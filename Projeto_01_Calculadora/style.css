@@ -1,1 +1,66 @@
-h1 { color: blue; text-align: center; }
+h1 { color: blue; text-align: center; 
+    grid-column: span 2;
+}
+/* 1. Estilos para o Fundo da Página (body) */
+body {
+    background-color: #f4f4f4; /* Fundo cinza suave */
+    font-family: 'Arial', sans-serif; /* Fonte padrão */
+    display: flex; /* Habilita o modo Flexbox */
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    min-height: 100vh; /* Ocupa 100% da altura da tela */
+    margin: 0;
+}
+
+/* 2. Estilos para o Contêiner da Calculadora */
+.container-calculadora {
+    background-color: #ffffff; /* Fundo branco */
+    padding: 30px; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave (0.1 = 10% de opacidade) */
+    max-width: 400px; 
+    width: 90%; 
+    text-align: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+button {
+    background-color: #007bff; /* Fundo azul primário */
+    color: #fff; /* Texto branco */
+    padding: 10px 20px; /* Espaçamento interno: 10px vertical, 20px horizontal */
+    border: none; /* Remove a borda cinza padrão do navegador */
+    border-radius: 5px; /* Bordas levemente arredondadas */
+    cursor: pointer; /* O cursor vira uma mãozinha ao passar por cima */
+    transition: background-color 0.3s; /* Adiciona uma transição suave para efeitos futuros */
+    margin: 5px; /* Pequena margem para separar os botões uns dos outros */
+}
+button:hover {
+    background-color: #0056b3; /* Cor azul mais escura no hover */
+}
+.inputs-calculadora {
+    grid-column: span 2; /* Faz os inputs ocuparem as duas colunas */
+     display: flex; 
+    justify-content: space-between; /* Espaça os inputs igualmente */
+    gap: 10px; /* <--- NOVO: Espaço de 10px entre os inputs */
+}
+ input {
+    width: 100%; /* Ocupa a largura total disponível */
+    padding: 10px;
+    margin-bottom: 15px; /* Espaço abaixo do input */
+    border: 1px solid #ccc; 
+    border-radius: 5px;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+    flex-grow: 1; /* <--- NOVO: Garante que os inputs dividam o espaço igualmente */
+}
+.botoes-operacao {
+    display: flex; 
+    justify-content: space-between; /* Distribui os botões uniformemente na linha */
+    margin-bottom: 20px; /* Espaço abaixo do bloco de botões */
+}
+#resultado {
+    /* Estilos para a área de resultado */
+     font-size: 1.5rem;  
+     font-weight: bold; 
+     color: #28a745; /* Verde para indicar sucesso */
+     grid-column: span 2; /* Faz o resultado ocupar as duas colunas */
+}
