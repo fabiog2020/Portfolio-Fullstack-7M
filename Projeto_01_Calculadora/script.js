@@ -15,6 +15,11 @@ botaoSomar.addEventListener('click', function() {
     // 1. CAPTURAR OS NÚMEROS AQUI DENTRO
     let numero1 = parseInt(document.getElementById("num1").value);
     let numero2 = parseInt(document.getElementById("num2").value);
+    if (isNaN(numero1) || isNaN(numero2)) {
+    // Isso é TRUE se o campo estiver vazio, ou se o usuário digitar "abc"
+    alert("Erro: Preencha ambos os campos com números!");
+    return;
+}
     // 2. CALCULAR
     let resultado = numero1 + numero2;
     // 3. EXIBIR
@@ -25,6 +30,11 @@ botaoSubtrair.addEventListener('click', function() {
     // 1. CAPTURAR OS NÚMEROS AQUI DENTRO
     let numero1 = parseInt(document.getElementById("num1").value);
     let numero2 = parseInt(document.getElementById("num2").value);
+    if (isNaN(numero1) || isNaN(numero2)) {
+    // Isso é TRUE se o campo estiver vazio, ou se o usuário digitar "abc"
+    alert("Erro: Preencha ambos os campos com números!");
+    return;
+}
     // 2. CALCULAR
     let resultado = numero1 - numero2;
     // 3. EXIBIR
@@ -35,6 +45,11 @@ botaoMultiplicar.addEventListener('click', function() {
     // 1. CAPTURAR OS NÚMEROS AQUI DENTRO
     let numero1 = parseInt(document.getElementById("num1").value);
     let numero2 = parseInt(document.getElementById("num2").value);
+    if (isNaN(numero1) || isNaN(numero2)) {
+    // Isso é TRUE se o campo estiver vazio, ou se o usuário digitar "abc"
+    alert("Erro: Preencha ambos os campos com números!");
+    return;
+}
     // 2. CALCULAR
     let resultado = numero1 * numero2;
     // 3. EXIBIR
@@ -45,6 +60,16 @@ botaoDividir.addEventListener('click', function() {
     // 1. CAPTURAR OS NÚMEROS AQUI DENTRO
     let numero1 = parseInt(document.getElementById("num1").value);
     let numero2 = parseInt(document.getElementById("num2").value);
+    if (isNaN(numero1) || isNaN(numero2)) {
+    // Isso é TRUE se o campo estiver vazio, ou se o usuário digitar "abc"
+    alert("Erro: Preencha ambos os campos com números!");
+    return;
+}
+  // 2. Validação para verificar se o divisor é zero
+    if (numero2 === 0) {
+        alert("Erro: Divisão por zero não é permitida.");
+        return;  // Interrompe a execução da função
+}
     // 2. CALCULAR
     let resultado = numero1 / numero2;
     // 3. EXIBIR
