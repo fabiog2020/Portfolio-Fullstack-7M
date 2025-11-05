@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Cartões{% endblock %}
+
+{% block content %}
+  <h1>Cartões</h1>
+  <a href="{{ url_for('dashboard') }}">Voltar</a>
+  <ul>
+    {% for c in cartoes %}
+      <li>{{ c.nome }} — Limite: R${{ '%.2f'|format(c.limite) }} — Venc: {{ c.vencimento_dia }}</li>
+    {% else %}
+      <li>Nenhum cartão cadastrado.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Adicionar Cartão</h2>
+  <form method="post" action="{{ url_for('adicionar_cartao') }}">
+    <label>Nome: <input name="nome"></label>
+    <label>Limite: <input name="limite" type="number" step="0.01"></label>
+    <label>Vencimento dia: <input name="vencimento_dia" type="number"></label>
+    <button type="submit">Adicionar</button>
+  </form>
+{% endblock %}

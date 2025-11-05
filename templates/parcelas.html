@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Parcelas{% endblock %}
+
+{% block content %}
+  <h1>Parcelas</h1>
+  <a href="{{ url_for('dashboard') }}">Voltar</a>
+  <ul>
+    {% for p in parcelas %}
+      <li>{{ p.descricao }} — R${{ '%.2f'|format(p.valor) }} — Venc: {{ p.vencimento.date() }} — Pago: {{ p.pago }}</li>
+    {% else %}
+      <li>Nenhuma parcela.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Adicionar Parcela</h2>
+  <form method="post" action="{{ url_for('adicionar_parcela') }}">
+    <label>Descrição: <input name="descricao"></label>
+    <label>Valor: <input name="valor" type="number" step="0.01"></label>
+    <label>Vencimento (YYYY-MM-DD): <input name="vencimento" type="text"></label>
+    <button type="submit">Adicionar</button>
+  </form>
+{% endblock %}

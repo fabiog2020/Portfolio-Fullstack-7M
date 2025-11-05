@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro - FinanceApp</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .register-container {
+      max-width: 400px;
+      background: #fff;
+      margin: 80px auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .register-container h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 25px;
+    }
+
+    .register-container p {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .register-container a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .register-container a:hover {
+      text-decoration: underline;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 15px;
+      width: 80px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-container">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
+
+    <h1>Crie sua conta 💼</h1>
+
+    <!-- MENSAGENS DE ALERTA -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('register') }}">
+      <label for="nome">Nome:</label>
+      <input type="text" name="nome" id="nome" placeholder="Digite seu nome completo" required>
+
+      <label for="email">E-mail:</label>
+      <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required>
+
+      <label for="senha">Senha:</label>
+      <input type="password" name="senha" id="senha" placeholder="Crie uma senha segura" required>
+
+      <button type="submit">Cadastrar</button>
+    </form>
+
+    <p>Já tem uma conta? <a href="{{ url_for('login') }}">Faça login aqui</a></p>
+  </div>
+
+  <footer>
+    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
+  </footer>
+
+</body>
+</html>

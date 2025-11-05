@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Transação</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      background: #fff;
+      margin: 50px auto;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #555;
+    }
+
+    input, select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .link-voltar {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .link-voltar:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✏️ Editar Transação</h1>
+
+    <form method="POST">
+      <label for="tipo">Tipo:</label>
+      <select name="tipo" id="tipo" required>
+        <option value="entrada" {% if transacao.tipo == 'entrada' %}selected{% endif %}>Entrada</option>
+        <option value="saida" {% if transacao.tipo == 'saida' %}selected{% endif %}>Saída</option>
+      </select>
+
+      <label for="categoria">Categoria:</label>
+      <input type="text" name="categoria" id="categoria" value="{{ transacao.categoria }}" required>
+
+      <label for="descricao">Descrição:</label>
+      <input type="text" name="descricao" id="descricao" value="{{ transacao.descricao }}">
+
+      <label for="valor">Valor (R$):</label>
+      <input type="number" name="valor" id="valor" step="0.01" value="{{ transacao.valor }}" required>
+
+      <button type="submit">💾 Salvar Alterações</button>
+    </form>
+
+    <a href="{{ url_for('dashboard') }}" class="link-voltar">⬅ Voltar ao Dashboard</a>
+  </div>
+
+  <footer>
+    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
+  </footer>
+</body>
+</html>

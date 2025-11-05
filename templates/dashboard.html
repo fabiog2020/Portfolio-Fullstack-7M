@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - FinanceApp</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* estilos locais válidos, sem CSS inline dinâmico */
+    .transacao-form {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .transacao-form h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 15px;
+    }
+    .actions a {
+      color: #007bff;
+      margin: 0 8px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .actions a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>💰 FinanceApp — Painel de Controle</h1>
+  </header>
+
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('investimentos') }}">📈 Investimentos</a>
+    <a href="{{ url_for('logout') }}">🚪 Sair</a>
+  </nav>
+
+  <div class="container">
+    <!-- MENSAGENS FLASH -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h2>Bem-vindo, {{ nome }}!</h2>
+
+    <!-- SALDO -->
+    <div class="saldo {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+      Saldo atual: R$ {{ "%.2f"|format(saldo) }}
+    </div>
+
+    <!-- FORMULÁRIO DE NOVA TRANSAÇÃO -->
+    <div class="transacao-form">
+      <h2>➕ Adicionar Transação</h2>
+      <form method="POST" action="{{ url_for('adicionar_transacao') }}">
+        <label for="tipo">Tipo:</label>
+        <select name="tipo" id="tipo" required>
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+
+        <label for="categoria">Categoria:</label>
+        <input type="text" name="categoria" id="categoria" placeholder="Ex: Salário, Alimentação" required>
+
+        <label for="descricao">Descrição:</label>
+        <input type="text" name="descricao" id="descricao" placeholder="Ex: Pagamento de contas">
+
+        <label for="valor">Valor (R$):</label>
+        <input type="number" name="valor" id="valor" step="0.01" placeholder="Ex: 250.00" required>
+
+        <button type="submit">Adicionar</button>
+      </form>
+    </div>
+
+    <!-- LISTAGEM DE TRANSAÇÕES -->
+    <h2>📋 Histórico de Transações</h2>
+
+    {% if transacoes %}
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th>Valor (R$)</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transacoes %}
+          <tr>
+            <td>{{ t.tipo.capitalize() }}</td>
+            <td>{{ t.categoria }}</td>
+            <td>{{ t.descricao or '-' }}</td>
+            <td class="{% if t.tipo == 'entrada' %}valor-entrada{% else %}valor-saida{% endif %}">
+              {{ "%.2f"|format(t.valor) }}
+            </td>
+            <td>{{ t.data.strftime('%d/%m/%Y') }}</td>
+            <td class="actions">
+              <a href="{{ url_for('editar_transacao', id=t.id) }}">✏️ Editar</a> |
+              <a href="{{ url_for('excluir_transacao', id=t.id) }}" onclick="return confirm('Deseja realmente excluir esta transação?');">🗑 Excluir</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="text-align:center; color:#777;">Nenhuma transação registrada ainda.</p>
+    {% endif %}
+  </div>
+
+  <footer>
+    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
+  </footer>
+
+</body>
+</html>

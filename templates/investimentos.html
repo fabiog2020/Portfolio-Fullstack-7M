@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Investimentos{% endblock %}
+
+{% block content %}
+  <h1>Investimentos</h1>
+  <a href="{{ url_for('dashboard') }}">Voltar</a>
+  <ul>
+    {% for inv in investimentos %}
+      <li>{{ inv.nome }} ({{ inv.tipo }}) — Qtd: {{ inv.quantidade }} — Valor unit: R${{ '%.2f'|format(inv.valor_unitario) }}</li>
+    {% else %}
+      <li>Nenhum investimento cadastrado.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Adicionar Investimento</h2>
+  <form method="post" action="{{ url_for('adicionar_investimento') }}">
+    <label>Tipo: <input name="tipo"></label>
+    <label>Nome: <input name="nome"></label>
+    <label>Quantidade: <input name="quantidade" type="number" step="0.0001"></label>
+    <label>Valor unitário: <input name="valor_unitario" type="number" step="0.01"></label>
+    <button type="submit">Adicionar</button>
+  </form>
+{% endblock %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investimentos - FinanceApp</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f6fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #007bff;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    nav {
+      background-color: #f9f9f9;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    nav a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 0 15px;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    .investimento-card {
+      border: 1px solid #ddd;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: #fafafa;
+      transition: all 0.3s ease;
+    }
+
+    .investimento-card:hover {
+      background-color: #f1f7ff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .investimento-card h3 {
+      margin: 0;
+      color: #007bff;
+    }
+
+    .investimento-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: #555;
+    }
+
+    .btn-voltar {
+      display: block;
+      margin: 25px auto 0;
+      padding: 12px 20px;
+      text-align: center;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    .btn-voltar:hover {
+      background-color: #0056b3;
+    }
+
+    footer {
+      text-align: center;
+      color: #777;
+      font-size: 14px;
+      padding: 20px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>💹 Painel de Investimentos</h1>
+  </header>
+
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('investimentos') }}">📈 Investimentos</a>
+    <a href="{{ url_for('logout') }}">🚪 Sair</a>
+  </nav>
+
+  <div class="container">
+    <h2>Resumo dos Investimentos</h2>
+
+    <!-- Exemplo de cartões (dados fixos por enquanto) -->
+    <div class="investimento-card">
+      <h3>Tesouro Selic</h3>
+      <div class="investimento-info">
+        <span>Rendimento: <b>+12,5% ao ano</b></span>
+        <span>Aplicado: <b>R$ 5.000,00</b></span>
+      </div>
+    </div>
+
+    <div class="investimento-card">
+      <h3>CDB Banco XP</h3>
+      <div class="investimento-info">
+        <span>Rendimento: <b>+13,2% ao ano</b></span>
+        <span>Aplicado: <b>R$ 3.000,00</b></span>
+      </div>
+    </div>
+
+    <div class="investimento-card">
+      <h3>Fundo Imobiliário - HGLG11</h3>
+      <div class="investimento-info">
+        <span>Dividendos: <b>R$ 68,00/mês</b></span>
+        <span>Investido: <b>R$ 2.500,00</b></span>
+      </div>
+    </div>
+
+    <div class="investimento-card">
+      <h3>Ações - PETR4</h3>
+      <div class="investimento-info">
+        <span>Variação: <b>+5,7%</b></span>
+        <span>Investido: <b>R$ 1.200,00</b></span>
+      </div>
+    </div>
+
+    <a href="{{ url_for('dashboard') }}" class="btn-voltar">⬅ Voltar ao Dashboard</a>
+  </div>
+
+  <footer>
+    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
+  </footer>
+
+</body>
+</html>

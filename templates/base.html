@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Título dinâmico: páginas filhas podem mudar esse bloco -->
+  <title>{% block title %}FinanceApp{% endblock %}</title>
+
+  <!-- Linka nosso CSS dentro de /static/css/style.css -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+  <!-- mensagens de feedback (sucesso/erro), se usarmos flash no Flask -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- aqui é onde cada página “filha” insere seu conteúdo -->
+  {% block content %}{% endblock %}
+</body>
+</html>
