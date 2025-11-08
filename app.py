@@ -33,9 +33,8 @@ login_manager.login_message_category = "info"
 from models import User
 from models_finance import Transacao, Categoria, Cartao, Parcela, Investimento
 
-# Cria o banco se não existir
+# Cria o banco de dados e as tabelas na ordem correta
 with app.app_context():
-    # importa os módulos de modelo antes de criar tabelas
     db.create_all()
 
 

@@ -1,11 +1,13 @@
-from flask_sqlalchemy import SQLAlchemy
+# models.py corrigido
+
+# Importa o objeto 'db' central e o UserMixin do Flask-Login
+from database import db
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# cria o objeto de banco (será inicializado no app principal)
-db = SQLAlchemy()
 
-# modelo de usuário — representa a tabela 'user'
-class User(db.Model):
+# Modelo de usuário — AGORA HERDA DE UserMixin E db.Model!
+class User(UserMixin, db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -18,3 +20,6 @@ class User(db.Model):
     # valida senha ao logar
     def check_password(self, senha):
         return check_password_hash(self.senha_hash, senha)
+
+    def __repr__(self):
+        return f"<User {self.email}>"
