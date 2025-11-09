@@ -2,8 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, date 
 import os
+
+# IMPORTS NECESSÁRIOS PARA CÁLCULOS ROBUSTOS
+from sqlalchemy import func, extract 
 
 # ===========================
 # CONFIGURAÇÃO BÁSICA
@@ -92,7 +95,7 @@ def logout():
 
 
 # ===========================
-# DASHBOARD PRINCIPAL
+# DASHBOARD PRINCIPAL (DINÂMICO E ROBUSTO)
 # ===========================
 @app.route("/")
 @login_required
@@ -103,25 +106,113 @@ def home():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    transacoes = Transacao.query.filter_by(user_id=current_user.id).order_by(Transacao.data.desc()).all()
-    entradas = sum(t.valor for t in transacoes if t.tipo == 'entrada')
-    saidas = sum(t.valor for t in transacoes if t.tipo == 'saida')
-    saldo = entradas - saidas
-    return render_template("dashboard.html", nome=current_user.nome, transacoes=transacoes, saldo=saldo)
+    # 1. DEFINIÇÃO DO PERÍODO (TORNANDO DINÂMICO)
+    # Tenta pegar 'mes' e 'ano' da URL: /dashboard?mes=10&ano=2025
+    mes_param = request.args.get('mes', type=int)
+    ano_param = request.args.get('ano', type=int)
 
+    hoje = datetime.now()
+    
+    # Usa o parâmetro da URL se existir, senão usa o mês e ano atuais
+    mes_atual = mes_param if mes_param and 1 <= mes_param <= 12 else hoje.month
+    ano_atual = ano_param if ano_param else hoje.year
+
+    # 2. CÁLCULO REALIZADO (TRANSAÇÕES JÁ EFETUADAS)
+
+    # 2.1. ENTRADAS REALIZADAS (RECEITAS)
+    entradas_realizadas = db.session.query(func.sum(Transacao.valor)).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        extract('month', Transacao.data_transacao) == mes_atual,
+        extract('year', Transacao.data_transacao) == ano_atual,
+        Categoria.tipo == 'entrada'
+    ).scalar() or 0.0
+
+    # 2.2. SAÍDAS REALIZADAS (DESPESAS)
+    saidas_realizadas = db.session.query(func.sum(Transacao.valor)).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        extract('month', Transacao.data_transacao) == mes_atual,
+        extract('year', Transacao.data_transacao) == ano_atual,
+        Categoria.tipo == 'saída'
+    ).scalar() or 0.0
+
+    # 3. CÁLCULO PREVISTO (CONTAS A PAGAR/RECEBER - PARCELAS NÃO PAGAS)
+    
+    # 3.1. DESPESAS PREVISTAS (SOMENTE PARCELAS A VENCER, COM DATA NO MÊS ATUAL, E NÃO PAGAS)
+    despesas_previstas_parcelas = db.session.query(func.sum(Parcela.valor)).join(Categoria).filter(
+        Parcela.user_id == current_user.id,
+        extract('month', Parcela.data_vencimento) == mes_atual,
+        extract('year', Parcela.data_vencimento) == ano_atual,
+        Categoria.tipo == 'saída', # Só consideramos parcelas de despesas
+        Parcela.pago == False       # Apenas as que ainda não foram pagas
+    ).scalar() or 0.0
+
+    # 4. CONSOLIDAÇÃO DO DASHBOARD
+    saldo_realizado = entradas_realizadas - saidas_realizadas
+    saldo_projetado = saldo_realizado - despesas_previstas_parcelas
+    
+    # 5. TRANSAÇÕES RECENTES (usada na listagem)
+    transacoes_recentes = Transacao.query.filter(
+        Transacao.user_id == current_user.id
+    ).order_by(Transacao.data_transacao.desc()).limit(10).all()
+
+    # NOTA: Não precisamos mais buscar categorias aqui, pois o formulário saiu do dashboard
+    
+    return render_template(
+        "dashboard.html",
+        nome=current_user.nome,
+        mes_atual=mes_atual, 
+        ano_atual=ano_atual, 
+        entradas_realizadas=entradas_realizadas,
+        saidas_realizadas=saidas_realizadas,
+        saldo_realizado=saldo_realizado,
+        despesas_previstas_parcelas=despesas_previstas_parcelas,
+        saldo_projetado=saldo_projetado,
+        transacoes_recentes=transacoes_recentes
+    )
 
 # ===========================
-# ADICIONAR TRANSAÇÃO
+# ROTAS DE TRANSAÇÕES (CRIAÇÃO - GET/POST)
 # ===========================
+@app.route("/adicionar", methods=["GET"])
+@login_required
+def formulario_adicionar_transacao():
+    """Rota GET para exibir o formulário e passar a lista de categorias (mantido)."""
+    
+    # Apenas esta rota busca as categorias
+    categorias = Categoria.query.order_by(Categoria.nome.asc()).all()
+    
+    return render_template(
+        "adicionar.html",
+        categorias=categorias
+    )
+
 @app.route("/adicionar", methods=["POST"])
 @login_required
 def adicionar_transacao():
-    tipo = request.form.get("tipo")
-    categoria = request.form.get("categoria")
+    # 1. Obter dados do formulário
+    categoria_id_str = request.form.get("categoria_id")
     descricao = request.form.get("descricao")
-    valor = float(request.form.get("valor"))
+    valor_str = request.form.get("valor")
+    data_str = request.form.get("data") # Ex: "2025-11-09"
 
-    nova = Transacao(tipo=tipo, categoria=categoria, descricao=descricao, valor=valor, user_id=current_user.id)
+    try:
+        # 2. VALIDAÇÃO E CONVERSÃO
+        categoria_id = int(categoria_id_str)
+        valor = float(valor_str)
+        data_transacao = date.fromisoformat(data_str) 
+
+    except (ValueError, TypeError) as e:
+        flash(f"Erro de formato nos dados. Verifique a categoria, valor e data: {e}", "danger")
+        return redirect(url_for("formulario_adicionar_transacao"))
+
+    # 3. CRIAÇÃO E SALVAMENTO
+    nova = Transacao(
+        categoria_id=categoria_id, 
+        descricao=descricao,
+        valor=valor,
+        data_transacao=data_transacao, 
+        user_id=current_user.id
+    )
     db.session.add(nova)
     db.session.commit()
     flash("Transação adicionada com sucesso!", "success")
@@ -129,7 +220,7 @@ def adicionar_transacao():
 
 
 # ===========================
-# EDITAR TRANSAÇÃO
+# EDITAR TRANSAÇÃO (ATUALIZADA)
 # ===========================
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -139,16 +230,33 @@ def editar_transacao(id):
         flash("Você não tem permissão para editar esta transação.", "danger")
         return redirect(url_for("dashboard"))
 
-    if request.method == "POST":
-        transacao.tipo = request.form.get("tipo")
-        transacao.categoria = request.form.get("categoria")
-        transacao.descricao = request.form.get("descricao")
-        transacao.valor = float(request.form.get("valor"))
-        db.session.commit()
-        flash("Transação atualizada com sucesso!", "success")
-        return redirect(url_for("dashboard"))
+    # Rota GET: Exibe o formulário e passa as categorias
+    if request.method == "GET":
+        categorias = Categoria.query.order_by(Categoria.nome.asc()).all()
+        return render_template("editar.html", transacao=transacao, categorias=categorias)
 
-    return render_template("editar.html", transacao=transacao)
+    # Rota POST: Recebe e salva os novos dados
+    if request.method == "POST":
+        categoria_id_str = request.form.get("categoria_id")
+        valor_str = request.form.get("valor")
+        data_str = request.form.get("data")
+        
+        try:
+            # 1. Conversão e Atualização dos Campos
+            transacao.categoria_id = int(categoria_id_str)
+            transacao.descricao = request.form.get("descricao")
+            transacao.valor = float(valor_str)
+            transacao.data_transacao = date.fromisoformat(data_str) 
+            
+            db.session.commit()
+            flash("Transação atualizada com sucesso!", "success")
+            return redirect(url_for("dashboard"))
+
+        except (ValueError, TypeError) as e:
+            flash(f"Erro de formato nos dados. Verifique a categoria, valor e data: {e}", "danger")
+            return redirect(url_for("editar_transacao", id=id)) 
+
+    return render_template("editar.html", transacao=transacao) 
 
 
 # ===========================

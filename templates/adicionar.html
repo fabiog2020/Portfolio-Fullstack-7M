@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h2>➕ Adicionar Nova Transação</h2>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6 transacao-form">
+            <form method="POST" action="{{ url_for('adicionar_transacao') }}">
+                
+                <div class="form-group">
+                    <label for="categoria_id">Categoria</label>
+                    <select name="categoria_id" id="categoria_id" class="form-control" required>
+                        <option value="">Selecione a Categoria</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nome }} ({{ categoria.tipo.capitalize() }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descricao">Descrição</label>
+                    <input type="text" name="descricao" id="descricao" class="form-control" placeholder="Ex: Salário, Conta de Luz, Aluguel" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="valor">Valor</label>
+                    <input type="number" step="0.01" name="valor" id="valor" class="form-control" placeholder="Ex: 500.00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="data">Data da Transação</label>
+                    <input type="date" name="data" id="data" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-3">Salvar Transação</button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

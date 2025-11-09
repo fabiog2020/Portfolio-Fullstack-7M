@@ -1,126 +1,179 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard - FinanceApp</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <style>
-    /* estilos locais válidos, sem CSS inline dinâmico */
-    .transacao-form {
-      background-color: #f8f9fa;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-    .transacao-form h2 {
-      text-align: center;
-      color: #007bff;
-      margin-bottom: 15px;
-    }
-    .actions a {
-      color: #007bff;
-      margin: 0 8px;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .actions a:hover { text-decoration: underline; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - FinanceApp</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Estilos para o formulário de transações */
+    .transacao-form {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .transacao-form h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 15px;
+    }
+
+    /* Estilos para ações */
+    .actions a {
+      color: #007bff;
+      margin: 0 8px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .actions a:hover {
+      text-decoration: underline;
+    }
+
+    /* Estilos para métricas gerais */
+    .metricas-gerais {
+      display: flex;
+      justify-content: space-around;
+      gap: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .metrica-card {
+      flex-grow: 1;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .entrada-card {
+      background-color: #e6ffed;
+      border: 1px solid #c8e6c9;
+    }
+    .saida-card {
+      background-color: #ffe6e6;
+      border: 1px solid #ffcdd2;
+    }
+    .projetado-card {
+      background-color: #fff8e1;
+      border: 1px solid #ffe082;
+    }
+
+    /* Estilos para valores */
+    .valor {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .valor-entrada {
+      color: #28a745;
+    }
+    .valor-saida {
+      color: #dc3545;
+    }
+    .valor-neutro {
+      color: #ffc107;
+    }
+
+    /* Estilos para saldo */
+    .saldo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .saldo-positivo {
+      color: #28a745;
+    }
+    .saldo-negativo {
+      color: #dc3545;
+    }
+  </style>
 </head>
 <body>
 
-  <header>
-    <h1>💰 FinanceApp — Painel de Controle</h1>
-  </header>
+  <header>
+    <h1>💰 FinanceApp — Painel de Controle</h1>
+  </header>
 
-  <nav>
-    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
-    <a href="{{ url_for('investimentos') }}">📈 Investimentos</a>
-    <a href="{{ url_for('logout') }}">🚪 Sair</a>
-  </nav>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('formulario_adicionar_transacao') }}">➕ Adicionar Transação</a> 
+    <a href="{{ url_for('investimentos') }}">📈 Investimentos</a>
+    <a href="{{ url_for('cartoes') }}">💳 Cartões</a>
+    <a href="{{ url_for('logout') }}">🚪 Sair</a>
+  </nav>
 
-  <div class="container">
-    <!-- MENSAGENS FLASH -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+  <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-    <h2>Bem-vindo, {{ nome }}!</h2>
+    <h2>Resumo do Mês ({{ mes_atual }}/{{ ano_atual }})</h2>
 
-    <!-- SALDO -->
-    <div class="saldo {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
-      Saldo atual: R$ {{ "%.2f"|format(saldo) }}
+    <div class="metricas-gerais">
+        <div class="metrica-card entrada-card">
+            <h4>Entradas Realizadas</h4>
+            <div class="valor valor-entrada">R$ {{ "%.2f"|format(entradas_realizadas) }}</div>
+        </div>
+        
+        <div class="metrica-card saida-card">
+            <h4>Saídas Realizadas</h4>
+            <div class="valor valor-saida">R$ {{ "%.2f"|format(saidas_realizadas) }}</div>
+        </div>
+
+        <div class="metrica-card projetado-card">
+            <h4>Previsto a Pagar (Orçamento)</h4>
+            <div class="valor valor-neutro">R$ {{ "%.2f"|format(despesas_previstas_parcelas) }}</div>
+        </div>
+    </div>
+    
+    <div class="saldo {% if saldo_projetado >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+        Saldo Realizado: R$ {{ "%.2f"|format(saldo_realizado) }} | 
+        **Saldo Projetado:** R$ {{ "%.2f"|format(saldo_projetado) }}
     </div>
 
-    <!-- FORMULÁRIO DE NOVA TRANSAÇÃO -->
-    <div class="transacao-form">
-      <h2>➕ Adicionar Transação</h2>
-      <form method="POST" action="{{ url_for('adicionar_transacao') }}">
-        <label for="tipo">Tipo:</label>
-        <select name="tipo" id="tipo" required>
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
-        </select>
+        <h2>📋 Histórico de Transações Recentes</h2>
 
-        <label for="categoria">Categoria:</label>
-        <input type="text" name="categoria" id="categoria" placeholder="Ex: Salário, Alimentação" required>
+    {% if transacoes_recentes %}
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Categoria</th>
+            <th>Descrição</th>
+            <th>Valor (R$)</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transacoes_recentes %}
+          <tr>
+            <td>{{ t.categoria.tipo.capitalize() }}</td> 
+            <td>{{ t.categoria.nome }}</td>
+            <td>{{ t.descricao or '-' }}</td>
+            <td class="{% if t.categoria.tipo == 'entrada' %}valor-entrada{% else %}valor-saida{% endif %}">
+              {{ "%.2f"|format(t.valor) }}
+            </td>
+            <td>{{ t.data_transacao.strftime('%d/%m/%Y') }}</td>
+            <td class="actions">
+              <a href="{{ url_for('editar_transacao', id=t.id) }}">✏️ Editar</a> |
+              <a href="{{ url_for('excluir_transacao', id=t.id) }}" onclick="return confirm('Deseja realmente excluir esta transação?');">🗑 Excluir</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="text-align:center; color:#777;">Nenhuma transação registrada ainda.</p>
+    {% endif %}
+  </div>
 
-        <label for="descricao">Descrição:</label>
-        <input type="text" name="descricao" id="descricao" placeholder="Ex: Pagamento de contas">
-
-        <label for="valor">Valor (R$):</label>
-        <input type="number" name="valor" id="valor" step="0.01" placeholder="Ex: 250.00" required>
-
-        <button type="submit">Adicionar</button>
-      </form>
-    </div>
-
-    <!-- LISTAGEM DE TRANSAÇÕES -->
-    <h2>📋 Histórico de Transações</h2>
-
-    {% if transacoes %}
-      <table>
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Categoria</th>
-            <th>Descrição</th>
-            <th>Valor (R$)</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for t in transacoes %}
-          <tr>
-            <td>{{ t.tipo.capitalize() }}</td>
-            <td>{{ t.categoria }}</td>
-            <td>{{ t.descricao or '-' }}</td>
-            <td class="{% if t.tipo == 'entrada' %}valor-entrada{% else %}valor-saida{% endif %}">
-              {{ "%.2f"|format(t.valor) }}
-            </td>
-            <td>{{ t.data.strftime('%d/%m/%Y') }}</td>
-            <td class="actions">
-              <a href="{{ url_for('editar_transacao', id=t.id) }}">✏️ Editar</a> |
-              <a href="{{ url_for('excluir_transacao', id=t.id) }}" onclick="return confirm('Deseja realmente excluir esta transação?');">🗑 Excluir</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p style="text-align:center; color:#777;">Nenhuma transação registrada ainda.</p>
-    {% endif %}
-  </div>
-
-  <footer>
-    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
-  </footer>
+  <footer>
+    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
+  </footer>
 
 </body>
 </html>
