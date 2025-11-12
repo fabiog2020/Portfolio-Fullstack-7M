@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-8 flex justify-between items-center border-b border-primary-300 dark:border-primary-700 pb-2">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
+            <i class="fa-solid fa-tags mr-3 text-secondary-500"></i>
+            Gerenciamento de Categorias
+        </h1>
+        <a href="{{ url_for('dashboard') }}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Voltar
+        </a>
+    </header>
+
+    <!-- Área de Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="space-y-3 mb-6">
+            {% for category, message in messages %}
+                {% set style_class = 'p-4 rounded-xl shadow-md text-sm ' %}
+                {% if category == 'success' %}
+                    {% set style_class = style_class + 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100' %}
+                {% elif category == 'error' or category == 'danger' %}
+                    {% set style_class = style_class + 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-100' %}
+                {% else %}
+                    {% set style_class = style_class + 'bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100' %}
+                {% endif %}
+                <div class="{{ style_class }}" role="alert">
+                    <i class="fa-solid fa-bell mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Formulário de Adicionar Categoria -->
+        <div class="lg:col-span-1 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 h-fit">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                <i class="fa-solid fa-plus-square mr-2 text-secondary-500"></i> Nova Categoria
+            </h2>
+            <form method="post" action="{{ url_for('adicionar_categoria') }}" class="space-y-4">
+                
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Nome da Categoria
+                    </label>
+                    <input type="text" name="nome" id="nome" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-secondary-500 focus:border-secondary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                           placeholder="Ex: Aluguel, Salário, Lazer">
+                </div>
+                
+                <div>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Tipo
+                    </label>
+                    <select name="tipo" id="tipo" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-secondary-500 focus:border-secondary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                        <option value="despesa" selected>Despesa (Saída)</option>
+                        <option value="receita">Receita (Entrada)</option>
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-secondary-600 hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                        <i class="fa-solid fa-check-circle mr-2"></i> Adicionar Categoria
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Listagem de Categorias -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
+                Minhas Categorias
+            </h2>
+
+            <!-- Exemplo de estrutura de dados: categorias = [{id: 1, nome: 'Alimentação', tipo: 'despesa'}, ...] -->
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for c in categorias %}
+                <li class="py-3 flex justify-between items-center group">
+                    <div class="flex items-center space-x-3">
+                        {% if c.tipo == 'despesa' %}
+                            <!-- Ícone para Despesa -->
+                            <i class="fa-solid fa-arrow-down text-red-500 dark:text-red-400 text-lg"></i>
+                            <span class="text-sm font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">SAÍDA</span>
+                        {% else %}
+                            <!-- Ícone para Receita -->
+                            <i class="fa-solid fa-arrow-up text-green-500 dark:text-green-400 text-lg"></i>
+                            <span class="text-sm font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider">ENTRADA</span>
+                        {% endif %}
+                        <span class="text-lg font-medium text-gray-900 dark:text-white ml-4">{{ c.nome }}</span>
+                    </div>
+
+                    <!-- Ações (Edit/Delete) -->
+                    <div class="flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <a href="{{ url_for('editar_categoria', id=c.id) }}" 
+                           class="text-gray-500 hover:text-secondary-600 dark:hover:text-secondary-400 transition text-sm flex items-center">
+                            <i class="fa-solid fa-pen mr-1"></i> Editar
+                        </a>
+                        <a href="{{ url_for('excluir_categoria', id=c.id) }}" 
+                           class="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition text-sm flex items-center">
+                            <i class="fa-solid fa-trash-alt mr-1"></i> Excluir
+                        </a>
+                    </div>
+                </li>
+                {% else %}
+                <li class="p-4 text-center text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3 text-secondary-500"></i>
+                    <p>Nenhuma categoria cadastrada. Comece adicionando receitas e despesas.</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

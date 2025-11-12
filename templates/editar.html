@@ -1,117 +1,152 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editar Transação</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f8;
-      margin: 0;
-      padding: 0;
-    }
+{% extends "base.html" %}
 
-    .container {
-      max-width: 600px;
-      background: #fff;
-      margin: 50px auto;
-      padding: 25px 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+{% block title %}Editar Transação ID: {{ transacao.id }}{% endblock %}
 
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
-    }
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white border-b border-primary-300 dark:border-primary-700 pb-2 flex items-center">
+            <i class="fa-solid fa-pen-to-square mr-3 text-primary-500"></i>
+            Editar Transação
+        </h1>
+        <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
+            Ajustando a transação <span class="font-bold text-gray-800 dark:text-gray-200">#{{ transacao.id }}</span> registrada em {{ transacao.data_transacao.strftime('%d/%m/%Y') }}.
+        </p>
+    </header>
 
-    form {
-      display: flex;
-      flex-direction: column;
-    }
+    <!-- Área de Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="space-y-3 mb-6">
+            {% for category, message in messages %}
+                {% set style_class = 'p-4 rounded-xl shadow-md text-sm ' %}
+                {% if category == 'success' %}
+                    {% set style_class = style_class + 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100' %}
+                {% elif category == 'error' or category == 'danger' %}
+                    {% set style_class = style_class + 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-100' %}
+                {% else %}
+                    {% set style_class = style_class + 'bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100' %}
+                {% endif %}
+                <div class="{{ style_class }}" role="alert">
+                    <i class="fa-solid fa-bell mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      color: #555;
-    }
+    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8">
+        <div class="max-w-lg mx-auto">
+            <form method="POST" action="{{ url_for('editar_transacao', id=transacao.id) }}" class="space-y-6">
+                
+                <!-- Categoria (Tipo de Transação) -->
+                <div>
+                    <label for="categoria_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Categoria (Atual: <span class="font-bold">{{ transacao.categoria.nome }} ({{ transacao.categoria.tipo.capitalize() }})</span>)
+                    </label>
+                    <select name="categoria_id" id="categoria_id" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" 
+                            {% if categoria.id == transacao.categoria_id %}selected{% endif %}
+                            >
+                            {{ categoria.nome }} ({{ categoria.tipo.capitalize() }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Descrição -->
+                <div>
+                    <label for="descricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Descrição
+                    </label>
+                    <input type="text" name="descricao" id="descricao" value="{{ transacao.descricao or '' }}" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                           placeholder="Ex: Salário, Conta de Luz, Aluguel">
+                </div>
+                
+                <!-- Valor e Data (Em Grid) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Valor -->
+                    <div>
+                        <label for="valor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Valor (R$)
+                        </label>
+                        <div class="relative mt-1 rounded-lg shadow-sm">
+                            <input type="number" step="0.01" name="valor" id="valor" value="{{ '%.2f'|format(transacao.valor) }}" required
+                                   class="block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                                   placeholder="Ex: 500.00">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">R$</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data da Transação -->
+                    <div>
+                        <label for="data" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Data da Transação
+                        </label>
+                        <input type="date" name="data" id="data" value="{{ transacao.data_transacao.strftime('%Y-%m-%d') }}" required
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                    </div>
+                </div>
 
-    input, select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-top: 5px;
-      font-size: 14px;
-    }
+                <!-- Lógica de Parcelamento (Se for uma transação parcelada, mostra os campos, que são SOMENTE LEITURA ao editar) -->
+                {% if transacao.cartao_id %}
+                <div class="space-y-6 pt-4 border-t border-dashed border-gray-300 dark:border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                        <i class="fa-solid fa-credit-card mr-2 text-primary-500"></i> Detalhes do Parcelamento (Somente Leitura)
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Cartão de Crédito -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Cartão (Original)
+                            </label>
+                            <p class="mt-1 block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium border border-gray-300 dark:border-gray-600">
+                                {{ transacao.cartao.nome }} ({{ transacao.cartao.bandeira }})
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                * Para alterar o cartão ou o número de parcelas, você deve excluir a transação e adicioná-la novamente.
+                            </p>
+                        </div>
+                        
+                        <!-- Número de Parcelas -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Parcela Atual
+                            </label>
+                            <p class="mt-1 block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium border border-gray-300 dark:border-gray-600">
+                                {{ transacao.num_parcela }} de {{ transacao.total_parcelas }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
 
-    button {
-      margin-top: 20px;
-      padding: 12px;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+                
+                <!-- Botões de Ação -->
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4 justify-end">
+                    
+                    <!-- Cancelar / Voltar -->
+                    <a href="{{ url_for('dashboard') }}"
+                       class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-full shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
+                        <i class="fa-solid fa-times-circle mr-2"></i>
+                        Cancelar
+                    </a>
 
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .link-voltar {
-      display: block;
-      text-align: center;
-      margin-top: 15px;
-      text-decoration: none;
-      color: #007bff;
-      font-weight: bold;
-    }
-
-    .link-voltar:hover {
-      text-decoration: underline;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 30px;
-      color: #777;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>✏️ Editar Transação</h1>
-
-    <form method="POST">
-      <label for="tipo">Tipo:</label>
-      <select name="tipo" id="tipo" required>
-        <option value="entrada" {% if transacao.tipo == 'entrada' %}selected{% endif %}>Entrada</option>
-        <option value="saida" {% if transacao.tipo == 'saida' %}selected{% endif %}>Saída</option>
-      </select>
-
-      <label for="categoria">Categoria:</label>
-      <input type="text" name="categoria" id="categoria" value="{{ transacao.categoria }}" required>
-
-      <label for="descricao">Descrição:</label>
-      <input type="text" name="descricao" id="descricao" value="{{ transacao.descricao }}">
-
-      <label for="valor">Valor (R$):</label>
-      <input type="number" name="valor" id="valor" step="0.01" value="{{ transacao.valor }}" required>
-
-      <button type="submit">💾 Salvar Alterações</button>
-    </form>
-
-    <a href="{{ url_for('dashboard') }}" class="link-voltar">⬅ Voltar ao Dashboard</a>
-  </div>
-
-  <footer>
-    <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>
-  </footer>
-</body>
-</html>
+                    <!-- Salvar -->
+                    <button type="submit"
+                            class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

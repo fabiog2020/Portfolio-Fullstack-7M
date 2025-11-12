@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Categoria: {{ categoria.nome }}{% endblock %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto p-4 sm:p-6 lg:p-8">
+<h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6 border-b pb-2">
+Editar Categoria: {{ categoria.nome }}
+</h1>
+
+<div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6">
+    <form action="{{ url_for('editar_categoria', id=categoria.id) }}" method="POST" class="space-y-6">
+        
+        <!-- Campo Nome -->
+        <div>
+            <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Categoria</label>
+            <input type="text" id="nome" name="nome" value="{{ categoria.nome }}" required 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+
+        <!-- Campo Tipo -->
+        <div>
+            <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
+            <select id="tipo" name="tipo" required 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                
+                {% set tipos = [('saída', 'Saída (Despesa)'), ('entrada', 'Entrada (Receita)'), ('investimento', 'Investimento')] %}
+                {% for tipo_val, tipo_label in tipos %}
+                    <option value="{{ tipo_val }}" {% if tipo_val == categoria.tipo %}selected{% endif %}>
+                        {{ tipo_label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Campo Cor e Ícone (Lado a Lado) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Campo Cor -->
+            <div>
+                <label for="cor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cor</label>
+                <input type="color" id="cor" name="cor" value="{{ categoria.cor }}"
+                        class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 p-0.5">
+            </div>
+
+            <!-- Campo Ícone (Com Pré-visualização) -->
+            <div>
+                <label for="icone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ícone (Classe Font Awesome)</label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <!-- Pré-visualização do Ícone Atual -->
+                    <span id="icon-preview-container" class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                        <i id="icon-preview" class="{{ categoria.icone }} text-lg" style="color: {{ categoria.cor }}"></i>
+                    </span>
+                    <input type="text" id="icone" name="icone" value="{{ categoria.icone }}" required
+                           class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                           placeholder="Ex: fa-solid fa-house">
+                </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use classes Font Awesome 6 (ex: fa-solid fa-car).</p>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="{{ url_for('gerenciar_categorias') }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800 transition duration-150">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Cancelar
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
+                <i class="fa-solid fa-floppy-disk mr-2"></i> Salvar Alterações
+            </button>
+        </div>
+    </form>
+    
+    <!-- ============================== -->
+    <!-- Zona de Perigo: Exclusão -->
+    <!-- ============================== -->
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Zona de Perigo</h2>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+            <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1"></i> A exclusão desta categoria é permanente e será **bloqueada** se houver transações ou parcelas vinculadas a ela.
+        </p>
+        <form action="{{ url_for('excluir_categoria', id=categoria.id) }}" method="POST">
+            <!-- Nota: A validação de vínculos é feita no app.py, garantindo a segurança. -->
+            <button type="submit" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                <i class="fa-solid fa-trash-can mr-2"></i> Excluir Categoria
+            </button>
+        </form>
+    </div>
+</div>
+
+</div>
+
+<script>
+// Script para pré-visualização em tempo real do ícone e cor
+document.addEventListener('DOMContentLoaded', function() {
+    const iconInput = document.getElementById('icone');
+    const colorInput = document.getElementById('cor');
+    const iconPreview = document.getElementById('icon-preview');
+
+    if (iconInput && colorInput && iconPreview) {
+        const updateIconPreview = () => {
+            // Atualiza a classe (o ícone)
+            iconPreview.className = iconInput.value + ' text-lg';
+            // Atualiza a cor
+            iconPreview.style.color = colorInput.value;
+        };
+
+        // Escuta as alterações no campo de ícone e cor
+        iconInput.addEventListener('input', updateIconPreview);
+        colorInput.addEventListener('input', updateIconPreview);
+    }
+});
+</script>
+
+{% endblock %}
+      margin-top: 10px;
+    }
+  </style>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Financeiro Pessoal{% endblock %}</title>
+    
+    <!-- Carrega o Tailwind CSS CDN para todos os estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuração do Tailwind para usar a fonte Inter e o modo escuro -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Carrega o Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJc5n/0nksM/zLJe7hUjTfM9N1t0C95+x+V/w6WJt4s8uU+7q2z5A5bN2sI2Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <!-- Estrutura do layout principal (Nav e Content) -->
+    
+    <!-- Nav Bar (Mockup simples para contexto) -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo/Nome do App -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{{ url_for('dashboard') }}" class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                        <i class="fa-solid fa-chart-line mr-2"></i> Finanças
+                    </a>
+                </div>
+                
+                <!-- Links de Navegação (Mock) -->
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-8 items-center">
+                    <a href="{{ url_for('dashboard') }}" class="border-b-2 border-primary-500 text-gray-900 dark:text-white px-3 py-2 font-medium">Dashboard</a>
+                    <a href="{{ url_for('transacoes') }}" class="border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-2 font-medium">Transações</a>
+                    <a href="{{ url_for('contas_e_cartoes') }}" class="border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-2 font-medium">Contas</a>
+                </div>
+                
+                <!-- Perfil/Notificações (Mock) -->
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150">
+                        <span class="sr-only">Ver notificações</span>
+                        <i class="fa-solid fa-bell h-6 w-6"></i>
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-150 text-sm">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mensagens Flash (Exemplo de Sucesso ou Erro) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="rounded-md p-4 mb-4 
+                        {% if category == 'success' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% elif category == 'error' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% else %}bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200{% endif %}"
+                         role="alert">
+                        <p class="font-medium">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Conteúdo Específico da Página -->
+    <main>
+        {% block content %}
+        <!-- O conteúdo de cada template individual (como editar_cartao.html) será inserido aqui -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer (Mockup) -->
+    <footer class="mt-12 py-4 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
+        &copy; 2024 Gerenciador Financeiro Pessoal.
+    </footer>
+
+</body>
+</html>

@@ -1,52 +1,205 @@
 {% extends "base.html" %}
 
+{% block title %}Adicionar Nova Transação{% endblock %}
+
 {% block content %}
-<div class="container">
-    
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white border-b border-primary-300 dark:border-primary-700 pb-2 flex items-center">
+            <i class="fa-solid fa-plus-circle mr-3 text-primary-500"></i>
+            Adicionar Nova Transação
+        </h1>
+        <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
+            Registre uma nova movimentação de receita ou despesa no seu controle financeiro.
+        </p>
+    </header>
+
+    <!-- Área de Mensagens Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
+            <div class="space-y-3 mb-6">
             {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
+                {% set style_class = 'p-4 rounded-xl shadow-md text-sm ' %}
+                {% if category == 'success' %}
+                    {% set style_class = style_class + 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100' %}
+                {% elif category == 'error' or category == 'danger' %}
+                    {% set style_class = style_class + 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-100' %}
+                {% else %}
+                    {% set style_class = style_class + 'bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100' %}
+                {% endif %}
+                <div class="{{ style_class }}" role="alert">
+                    <i class="fa-solid fa-bell mr-2"></i>
+                    {{ message }}
+                </div>
             {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
 
-    <h2>➕ Adicionar Nova Transação</h2>
-    <hr>
-
-    <div class="row">
-        <div class="col-md-6 transacao-form">
-            <form method="POST" action="{{ url_for('adicionar_transacao') }}">
+    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8">
+        <div class="max-w-lg mx-auto">
+            <form method="POST" action="{{ url_for('adicionar_transacao') }}" class="space-y-6">
                 
-                <div class="form-group">
-                    <label for="categoria_id">Categoria</label>
-                    <select name="categoria_id" id="categoria_id" class="form-control" required>
-                        <option value="">Selecione a Categoria</option>
+                <!-- Categoria (Tipo de Transação) -->
+                <div>
+                    <label for="categoria_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Categoria
+                    </label>
+                    <select name="categoria_id" id="categoria_id" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                        <option value="" disabled selected>Selecione a Categoria</option>
                         {% for categoria in categorias %}
                         <option value="{{ categoria.id }}">{{ categoria.nome }} ({{ categoria.tipo.capitalize() }})</option>
                         {% endfor %}
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="descricao">Descrição</label>
-                    <input type="text" name="descricao" id="descricao" class="form-control" placeholder="Ex: Salário, Conta de Luz, Aluguel" required>
+                <!-- Descrição -->
+                <div>
+                    <label for="descricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Descrição
+                    </label>
+                    <input type="text" name="descricao" id="descricao" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                           placeholder="Ex: Salário, Conta de Luz, Aluguel">
                 </div>
                 
-                <div class="form-group">
-                    <label for="valor">Valor</label>
-                    <input type="number" step="0.01" name="valor" id="valor" class="form-control" placeholder="Ex: 500.00" required>
+                <!-- Valor e Data (Em Grid para Mobile/Desktop) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Valor -->
+                    <div>
+                        <label for="valor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Valor (R$)
+                        </label>
+                        <div class="relative mt-1 rounded-lg shadow-sm">
+                            <input type="number" step="0.01" name="valor" id="valor" required
+                                   class="block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                                   placeholder="Ex: 500.00">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">R$</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data da Transação -->
+                    <div>
+                        <label for="data" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Data da Transação
+                        </label>
+                        <input type="date" name="data" id="data" required
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="data">Data da Transação</label>
-                    <input type="date" name="data" id="data" class="form-control" required>
+
+                <!-- Tipo de Pagamento (Toggle) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Tipo de Pagamento
+                    </label>
+                    <div class="flex space-x-4">
+                        <div class="flex items-center">
+                            <input id="tipo_unica" name="tipo_pagamento" type="radio" value="unica" checked class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700" onclick="toggleParcelaFields(false)">
+                            <label for="tipo_unica" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Transação Única
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="tipo_parcelada" name="tipo_pagamento" type="radio" value="parcelada" class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700" onclick="toggleParcelaFields(true)">
+                            <label for="tipo_parcelada" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Parcelada (Cartão)
+                            </label>
+                        </div>
+                    </div>
+                    <input type="hidden" id="is_parcelada_input" name="is_parcelada" value="false">
                 </div>
+
+                <!-- CAMPOS DE PARCELAMENTO (Condicional) -->
+                <div id="parcelamento_fields" class="space-y-6 pt-4 border-t border-dashed border-gray-300 dark:border-gray-700 hidden">
+                    
+                    <!-- Cartão de Crédito -->
+                    <div>
+                        <label for="cartao_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Cartão de Crédito
+                        </label>
+                        <select name="cartao_id" id="cartao_id" disabled
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                            <option value="" selected>Selecione o Cartão</option>
+                            {% for cartao in cartoes %}
+                            <option value="{{ cartao.id }}">{{ cartao.nome }} ({{ cartao.bandeira }})</option>
+                            {% endfor %}
+                        </select>
+                        {% if not cartoes %}
+                            <p class="mt-1 text-xs text-red-500">
+                                ⚠️ Nenhum cartão encontrado. Adicione um cartão na seção "Cartões" para usar este recurso.
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Número de Parcelas -->
+                    <div>
+                        <label for="num_parcelas" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Número de Parcelas
+                        </label>
+                        <input type="number" name="num_parcelas" id="num_parcelas" min="1" max="60" disabled value="1"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                               placeholder="Ex: 5">
+                    </div>
+                </div>
+
                 
-                <button type="submit" class="btn btn-primary mt-3">Salvar Transação</button>
-                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Cancelar</a>
+                <!-- Botões de Ação -->
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                    <!-- Salvar -->
+                    <button type="submit"
+                            class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                        <i class="fa-solid fa-check-circle mr-2"></i>
+                        Salvar Transação
+                    </button>
+
+                    <!-- Cancelar / Voltar -->
+                    <a href="{{ url_for('dashboard') }}"
+                       class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-full shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
+                        <i class="fa-solid fa-times-circle mr-2"></i>
+                        Cancelar
+                    </a>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    function toggleParcelaFields(isParcelada) {
+        const fieldsDiv = document.getElementById('parcelamento_fields');
+        const cartaoSelect = document.getElementById('cartao_id');
+        const parcelasInput = document.getElementById('num_parcelas');
+        const isParceladaInput = document.getElementById('is_parcelada_input');
+
+        if (isParcelada) {
+            fieldsDiv.classList.remove('hidden');
+            cartaoSelect.removeAttribute('disabled');
+            cartaoSelect.setAttribute('required', 'required'); // Torna obrigatório ao parcelar
+            parcelasInput.removeAttribute('disabled');
+            parcelasInput.setAttribute('required', 'required'); // Torna obrigatório ao parcelar
+            parcelasInput.value = 2; // Sugere 2 parcelas por padrão
+            isParceladaInput.value = 'true';
+        } else {
+            fieldsDiv.classList.add('hidden');
+            cartaoSelect.setAttribute('disabled', 'disabled');
+            cartaoSelect.removeAttribute('required');
+            cartaoSelect.value = ''; // Limpa a seleção
+            parcelasInput.setAttribute('disabled', 'disabled');
+            parcelasInput.removeAttribute('required');
+            parcelasInput.value = 1; // Reseta para 1
+            isParceladaInput.value = 'false';
+        }
+    }
+
+    // Inicializa o estado baseado no radio button padrão
+    document.addEventListener('DOMContentLoaded', () => {
+        // Assume-se que 'tipo_unica' é o padrão, então não faz nada, 
+        // mas se necessário, a função poderia ser chamada:
+        // toggleParcelaFields(document.getElementById('tipo_parcelada').checked);
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Extrato de Transações{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-8 flex justify-between items-center border-b border-primary-300 dark:border-primary-700 pb-2">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
+            <i class="fa-solid fa-list-check mr-3 text-secondary-500"></i>
+            Extrato de Transações
+        </h1>
+        <a href="{{ url_for('dashboard') }}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Dashboard
+        </a>
+    </header>
+
+    <!-- Área de Filtros -->
+    <section class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
+            Filtrar Extrato
+        </h2>
+        <form method="GET" action="{{ url_for('extrato') }}" class="space-y-4 md:space-y-0 md:grid md:grid-cols-5 md:gap-4 items-end">
+            
+            <!-- Data Inicial -->
+            <div>
+                <label for="data_inicio" class="block text-sm font-medium text-gray-700 dark:text-gray-300">De:</label>
+                <input type="date" name="data_inicio" id="data_inicio" 
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+            </div>
+            
+            <!-- Data Final -->
+            <div>
+                <label for="data_fim" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Até:</label>
+                <input type="date" name="data_fim" id="data_fim" 
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <!-- Categoria -->
+            <div>
+                <label for="categoria_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria:</label>
+                <select name="categoria_id" id="categoria_id" 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Tipo (Receita/Despesa) -->
+            <div>
+                <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo:</label>
+                <select name="tipo" id="tipo" 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="receita">Receita</option>
+                    <option value="despesa">Despesa</option>
+                </select>
+            </div>
+
+            <!-- Botão de Filtrar -->
+            <div class="md:col-span-1">
+                <button type="submit"
+                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                    <i class="fa-solid fa-filter mr-2"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Listagem de Transações -->
+    <section class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Resultados Encontrados ({{ transacoes | length }})</h2>
+        </div>
+
+        {% if transacoes %}
+        <div class="overflow-x-auto">
+            <!-- Tabela para Desktop e Tablet -->
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden md:table">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/12">Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-3/12">Descrição</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-2/12">Categoria</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-2/12">Conta/Cartão</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-2/12">Valor</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-2/12">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for t in transacoes %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ t.data.strftime('%d/%m/%Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            {{ t.descricao }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if t.tipo == 'receita' %} bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                {% else %} bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100 
+                                {% endif %}">
+                                {{ t.categoria_nome }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {{ t.conta_nome or t.cartao_nome }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold 
+                            {% if t.tipo == 'receita' %} text-green-600 dark:text-green-400
+                            {% else %} text-red-600 dark:text-red-400 
+                            {% endif %}">
+                            R$ {{ '%.2f'|format(t.valor) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{{ url_for('editar_transacao', id=t.id) }}" class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 mr-4">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <a href="{{ url_for('excluir_transacao', id=t.id) }}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fa-solid fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cards para Mobile (abaixo de md) -->
+        <div class="space-y-4 p-4 md:hidden">
+            {% for t in transacoes %}
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md p-4 border-l-4 
+                {% if t.tipo == 'receita' %} border-green-500
+                {% else %} border-red-500
+                {% endif %}">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-base font-semibold text-gray-900 dark:text-white">{{ t.descricao }}</p>
+                    <p class="text-sm font-bold 
+                        {% if t.tipo == 'receita' %} text-green-600 dark:text-green-400
+                        {% else %} text-red-600 dark:text-red-400 
+                        {% endif %}">
+                        R$ {{ '%.2f'|format(t.valor) }}
+                    </p>
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                    <p>
+                        <i class="fa-solid fa-calendar-alt mr-1"></i> Data: {{ t.data.strftime('%d/%m/%Y') }}
+                    </p>
+                    <p>
+                        <i class="fa-solid fa-tag mr-1"></i> Categoria: <span class="font-medium">{{ t.categoria_nome }}</span>
+                    </p>
+                    <p>
+                        <i class="fa-solid fa-wallet mr-1"></i> Origem: <span class="font-medium">{{ t.conta_nome or t.cartao_nome }}</span>
+                    </p>
+                </div>
+                <!-- Ações Mobile -->
+                <div class="mt-3 flex justify-end space-x-3 text-sm">
+                    <a href="{{ url_for('editar_transacao', id=t.id) }}" class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300">
+                        Editar
+                    </a>
+                    <a href="{{ url_for('excluir_transacao', id=t.id) }}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                        Excluir
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% else %}
+        <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+            <i class="fa-solid fa-magnifying-glass text-5xl mb-3 text-secondary-500"></i>
+            <p class="text-lg font-medium">Nenhuma transação encontrada com os filtros atuais.</p>
+            <p class="text-sm mt-1">Tente ajustar a data, categoria ou o tipo de transação.</p>
+        </div>
+        {% endif %}
+
+    </section>
+</div>
+{% endblock %}
