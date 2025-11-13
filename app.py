@@ -329,7 +329,7 @@ def adicionar_transacao():
             
         valor = float(valor_str)
         # Permite datas no passado, presente e futuro
-        data_transacao = date.fromisoformat(data_str) 
+        data_transacao = datetime.fromisoformat(data_str) 
 
     except (ValueError, TypeError) as e:
         flash(f"Erro de formato nos dados. Verifique a categoria, valor e data: {e}", "danger")
