@@ -228,12 +228,50 @@ def dashboard():
     saldo_projetado = saldo_realizado - despesas_previstas_parcelas
     
     # 5. TRANSAÇÕES RECENTES
-    # Nota: O uso de .all() sem .join() pode ser ineficiente. 
-    # Idealmente, faríamos .options(joinedload(Transacao.categoria)).all() se estivéssemos fora do Flask-SQLAlchemy.
     transacoes_recentes = Transacao.query.filter(
         Transacao.user_id == current_user.id
     ).order_by(Transacao.data_transacao.desc()).limit(10).all()
 
+    # =========================================================
+    # 6. DADOS PARA GRÁFICOS (Adicionado para resolver o TypeError)
+    # =========================================================
+
+    # 6.1. DESPESAS POR CATEGORIA (SAÍDAS)
+    query_despesas = db.session.query(
+        Categoria.nome,
+        func.sum(Transacao.valor).label('total')
+    ).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        extract('month', Transacao.data_transacao) == mes_atual,
+        extract('year', Transacao.data_transacao) == ano_atual,
+        Categoria.tipo == 'saída'
+    ).group_by(Categoria.nome).order_by(func.sum(Transacao.valor).desc()).all()
+
+    # Converte os resultados da query para um dicionário Python simples (nome: float)
+    # Isso garante que o Jinja/tojson consiga serializar o objeto para o JavaScript.
+    dados_despesas = {
+        nome: float(total) 
+        for nome, total in query_despesas if total is not None
+    }
+    
+    # 6.2. RECEITAS POR CATEGORIA (ENTRADAS)
+    query_receitas = db.session.query(
+        Categoria.nome,
+        func.sum(Transacao.valor).label('total')
+    ).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        extract('month', Transacao.data_transacao) == mes_atual,
+        extract('year', Transacao.data_transacao) == ano_atual,
+        Categoria.tipo == 'entrada'
+    ).group_by(Categoria.nome).order_by(func.sum(Transacao.valor).desc()).all()
+
+    # Converte os resultados da query para um dicionário Python simples (nome: float)
+    dados_receitas = {
+        nome: float(total) 
+        for nome, total in query_receitas if total is not None
+    }
+    
+    # 7. RENDERIZAR O TEMPLATE (Passando os novos dados)
     return render_template(
         "dashboard.html",
         nome=current_user.nome,
@@ -244,7 +282,10 @@ def dashboard():
         saldo_realizado=saldo_realizado,
         despesas_previstas_parcelas=despesas_previstas_parcelas,
         saldo_projetado=saldo_projetado,
-        transacoes_recentes=transacoes_recentes
+        transacoes_recentes=transacoes_recentes,
+        # NOVOS DADOS PARA OS GRÁFICOS
+        dados_despesas=dados_despesas,
+        dados_receitas=dados_receitas
     )
 
 # ===========================
@@ -870,6 +911,168 @@ def excluir_investimento(id):
         flash(f"Erro ao excluir o investimento: {e}", "danger")
 
     return redirect(url_for("investimentos"))
+
+# ===========================
+# ROTAS: RELATÓRIOS E ANÁLISES
+# ===========================
+@app.route("/relatorios", methods=["GET"])
+@login_required
+def relatorios():
+    """
+    Gera dados de Despesas e Receitas agrupados por Categoria para 
+    renderizar os gráficos de pizza (doughnut charts).
+    """
+    # 1. DEFINIÇÃO DO PERÍODO
+    periodo_selecionado = request.args.get('periodo')
+    hoje = datetime.now()
+    
+    # Se um período foi selecionado no formulário, usa esse período
+    if periodo_selecionado:
+        try:
+            # O input 'month' do HTML retorna 'YYYY-MM'
+            ano = int(periodo_selecionado.split('-')[0])
+            mes = int(periodo_selecionado.split('-')[1])
+        except (ValueError, IndexError):
+            # Fallback em caso de formato inválido
+            mes = hoje.month
+            ano = hoje.year
+            periodo_selecionado = hoje.strftime('%Y-%m') # Volta para o formato padrão
+    else:
+        # Padrão: Mês e Ano atuais
+        mes = hoje.month
+        ano = hoje.year
+        periodo_selecionado = hoje.strftime('%Y-%m')
+
+    # 2. CONSULTA DE DESPESAS (Saídas) por Categoria
+    # Nota: Transacao.valor é armazenado como negativo para saídas.
+    # Usaremos ABS(func.sum) para que o gráfico mostre valores positivos.
+    despesas_por_categoria = db.session.query(
+        Categoria.nome,
+        func.sum(Transacao.valor)
+    ).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        Categoria.tipo == 'saída',
+        extract('month', Transacao.data_transacao) == mes,
+        extract('year', Transacao.data_transacao) == ano
+    ).group_by(Categoria.nome).all()
+
+    # Formata para o dict: {nome_categoria: valor_positivo}
+    dados_despesas = {nome: abs(valor) for nome, valor in despesas_por_categoria if valor is not None}
+
+
+    # 3. CONSULTA DE RECEITAS (Entradas) por Categoria
+    receitas_por_categoria = db.session.query(
+        Categoria.nome,
+        func.sum(Transacao.valor)
+    ).join(Categoria).filter(
+        Transacao.user_id == current_user.id,
+        Categoria.tipo == 'entrada',
+        extract('month', Transacao.data_transacao) == mes,
+        extract('year', Transacao.data_transacao) == ano
+    ).group_by(Categoria.nome).all()
+
+    # Formata para o dict: {nome_categoria: valor}
+    dados_receitas = {nome: valor for nome, valor in receitas_por_categoria if valor is not None}
+
+
+    # 4. Renderiza o template. Os dicionários são passados para o Jinja,
+    # que os converterá para JSON para o JavaScript usar.
+    return render_template(
+        "relatorios.html",
+        periodo_selecionado=periodo_selecionado,
+        dados_despesas=dados_despesas,
+        dados_receitas=dados_receitas
+    )
+
+# ===========================
+# ROTAS: EXTRATO (LISTAGEM E FILTRO)
+# ===========================
+@app.route("/extrato", methods=["GET"])
+@login_required
+def extrato():
+    """
+    Lista e filtra todas as transações do usuário, permitindo filtros por 
+    data, categoria e tipo (receita/despesa).
+    """
+    # 1. Obter Categorias para o filtro dropdown
+    # Inclui apenas entradas e saídas, já que extratos geralmente não incluem Investimentos brutos.
+    categorias = Categoria.query.filter_by(user_id=current_user.id).filter(
+        Categoria.tipo.in_(['entrada', 'saída'])
+    ).order_by(Categoria.nome.asc()).all()
+
+    # 2. Iniciar a Query de Transações e aplicar o JOIN
+    # Selecionamos as colunas essenciais, incluindo nome e tipo da categoria.
+    # Usamos func.abs para garantir que o valor seja sempre positivo no extrato (o sinal é dado pelo 'tipo').
+    selecao = db.session.query(
+        Transacao.id, 
+        Transacao.data_transacao.label('data'),
+        Transacao.descricao,
+        func.abs(Transacao.valor).label('valor'), 
+        Categoria.nome.label('categoria_nome'), 
+        Categoria.tipo.label('tipo_bd') # 'entrada' ou 'saída'
+    ).join(Categoria).filter(
+        Transacao.user_id == current_user.id
+    )
+
+    # 3. Processar e Aplicar Filtros (vindo do formulário GET)
+    data_inicio_str = request.args.get('data_inicio')
+    data_fim_str = request.args.get('data_fim')
+    categoria_id_str = request.args.get('categoria_id')
+    tipo_str = request.args.get('tipo') # 'receita' ou 'despesa'
+
+    # 3.1. Filtro por Data
+    try:
+        if data_inicio_str:
+            data_inicio = date.fromisoformat(data_inicio_str)
+            selecao = selecao.filter(Transacao.data_transacao >= data_inicio)
+        if data_fim_str:
+            data_fim = date.fromisoformat(data_fim_str)
+            selecao = selecao.filter(Transacao.data_transacao <= data_fim)
+    except ValueError:
+        flash("Formato de data inválido. Ignorando filtro de data.", "warning")
+
+    # 3.2. Filtro por Categoria
+    if categoria_id_str and categoria_id_str.isdigit():
+        categoria_id = int(categoria_id_str)
+        if categoria_id > 0:
+            selecao = selecao.filter(Transacao.categoria_id == categoria_id)
+
+    # 3.3. Filtro por Tipo (Mapeando o valor do formulário para o banco)
+    if tipo_str:
+        tipo_bd = None
+        if tipo_str == 'receita':
+            tipo_bd = 'entrada'
+        elif tipo_str == 'despesa':
+            tipo_bd = 'saída'
+        
+        if tipo_bd:
+            selecao = selecao.filter(Categoria.tipo == tipo_bd)
+    
+    # 4. Finalizar Query: Ordenar e Executar
+    selecao = selecao.order_by(Transacao.data_transacao.desc())
+    resultados_db = selecao.all()
+
+    # 5. Formatar Transações (Mapear resultados da query para dicionários)
+    transacoes_formatadas = []
+    for r in resultados_db:
+        # Cria um dicionário a partir do objeto Row
+        d = r._asdict()
+        # Converte o tipo do BD ('entrada'/'saída') para o tipo do Template ('receita'/'despesa')
+        d['tipo'] = 'receita' if d['tipo_bd'] == 'entrada' else 'despesa'
+        
+        # Adiciona placeholders para campos que o template espera (e seu modelo Transacao não tem)
+        # Se você tiver um modelo 'Conta', precisará fazer JOINs adicionais.
+        d['conta_nome'] = "Conta Padrão" 
+        d['cartao_nome'] = None 
+        
+        transacoes_formatadas.append(d)
+    
+    # 6. Renderizar
+    return render_template(
+        "extrato.html", 
+        transacoes=transacoes_formatadas, 
+        categorias=categorias
+    )
 
 
 # ===========================
