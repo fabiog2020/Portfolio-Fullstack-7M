@@ -14,27 +14,31 @@
         </p>
     </header>
 
-    <!-- Adicionar Nova Parcela (Formulário) -->
+    <!-- Adicionar Novo Conjunto de Parcelas -->
     <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8 mb-8">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <i class="fa-solid fa-plus-square mr-2 text-green-500"></i> Adicionar Nova Parcela Recorrente
+            <i class="fa-solid fa-plus-square mr-2 text-green-500"></i> Adicionar Novo Conjunto de Parcelas
         </h2>
         
-        <form method="post" action="{{ url_for('adicionar_parcela') }}" class="space-y-4">
+        <form method="post" action="{{ url_for('adicionar_parcela') }}" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
                 <!-- Descrição -->
                 <div>
-                    <label for="descricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
+                    <label for="descricao" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Descrição
+                    </label>
                     <input name="descricao" id="descricao" required
                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
                 </div>
                 
-                <!-- Valor -->
+                <!-- Valor Total -->
                 <div>
-                    <label for="valor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor (R$)</label>
+                    <label for="valor_total" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Valor Total (R$)
+                    </label>
                     <div class="relative mt-1 rounded-lg shadow-sm">
-                        <input name="valor" id="valor" type="number" step="0.01" required
+                        <input name="valor_total" id="valor_total" type="number" step="0.01" required
                                class="block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                             <span class="text-gray-500 dark:text-gray-400 sm:text-sm">R$</span>
@@ -42,19 +46,58 @@
                     </div>
                 </div>
                 
-                <!-- Vencimento -->
+                <!-- Número de Parcelas -->
                 <div>
-                    <label for="vencimento" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Data de Início/Vencimento</label>
-                    <input name="vencimento" id="vencimento" type="date" required
+                    <label for="num_parcelas" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Número de Parcelas
+                    </label>
+                    <input name="num_parcelas" id="num_parcelas" type="number" min="1" max="60" required
                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
                 </div>
+            </div>
+
+            <!-- Data da Primeira Parcela -->
+            <div>
+                <label for="data_vencimento_primeira" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Vencimento da Primeira Parcela
+                </label>
+                <input name="data_vencimento_primeira" id="data_vencimento_primeira" type="date" required
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <!-- Categoria (somente saídas) -->
+            <div>
+                <label for="categoria_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Categoria (Despesa)
+                </label>
+                <select name="categoria_id" id="categoria_id" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                    <option value="" disabled selected>Selecione a categoria</option>
+                    {% for categoria in categorias_saida %}
+                        <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Cartão Opcional -->
+            <div>
+                <label for="cartao_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Cartão (Opcional)
+                </label>
+                <select name="cartao_id" id="cartao_id"
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                    <option value="">Sem cartão / A prazo</option>
+                    {% for cartao in cartoes %}
+                        <option value="{{ cartao.id }}">{{ cartao.nome }} ({{ cartao.bandeira }})</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Botão de Adicionar -->
             <button type="submit"
                     class="w-full md:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
                 <i class="fa-solid fa-plus mr-2"></i>
-                Adicionar Parcela
+                Adicionar Parcelas
             </button>
         </form>
     </div>
@@ -78,13 +121,18 @@
                         
                         <!-- Detalhes da Parcela -->
                         <div class="flex flex-col mb-2 sm:mb-0">
-                            <span class="font-semibold text-lg text-gray-800 dark:text-gray-100">{{ p.descricao }}</span>
+                            <span class="font-semibold text-lg text-gray-800 dark:text-gray-100">
+                                {{ p.descricao }}
+                            </span>
                             <span class="text-sm text-gray-600 dark:text-gray-400">
-                                Vencimento: <span class="font-medium">{{ p.vencimento.strftime('%d/%m/%Y') }}</span>
+                                Vencimento: 
+                                <span class="font-medium">
+                                    {{ p.data_vencimento.strftime('%d/%m/%Y') }}
+                                </span>
                             </span>
                         </div>
 
-                        <!-- Valor e Status -->
+                        <!-- Valor, Status e Ações -->
                         <div class="flex items-center space-x-4">
                             <span class="text-xl font-bold 
                                 {% if p.pago %}
@@ -107,10 +155,26 @@
                                 {% if p.pago %} Pago {% else %} Pendente {% endif %}
                             </span>
 
-                            <!-- Botão de Ação (Apenas um placeholder para edição ou marcação) -->
-                            <button class="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-150">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
+                            <!-- Ações da Parcela -->
+                            <div class="flex items-center space-x-2">
+                                {% if not p.pago %}
+                                    <!-- Botão Pagar -->
+                                    <form method="post" action="{{ url_for('pagar_parcela', id=p.id) }}">
+                                        <button 
+                                            type="submit"
+                                            class="px-3 py-1 text-sm font-semibold rounded-full bg-green-600 text-white hover:bg-green-700 transition">
+                                            Pagar
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Badge Pago extra (opcional) -->
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-300 text-green-900 dark:bg-green-700 dark:text-green-100">
+                                        Pago
+                                    </span>
+                                {% endif %}
+
+                                <!-- (futuro) Botão Excluir/Editar Parcela -->
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
@@ -118,7 +182,9 @@
         {% else %}
             <div class="text-center p-8 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <i class="fa-solid fa-calendar-times text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
-                <p class="text-gray-500 dark:text-gray-400">Nenhuma parcela recorrente cadastrada. Comece adicionando uma acima!</p>
+                <p class="text-gray-500 dark:text-gray-400">
+                    Nenhuma parcela recorrente cadastrada. Comece adicionando uma acima!
+                </p>
             </div>
         {% endif %}
 

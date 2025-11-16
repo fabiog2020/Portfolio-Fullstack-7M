@@ -7,6 +7,12 @@ import os
 from sqlalchemy import func, extract
 import re 
 import calendar # Usado para o cálculo robusto de parcelas
+from services.transactions_service import criar_transacao_a_partir_formulario
+from services.parcelas_service import (
+    criar_parcelas_a_partir_formulario,
+    pagar_parcela_service,
+)
+
 
 # ===========================
 # CONFIGURAÇÃO BÁSICA
@@ -312,41 +318,15 @@ def formulario_adicionar_transacao():
 @app.route("/adicionar", methods=["POST"])
 @login_required
 def adicionar_transacao():
-    # 1. Obter dados do formulário
-    categoria_id_str = request.form.get("categoria_id")
-    descricao = request.form.get("descricao")
-    valor_str = request.form.get("valor")
-    data_str = request.form.get("data") # Ex: "2025-11-09"
+    # Delega toda a lógica para o service
+    sucesso = criar_transacao_a_partir_formulario(request.form)
 
-    try:
-        # 2. VALIDAÇÃO E CONVERSÃO
-        categoria_id = int(categoria_id_str)
-        # Verifica se o ID da categoria existe antes de prosseguir
-        categoria = Categoria.query.get(categoria_id)
-        if not categoria or categoria.user_id != current_user.id:
-            flash("Categoria inválida ou não encontrada.", "danger")
-            return redirect(url_for("formulario_adicionar_transacao"))
-            
-        valor = float(valor_str)
-        # Permite datas no passado, presente e futuro
-        data_transacao = datetime.fromisoformat(data_str) 
-
-    except (ValueError, TypeError) as e:
-        flash(f"Erro de formato nos dados. Verifique a categoria, valor e data: {e}", "danger")
+    # Se houve algum erro de validação, o service já deu flash;
+    # aqui só redirecionamos de volta para o formulário.
+    if not sucesso:
         return redirect(url_for("formulario_adicionar_transacao"))
 
-    # 3. CRIAÇÃO E SALVAMENTO
-    nova = Transacao(
-        categoria_id=categoria_id, 
-        descricao=descricao,
-        # Se a categoria for de 'saída', o valor deve ser negativo no banco para cálculos corretos
-        valor=valor if categoria.tipo == 'entrada' else -abs(valor),
-        data_transacao=data_transacao, 
-        user_id=current_user.id
-    )
-    db.session.add(nova)
-    db.session.commit()
-    flash("Transação adicionada com sucesso!", "success")
+    # Se deu tudo certo, voltamos para o dashboard.
     return redirect(url_for("dashboard"))
 
 
@@ -654,94 +634,15 @@ def listar_parcelas():
     )
 
 
-@app.route('/parcelas/adicionar', methods=['POST'])
+@app.route("/parcelas/adicionar", methods=["POST"])
 @login_required
 def adicionar_parcela():
     """Rota para adicionar um conjunto de parcelas de uma só vez."""
+    sucesso = criar_parcelas_a_partir_formulario(request.form)
 
-    # 1. Obter dados do formulário (agora com valor total e num_parcelas)
-    descricao = request.form.get('descricao')
-    valor_total_str = request.form.get('valor_total')
-    num_parcelas_str = request.form.get('num_parcelas')
-    data_primeira_str = request.form.get('data_vencimento_primeira')
-    categoria_id_str = request.form.get('categoria_id')
-    cartao_id_str = request.form.get('cartao_id')
-    
-    try:
-        valor_total = float(valor_total_str)
-        num_parcelas = int(num_parcelas_str)
-        categoria_id = int(categoria_id_str)
-        cartao_id = int(cartao_id_str) if cartao_id_str else None
-        data_primeira = date.fromisoformat(data_primeira_str)
-        
-        if valor_total <= 0 or num_parcelas <= 0 or num_parcelas > 60: 
-             flash('Verifique o valor total e o número de parcelas (máx. 60).', 'danger')
-             return redirect(url_for('listar_parcelas'))
-             
-    except (ValueError, TypeError):
-        flash('Erro de formato nos dados (Valor Total, Parcelas, Categoria ou Data).', 'danger')
-        return redirect(url_for('listar_parcelas'))
-        
-    # Verifica se a categoria é válida e de saída (parcelas geralmente são despesas)
-    categoria = Categoria.query.filter_by(id=categoria_id, user_id=current_user.id).first()
-    if not categoria or categoria.tipo != 'saída':
-        flash('Categoria inválida ou não é uma categoria de Despesa.', 'danger')
-        return redirect(url_for('listar_parcelas'))
-
-    # Calcula o valor da parcela (arredondado para duas casas decimais)
-    valor_parcela = round(valor_total / num_parcelas, 2)
-    
-    # Ajusta a última parcela para que a soma seja exatamente o valor_total (evita erro de arredondamento)
-    ajuste = round(valor_total - (valor_parcela * num_parcelas), 2)
-    
-    dia_vencimento_inicial = data_primeira.day
-
-    try:
-        for i in range(1, num_parcelas + 1):
-            
-            # Cálculo da data de vencimento: Mês atual + i - 1
-            mes_base = data_primeira.month + i - 1
-            ano_vencimento = data_primeira.year
-            
-            # Ajusta ano e mês
-            while mes_base > 12:
-                mes_base -= 12
-                ano_vencimento += 1
-            mes_vencimento = mes_base
-            
-            # Tenta criar a data. O dia pode ser inválido (ex: 31/02), então ajustamos.
-            try:
-                data_vencimento = date(ano_vencimento, mes_vencimento, dia_vencimento_inicial)
-            except ValueError:
-                # Se o dia for inválido para o mês (ex: dia 31 em fev/abr/jun/set/nov), usa o último dia do mês
-                ultimo_dia_mes = calendar.monthrange(ano_vencimento, mes_vencimento)[1]
-                data_vencimento = date(ano_vencimento, mes_vencimento, ultimo_dia_mes)
-                
-            
-            valor_final_parcela = valor_parcela
-            if i == num_parcelas:
-                # Adiciona o ajuste à última parcela
-                valor_final_parcela += ajuste
-            
-            # Cria a Parcela
-            nova_parcela = Parcela(
-                descricao=f"{descricao} ({i}/{num_parcelas})", 
-                valor=valor_final_parcela, 
-                data_vencimento=data_vencimento,
-                categoria_id=categoria_id,
-                cartao_id=cartao_id,
-                user_id=current_user.id,
-                pago=False
-            )
-            db.session.add(nova_parcela)
-            
-        db.session.commit()
-        flash(f'{num_parcelas} parcelas adicionadas com sucesso para "{descricao}"!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao gerar as parcelas: {e}', 'danger')
-        
-    return redirect(url_for('listar_parcelas'))
+    # Independente de sucesso ou erro, voltamos para a lista.
+    # O próprio service já mostra as mensagens (flash).
+    return redirect(url_for("listar_parcelas"))
 
 
 @app.route("/parcelas/pagar/<int:id>", methods=["POST"])

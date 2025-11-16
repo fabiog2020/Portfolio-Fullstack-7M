@@ -99,19 +99,33 @@
     <!-- 3. Ações Rápidas -->
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Ações Rápidas</h2>
     <div class="flex flex-wrap gap-4 mb-10">
-        <a href="{{ url_for('formulario_adicionar_transacao') }}" class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-green-600 hover:bg-green-700 transition duration-150 transform hover:-translate-y-0.5">
+        <a href="{{ url_for('formulario_adicionar_transacao') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-green-600 hover:bg-green-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-plus-circle mr-2"></i> Adicionar Transação
         </a>
-        <a href="{{ url_for('relatorios') }}" class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-tertiary-600 hover:bg-tertiary-700 transition duration-150 transform hover:-translate-y-0.5">
+
+        <a href="{{ url_for('relatorios') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-tertiary-600 hover:bg-tertiary-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-chart-pie mr-2"></i> Relatórios
         </a>
-        <a href="{{ url_for('investimentos') }}" class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 transform hover:-translate-y-0.5">
+
+        <a href="{{ url_for('investimentos') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-emerald-600 hover:bg-emerald-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-chart-area mr-2"></i> Investimentos
         </a>
-        <a href="{{ url_for('cartoes') }}" class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-yellow-600 hover:bg-yellow-700 transition duration-150 transform hover:-translate-y-0.5">
+
+        <a href="{{ url_for('listar_parcelas') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 transform hover:-translate-y-0.5">
+            <i class="fa-solid fa-calendar-days mr-2"></i> Parcelas
+        </a>
+
+        <a href="{{ url_for('cartoes') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-amber-500 hover:bg-amber-600 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-credit-card mr-2"></i> Cartões
         </a>
-        <a href="{{ url_for('logout') }}" class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-150 transform hover:-translate-y-0.5">
+
+        <a href="{{ url_for('logout') }}"
+           class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-door-open mr-2"></i> Sair
         </a>
     </div>
@@ -230,10 +244,12 @@
                         class="px-4 py-2 text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition shadow">
                     Cancelar
                 </button>
-                <a id="confirmDeleteButton" href="#"
-                   class="px-4 py-2 text-sm font-medium rounded-full text-white bg-red-600 hover:bg-red-700 transition shadow-lg">
-                    Excluir
-                </a>
+                <form id="confirmDeleteForm" method="post" action="#">
+                    <button type="submit"
+                            class="px-4 py-2 text-sm font-medium rounded-full text-white bg-red-600 hover:bg-red-700 transition shadow-lg">
+                        Excluir
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -245,7 +261,7 @@
 <script>
     // --- Funções do MODAL Customizado ---
     function showCustomModal(deleteUrl) {
-        document.getElementById('confirmDeleteButton').href = deleteUrl;
+        document.getElementById('confirmDeleteForm').action = deleteUrl;
         const modal = document.getElementById('customConfirmModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -274,8 +290,6 @@
         'Investimentos': 150.00,
     };
 
-    // CORREÇÃO: Usamos o 'tojson | default({})' em Jinja para garantir que a saída seja um objeto JSON válido,
-    // eliminando a necessidade de verificar strings como 'None'.
     // Os dados são injetados diretamente como objetos JavaScript (não strings).
     const dados_despesas_injetados = {{ dados_despesas | tojson | default({}, true) | safe }};
     const dados_receitas_injetados = {{ dados_receitas | tojson | default({}, true) | safe }};
@@ -332,7 +346,7 @@
                     label: 'Valor (R$)',
                     data: values,
                     backgroundColor: backgroundColors,
-                    hoverOffset: 12, // Aumenta o destaque ao passar o mouse
+                    hoverOffset: 12,
                     borderColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                     borderWidth: 4
                 }]
@@ -360,7 +374,6 @@
                                     label += ': ';
                                 }
                                 if (context.parsed !== null) {
-                                    // Formatação em Reais (BRL)
                                     label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
                                 }
                                 return label;
@@ -368,7 +381,7 @@
                         }
                     },
                     title: {
-                        display: false // Já temos o título no H3
+                        display: false
                     }
                 }
             }
@@ -377,10 +390,7 @@
 
     // Inicializa os gráficos ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
-        // Renderiza Despesas
         renderDoughnutChart('despesasChart', dados_despesas, 'Despesas');
-
-        // Renderiza Receitas
         renderDoughnutChart('receitasChart', dados_receitas, 'Receitas');
     });
 
