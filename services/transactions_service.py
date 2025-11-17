@@ -4,46 +4,36 @@ from flask_login import current_user
 
 from database import db
 from models_finance import Transacao, Categoria
+# Opcional: só para tipo de anotação, não é obrigatório
+# from forms.transacao_form import TransacaoForm
 
 
 def criar_transacao_a_partir_formulario(form):
     """
-    Lê os dados do formulário, valida e cria uma nova transação no banco.
+    Recebe um TransacaoForm já validado (WTForms),
+    faz validações de negócio e cria a transação no banco.
 
     Retorna:
         True  -> se deu tudo certo
-        False -> se houve algum erro de validação
+        False -> se houve algum erro de validação de negócio
     """
-    # 1. Obter dados do formulário
-    categoria_id_str = form.get("categoria_id")
-    descricao = form.get("descricao")
-    valor_str = form.get("valor")
-    data_str = form.get("data")  # Exemplo: "2025-11-09"
 
-    try:
-        # 2. VALIDAÇÃO E CONVERSÃO
-        categoria_id = int(categoria_id_str)
+    # 1. Lê os dados já convertidos/validados pelo WTForms
+    categoria_id = form.categoria_id.data
+    descricao = form.descricao.data
+    valor = form.valor.data
+    data_python = form.data.data  # objeto date do Python
 
-        # Verifica se a categoria existe e pertence ao usuário logado
-        categoria = Categoria.query.get(categoria_id)
-        if not categoria or categoria.user_id != current_user.id:
-            flash("Categoria inválida ou não encontrada.", "danger")
-            return False
-
-        # Converte o valor para float
-        valor = float(valor_str)
-
-        # Converte a data. Aqui aceitamos datas no passado/presente/futuro
-        data_transacao = datetime.fromisoformat(data_str)
-
-    except (ValueError, TypeError) as e:
-        flash(
-            f"Erro de formato nos dados. Verifique a categoria, valor e data: {e}",
-            "danger",
-        )
+    # 2. Verifica se a categoria existe e pertence ao usuário logado
+    categoria = Categoria.query.get(categoria_id)
+    if not categoria or categoria.user_id != current_user.id:
+        flash("Categoria inválida ou não encontrada.", "danger")
         return False
 
-    # 3. CRIAÇÃO E SALVAMENTO DA TRANSAÇÃO
+    # 3. Converte a data (date) para datetime (modelo Transacao usa DateTime)
+    data_transacao = datetime.combine(data_python, datetime.min.time())
+
+    # 4. Cria a transação
     nova = Transacao(
         categoria_id=categoria_id,
         descricao=descricao,
@@ -53,8 +43,13 @@ def criar_transacao_a_partir_formulario(form):
         user_id=current_user.id,
     )
 
-    db.session.add(nova)
-    db.session.commit()
+    try:
+        db.session.add(nova)
+        db.session.commit()
+        flash("Transação adicionada com sucesso!", "success")
+        return True
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao salvar a transação: {e}", "danger")
+        return False
 
-    flash("Transação adicionada com sucesso!", "success")
-    return True

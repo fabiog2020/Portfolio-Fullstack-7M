@@ -48,6 +48,12 @@
       color: #777;
       font-size: 14px;
     }
+
+    .error-message {
+      color: #d9534f;
+      font-size: 13px;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -67,11 +73,25 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('login') }}">
+      {# Token CSRF obrigatório quando usamos FlaskForm #}
+      {{ form.csrf_token }}
+
       <label for="email">E-mail:</label>
-      <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required>
+      <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required
+             value="{{ form.email.data if form and form.email.data else '' }}">
+      {% if form and form.email.errors %}
+        <div class="error-message">
+          {{ form.email.errors[0] }}
+        </div>
+      {% endif %}
 
       <label for="senha">Senha:</label>
       <input type="password" name="senha" id="senha" placeholder="Digite sua senha" required>
+      {% if form and form.senha.errors %}
+        <div class="error-message">
+          {{ form.senha.errors[0] }}
+        </div>
+      {% endif %}
 
       <button type="submit">Entrar</button>
     </form>
@@ -85,3 +105,4 @@
 
 </body>
 </html>
+

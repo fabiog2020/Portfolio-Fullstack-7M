@@ -10,115 +10,118 @@
             Editar Investimento: {{ investimento.nome }}
         </h1>
         <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Ajuste os detalhes e o valor atual do seu ativo financeiro.
+            Ajuste os detalhes e o valor do seu ativo financeiro.
         </p>
     </header>
 
-    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8">
-        <!-- O formulário aponta para uma rota de edição genérica -->
-        <form method="POST" action="{{ url_for('editar_investimento', investimento_id=investimento.id) }}" class="space-y-6">
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="space-y-3 mb-6">
+        {% for category, message in messages %}
+          <div class="p-4 rounded-xl shadow-md text-sm
+                      {% if category == 'success' %}
+                        bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100
+                      {% elif category == 'error' or category == 'danger' %}
+                        bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-100
+                      {% else %}
+                        bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100
+                      {% endif %}">
+            <i class="fa-solid fa-bell mr-2"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
-            <!-- Nome do Investimento (Título/Ação) -->
-            <div>
-                <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nome/Ticker
-                </label>
-                <input type="text" id="nome" name="nome" value="{{ investimento.nome }}" required
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Formulário de Edição -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                <i class="fa-solid fa-pen-to-square mr-2 text-primary-500"></i>
+                Detalhes do Investimento
+            </h2>
 
-            <!-- Tipo de Ativo (Select) -->
-            <div>
-                <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Tipo de Ativo
-                </label>
-                <select id="tipo" name="tipo" required
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
-                    <!-- Supondo que 'investimento.tipo' é a variável que armazena o valor atual -->
-                    <option value="Ação" {% if investimento.tipo == 'Ação' %}selected{% endif %}>Ação (Stock)</option>
-                    <option value="Fundo" {% if investimento.tipo == 'Fundo' %}selected{% endif %}>Fundo (FII/ETF)</option>
-                    <option value="Renda Fixa" {% if investimento.tipo == 'Renda Fixa' %}selected{% endif %}>Renda Fixa (CDB/Tesouro)</option>
-                    <option value="Cripto" {% if investimento.tipo == 'Cripto' %}selected{% endif %}>Criptomoeda</option>
-                    <option value="Outro" {% if investimento.tipo == 'Outro' %}selected{% endif %}>Outro</option>
-                </select>
-            </div>
-            
-            <!-- Corretora / Instituição -->
-            <div>
-                <label for="corretora" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Corretora / Instituição
-                </label>
-                <input type="text" id="corretora" name="corretora" value="{{ investimento.corretora }}"
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
-                       placeholder="Ex: NuInvest, XP, Binance, etc.">
-            </div>
-
-            <!-- Grupo para Valor e Data (Em uma linha para desktop) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Valor Atual -->
+            <form method="POST" action="{{ url_for('editar_investimento', id=investimento.id) }}" class="space-y-6">
+                <!-- Nome / Ticker -->
                 <div>
-                    <label for="valor_atual" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Valor Atual (R$)
+                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Nome/Ticker
                     </label>
-                    <div class="relative mt-1 rounded-lg shadow-sm">
-                        <input type="number" step="0.01" id="valor_atual" name="valor_atual" value="{{ '%.2f' | format(investimento.valor_atual) }}" required
-                               class="block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 dark:text-gray-400 sm:text-sm">R$</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Data da Última Atualização/Compra -->
-                <div>
-                    <label for="data_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Data da Compra / Última Atualização
-                    </label>
-                    <input type="date" id="data_compra" name="data_compra" value="{{ investimento.data_compra }}"
+                    <input type="text" id="nome" name="nome" value="{{ investimento.nome }}" required
                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
                 </div>
-            </div>
-            
-            <!-- Observações / Notas -->
-            <div>
-                <label for="observacoes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Observações / Estratégia
-                </label>
-                <textarea id="observacoes" name="observacoes" rows="4"
-                          class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">{{ investimento.observacoes }}</textarea>
-            </div>
 
+                <!-- Tipo -->
+                <div>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Tipo de Ativo
+                    </label>
+                    <input type="text" id="tipo" name="tipo" value="{{ investimento.tipo or '' }}"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
+                           placeholder="Ex: Ação, FII, CDB, Tesouro">
+                </div>
 
-            <!-- Botões de Ação -->
-            <div class="flex flex-col sm:flex-row justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                
-                <!-- Salvar Alterações -->
-                <button type="submit"
-                        class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
-                    <i class="fa-solid fa-floppy-disk mr-2"></i>
-                    Salvar Alterações
-                </button>
+                <!-- Quantidade -->
+                <div>
+                    <label for="quantidade" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Quantidade
+                    </label>
+                    <input type="number" id="quantidade" name="quantidade" step="0.0001" min="0"
+                           value="{{ investimento.quantidade }}"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                </div>
 
-                <!-- Cancelar / Voltar -->
-                <a href="{{ url_for('contas_e_investimentos') }}"
-                   class="w-full sm:w-auto mt-3 sm:mt-0 inline-flex justify-center items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-full shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
-                    <i class="fa-solid fa-xmark mr-2"></i>
-                    Cancelar
-                </a>
-            </div>
-        </form>
+                <!-- Preço de Compra -->
+                <div>
+                    <label for="preco_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Preço de compra (R$)
+                    </label>
+                    <input type="number" id="preco_compra" name="preco_compra" step="0.01" min="0"
+                           value="{{ investimento.preco_compra }}"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                </div>
 
-        <!-- Formulário de Exclusão (Separado por segurança e UX) -->
-        <div class="mt-8 border-t border-red-300 dark:border-red-700 pt-6">
-            <h3 class="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">Zona de Risco</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
-                Se você excluir este investimento, todos os dados relacionados a ele serão permanentemente removidos.
+                <!-- Data da Compra -->
+                <div>
+                    <label for="data_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Data da compra
+                    </label>
+                    <input type="date" id="data_compra" name="data_compra"
+                           value="{{ investimento.data_compra.strftime('%Y-%m-%d') if investimento.data_compra else '' }}"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <a href="{{ url_for('investimentos') }}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                        <i class="fa-solid fa-save mr-2"></i>
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Card de Exclusão -->
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 border border-red-300 dark:border-red-700">
+            <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
+                <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+                Zona de Perigo
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Excluir este investimento irá removê-lo permanentemente do seu histórico de controle de investimentos.
             </p>
-            <form method="POST" action="{{ url_for('excluir_investimento', investimento_id=investimento.id) }}"
+            <form method="POST" action="{{ url_for('excluir_investimento', id=investimento.id) }}"
                   onsubmit="return confirm('Tem certeza que deseja excluir este investimento? Esta ação não pode ser desfeita.');">
-                <input type="hidden" name="_method" value="DELETE"> 
                 <button type="submit"
-                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                        class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
                     <i class="fa-solid fa-trash-can mr-2"></i>
                     Excluir Investimento
                 </button>

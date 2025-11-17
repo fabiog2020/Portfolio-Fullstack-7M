@@ -12,23 +12,28 @@ from services.parcelas_service import (
     criar_parcelas_a_partir_formulario,
     pagar_parcela_service,
 )
+from forms.auth_forms import LoginForm, RegisterForm
+from forms.transacao_form import TransacaoForm
+from forms.categoria_form import CategoriaForm
+from forms.investimento_form import InvestimentoForm
+
 
 
 # ===========================
 # CONFIGURAÇÃO BÁSICA
 # ===========================
-app = Flask(__name__)
-app.secret_key = "chave-super-secreta"
-
-# ===========================
-# CONFIGURAÇÃO DO BANCO DE DADOS
-# ===========================
-base_dir = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(base_dir, "finance.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# Importa o objeto 'db'
+from config import DevConfig
 from database import db
+
+app = Flask(__name__, instance_relative_config=True)
+
+# Garante que a pasta instance existe
+os.makedirs(app.instance_path, exist_ok=True)
+
+# Carrega configuração de desenvolvimento (pode trocar para ProdConfig no futuro)
+app.config.from_object(DevConfig)
+
+# Inicializa o SQLAlchemy com o app
 db.init_app(app)
 
 # =========================================================================
@@ -121,56 +126,64 @@ def inserir_categorias_padrao(user_id):
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
-        
-    if request.method == "POST":
-        email = request.form.get("email")
-        senha = request.form.get("senha")
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        email = form.email.data
+        senha = form.senha.data
+
         # Usando sintaxe moderna do SQLAlchemy 2.0
-        user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
-        
+        user = db.session.execute(
+            db.select(User).filter_by(email=email)
+        ).scalar_one_or_none()
+
         if user and user.check_password(senha):
             login_user(user)
             flash(f"Bem-vindo, {user.nome}!", "success")
             return redirect(url_for("dashboard"))
         else:
-            flash("E-mail ou senha incorretos.", "danger")
-    return render_template("login.html")
+            flash("E-mail ou senha inválidos.", "danger")
+
+    # Se for GET, ou se o form tiver erro de validação, renderiza de novo
+    return render_template("login.html", form=form)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
-        
-    if request.method == "POST":
-        nome = request.form.get("nome")
-        email = request.form.get("email")
-        senha = request.form.get("senha")
 
-        # Validação de E-mail usando Regex
-        email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        
-        if not re.match(email_regex, email):
-            flash("Formato de e-mail inválido. Por favor, corrija.", "warning")
-            return render_template("register.html")
-            
-        # Usando sintaxe moderna do SQLAlchemy 2.0
-        if db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        nome = form.nome.data
+        email = form.email.data
+        senha = form.senha.data
+
+        # Verifica se o e-mail já existe
+        user_existente = db.session.execute(
+            db.select(User).filter_by(email=email)
+        ).scalar_one_or_none()
+
+        if user_existente:
             flash("E-mail já cadastrado.", "warning")
-        else:
-            # 1. Cria o novo usuário
-            novo = User(nome=nome, email=email)
-            novo.set_password(senha)
-            db.session.add(novo)
-            db.session.commit() # CRÍTICO: Comita o usuário para gerar o novo.id
-            
-            # 2. Insere as categorias padrão APÓS O CADASTRO
-            inserir_categorias_padrao(novo.id)
-            
-            flash("Cadastro realizado com sucesso! Faça login.", "success")
-            return redirect(url_for("login"))
-    return render_template("register.html")
+            return render_template("register.html", form=form)
 
+        # Cria o novo usuário
+        novo = User(nome=nome, email=email)
+        novo.set_password(senha)
+        db.session.add(novo)
+        db.session.commit()  # importante: gera novo.id
+
+        # Insere categorias padrão para o novo usuário
+        inserir_categorias_padrao(novo.id)
+
+        flash("Cadastro realizado com sucesso! Faça login.", "success")
+        return redirect(url_for("login"))
+
+    # GET ou form inválido → volta a tela de cadastro com erros
+    return render_template("register.html", form=form)
 
 @app.route("/logout")
 @login_required
@@ -302,31 +315,47 @@ def dashboard():
 def formulario_adicionar_transacao():
     """Rota GET para exibir o formulário e passar a lista de categorias e cartões."""
     
+    form = TransacaoForm()
+
     # Traz as categorias do usuário logado
-    categorias = Categoria.query.filter_by(user_id=current_user.id).order_by(Categoria.nome.asc()).all()
+    categorias = Categoria.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Categoria.nome.asc()).all()
     
     # Filtra as categorias de Investimento para não aparecerem em Transações Comuns (Entrada/Saída)
-    categorias_transacao = [c for c in categorias if c.tipo in ['entrada', 'saída']]
-    cartoes = Cartao.query.filter_by(user_id=current_user.id).all() # Adiciona cartões para futuras integrações
-    
+    categorias_transacao = [c for c in categorias if c.tipo in ["entrada", "saída"]]
+    cartoes = Cartao.query.filter_by(user_id=current_user.id).all()  # cartões
+
     return render_template(
         "adicionar.html",
+        form=form,
         categorias=categorias_transacao,
-        cartoes=cartoes
+        cartoes=cartoes,
     )
+
 
 @app.route("/adicionar", methods=["POST"])
 @login_required
 def adicionar_transacao():
-    # Delega toda a lógica para o service
-    sucesso = criar_transacao_a_partir_formulario(request.form)
+    """Processa o envio do formulário de nova transação usando WTForms."""
+    form = TransacaoForm()
 
-    # Se houve algum erro de validação, o service já deu flash;
-    # aqui só redirecionamos de volta para o formulário.
-    if not sucesso:
+    # 1. Validação básica do formulário (tipos / campos obrigatórios)
+    if not form.validate_on_submit():
+        # Mostra as mensagens de erro campo a campo
+        for field_name, errors in form.errors.items():
+            for error in errors:
+                flash(f"Erro no campo '{field_name}': {error}", "danger")
         return redirect(url_for("formulario_adicionar_transacao"))
 
-    # Se deu tudo certo, voltamos para o dashboard.
+    # 2. Delega validações de negócio e criação à camada de serviço
+    sucesso = criar_transacao_a_partir_formulario(form)
+
+    if not sucesso:
+        # O próprio service já mostrou mensagens via flash
+        return redirect(url_for("formulario_adicionar_transacao"))
+
+    # 3. Tudo certo → volta para o dashboard
     return redirect(url_for("dashboard"))
 
 
@@ -407,38 +436,55 @@ def excluir_transacao(id):
 @app.route("/categorias", methods=["GET", "POST"])
 @login_required
 def gerenciar_categorias():
-    if request.method == "POST":
-        nome = request.form.get("nome").strip()
-        tipo = request.form.get("tipo")
-        icone = request.form.get("icone", "fa-solid fa-list") # Padrão
-        cor = request.form.get("cor", "#6c757d") # Padrão
+    form = CategoriaForm()
+
+    if form.validate_on_submit():
+        nome = form.nome.data.strip()
+        tipo = form.tipo.data
+        icone = form.icone.data or "fa-solid fa-list"  # Padrão
+        cor = form.cor.data or "#007bff"
 
         if not nome or not tipo:
             flash("Nome e Tipo da categoria são obrigatórios.", "danger")
             return redirect(url_for("gerenciar_categorias"))
 
-        # 1. Checa se já existe uma categoria com este nome para este usuário
-        existente = Categoria.query.filter_by(user_id=current_user.id, nome=nome).first()
+        # Checa se já existe categoria com esse nome para o usuário
+        existente = Categoria.query.filter_by(
+            user_id=current_user.id, nome=nome
+        ).first()
         if existente:
             flash(f"A categoria '{nome}' já existe.", "warning")
             return redirect(url_for("gerenciar_categorias"))
 
-        # 2. Cria e Salva a nova categoria
         nova = Categoria(
-            user_id=current_user.id, 
-            nome=nome, 
-            tipo=tipo, 
-            icone=icone, 
-            cor=cor
+            user_id=current_user.id,
+            nome=nome,
+            tipo=tipo,
+            icone=icone,
+            cor=cor,
         )
-        db.session.add(nova)
-        db.session.commit()
-        flash(f"Categoria '{nome}' ({tipo}) adicionada com sucesso!", "success")
+
+        try:
+            db.session.add(nova)
+            db.session.commit()
+            flash(f"Categoria '{nome}' ({tipo}) adicionada com sucesso!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao salvar a categoria: {e}", "danger")
+
         return redirect(url_for("gerenciar_categorias"))
-    
-    # Rota GET: Listar Categorias
-    categorias = Categoria.query.filter_by(user_id=current_user.id).order_by(Categoria.nome.asc()).all()
-    return render_template("categorias.html", categorias=categorias)
+
+    # GET → listar categorias e mostrar formulário
+    categorias = Categoria.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Categoria.nome.asc()).all()
+
+    return render_template(
+        "categorias.html",
+        categorias=categorias,
+        form=form,
+    )
+
 
 
 @app.route("/categorias/editar/<int:id>", methods=["GET", "POST"])
@@ -446,39 +492,72 @@ def gerenciar_categorias():
 def editar_categoria(id):
     """Rota para editar uma categoria existente."""
     categoria = Categoria.query.filter_by(id=id, user_id=current_user.id).first()
-    
+
     if not categoria:
         flash("Categoria não encontrada ou você não tem permissão.", "danger")
         return redirect(url_for("gerenciar_categorias"))
-        
+
+    # form ligado ao objeto categoria
+    form = CategoriaForm(obj=categoria)
+
+    # Se for POST, tentamos validar e salvar
     if request.method == "POST":
-        novo_nome = request.form.get("nome").strip()
-        novo_tipo = request.form.get("tipo")
-        novo_icone = request.form.get("icone", categoria.icone)
-        novo_cor = request.form.get("cor", categoria.cor)
-        
-        # 1. Checa por duplicação (se o nome mudou e já existe outro igual)
+        # Atualiza o form com o POST
+        if not form.validate():
+            flash("Há erros no formulário. Verifique os campos em vermelho.", "danger")
+            # Aqui o form já carrega os erros e os valores digitados
+            return render_template(
+                "editar_categoria.html",
+                categoria=categoria,
+                form=form,
+            )
+
+        novo_nome = form.nome.data.strip()
+        novo_tipo = form.tipo.data
+        novo_icone = form.icone.data or categoria.icone
+        novo_cor = form.cor.data or categoria.cor
+
+        # Checa por duplicação se o nome mudou
         if novo_nome != categoria.nome:
             existente = Categoria.query.filter(
-                Categoria.user_id == current_user.id, 
+                Categoria.user_id == current_user.id,
                 Categoria.nome == novo_nome,
-                Categoria.id != id
+                Categoria.id != id,
             ).first()
             if existente:
-                flash(f"A categoria '{novo_nome}' já existe.", "warning")
-                return render_template("editar_categoria.html", categoria=categoria)
-        
-        # 2. Atualiza e Salva
+                flash(f"Já existe outra categoria chamada '{novo_nome}'.", "warning")
+                return render_template(
+                    "editar_categoria.html",
+                    categoria=categoria,
+                    form=form,
+                )
+
         categoria.nome = novo_nome
         categoria.tipo = novo_tipo
         categoria.icone = novo_icone
         categoria.cor = novo_cor
-        
-        db.session.commit()
-        flash(f"Categoria '{categoria.nome}' atualizada com sucesso!", "success")
-        return redirect(url_for("gerenciar_categorias"))
-        
-    return render_template("editar_categoria.html", categoria=categoria)
+
+        try:
+            db.session.commit()
+            flash(f"Categoria '{categoria.nome}' atualizada com sucesso!", "success")
+            return redirect(url_for("gerenciar_categorias"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao atualizar a categoria: {e}", "danger")
+            return render_template(
+                "editar_categoria.html",
+                categoria=categoria,
+                form=form,
+            )
+
+    # GET → exibe formulário com dados atuais
+    return render_template(
+        "editar_categoria.html",
+        categoria=categoria,
+        form=form,
+    )
+
+
 
 
 @app.route("/categorias/excluir/<int:id>", methods=["POST"])
@@ -649,156 +728,187 @@ def adicionar_parcela():
 @login_required
 def pagar_parcela(id):
     """Rota para marcar uma parcela como paga."""
-    parcela = Parcela.query.filter_by(id=id, user_id=current_user.id).first()
-    
-    if not parcela:
-        flash("Parcela não encontrada ou você não tem permissão.", "danger")
-        return redirect(url_for("listar_parcelas"))
-        
-    if parcela.pago:
-        flash("Esta parcela já estava marcada como paga.", "warning")
-        return redirect(url_for("listar_parcelas"))
-        
-    try:
-        # Marca como paga
-        parcela.pago = True
-        
-        # 🔔 Ação CRÍTICA: Geração da Transação Realizada
-        # Quando a parcela é paga, ela DEVE gerar uma Transação no banco de dados
-        # para que o dashboard reflita o débito no SALDO REALIZADO.
-        categoria = Categoria.query.get(parcela.categoria_id)
-        if not categoria:
-             flash("Erro: Categoria da parcela não encontrada. A Transação Realizada não pôde ser criada.", "danger")
-             parcela.pago = False # Reverte o pago se a transação falhar
-             db.session.rollback()
-             return redirect(url_for("listar_parcelas"))
-
-        # Cria a transação (o valor deve ser negativo, já que é uma despesa)
-        transacao_realizada = Transacao(
-            categoria_id=parcela.categoria_id,
-            descricao=f"[PAGO] {parcela.descricao}",
-            # O valor já é positivo no modelo Parcela, precisamos garantir que seja negativo na Transação (Saída)
-            valor=-abs(parcela.valor), 
-            data_transacao=datetime.now().date(), # Data de pagamento
-            user_id=current_user.id
-        )
-        db.session.add(transacao_realizada)
-        db.session.commit()
-        
-        flash(f"Parcela '{parcela.descricao}' marcada como paga e Transação de Saída gerada!", "success")
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Erro ao processar o pagamento da parcela: {e}", "danger")
-        
-    return redirect(url_for('listar_parcelas'))
+    pagar_parcela_service(id)
+    # O service já cuida de tudo e mostra mensagens
+    return redirect(url_for("listar_parcelas"))
 
 
 # ===========================
 # ROTAS: INVESTIMENTOS (CRUD COMPLETO)
 # ===========================
-@app.route("/investimentos")
+@app.route("/investimentos", methods=["GET", "POST"])
 @login_required
 def investimentos():
+    """
+    Lista investimentos do usuário e permite cadastrar novos usando WTForms.
+    """
+    form = InvestimentoForm()
+
+    # Lista de investimentos já cadastrados
     investimentos = Investimento.query.filter_by(user_id=current_user.id).all()
-    # Trazendo categorias de investimento para o formulário
-    categorias_investimento = Categoria.query.filter_by(user_id=current_user.id, tipo='investimento').all()
-    
-    return render_template("investimentos.html", 
-        nome=current_user.nome, 
+
+    # Categorias do tipo 'investimento' (para o select no template)
+    categorias_investimento = Categoria.query.filter_by(
+        user_id=current_user.id,
+        tipo="investimento",
+    ).all()
+
+    # Se veio um POST (envio do formulário de novo investimento)
+    if request.method == "POST":
+        if form.validate_on_submit():
+            # Campos validados pelo WTForms
+            tipo = form.tipo.data.strip()
+            nome = form.nome.data.strip()
+            quantidade = form.quantidade.data
+            preco_compra = form.preco_compra.data
+            data_compra_date = form.data_compra.data  # é um date
+
+            # Campo de categoria vem direto do formulário HTML (select)
+            categoria_id_str = (request.form.get("categoria_id") or "").strip()
+
+            # ==> AQUI categoria é OBRIGATÓRIA <==
+            if not categoria_id_str:
+                flash(
+                    "Selecione uma categoria de investimento (ex: Renda_fixa ou Renda_variavel).",
+                    "danger",
+                )
+                return redirect(url_for("investimentos"))
+
+            # Converte e valida categoria
+            try:
+                categoria_id = int(categoria_id_str)
+            except ValueError:
+                flash("Categoria de investimento inválida.", "danger")
+                return redirect(url_for("investimentos"))
+
+            categoria = Categoria.query.get(categoria_id)
+
+            if (
+                not categoria
+                or categoria.user_id != current_user.id
+                or categoria.tipo != "investimento"
+            ):
+                flash("Categoria de investimento inválida.", "danger")
+                return redirect(url_for("investimentos"))
+
+            # Converter date → datetime para salvar no modelo
+            data_compra_dt = datetime.combine(
+                data_compra_date,
+                datetime.min.time(),
+            )
+
+            try:
+                novo = Investimento(
+                    user_id=current_user.id,
+                    tipo=tipo,
+                    nome=nome,
+                    quantidade=quantidade,
+                    preco_compra=preco_compra,
+                    data_compra=data_compra_dt,
+                )
+
+                db.session.add(novo)
+                db.session.commit()
+                flash(f'Investimento em "{nome}" registrado!', "success")
+                return redirect(url_for("investimentos"))
+
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Erro ao salvar o investimento: {e}", "danger")
+        else:
+            # Form não validou
+            flash(
+                "Erro no formulário de investimento. Verifique os campos e tente novamente.",
+                "danger",
+            )
+
+    # GET ou POST com erro → renderiza página
+    return render_template(
+        "investimentos.html",
+        nome=current_user.nome,
         investimentos=investimentos,
-        categorias_investimento=categorias_investimento
+        categorias_investimento=categorias_investimento,
+        form=form,
     )
-
-
-@app.route('/investimentos/adicionar', methods=['POST'])
-@login_required
-def adicionar_investimento():
-    tipo = request.form.get('tipo')
-    nome = request.form.get('nome')
-    categoria_id_str = request.form.get('categoria_id')
-    quantidade = float(request.form.get('quantidade') or 0)
-    preco_compra = float(request.form.get('preco_compra') or 0)
-    data_compra_str = request.form.get('data_compra')
-    
-    try:
-        categoria_id = int(categoria_id_str)
-        data_compra_dt = date.fromisoformat(data_compra_str)
-        
-        # 1. Validação de Categoria (deve ser tipo 'investimento')
-        categoria = Categoria.query.get(categoria_id)
-        if not categoria or categoria.user_id != current_user.id or categoria.tipo != 'investimento':
-            flash("Categoria inválida ou não é uma categoria de Investimento.", "danger")
-            return redirect(url_for('investimentos'))
-            
-        # 2. Cria e Salva
-        novo = Investimento(
-            tipo=tipo, 
-            nome=nome, 
-            quantidade=quantidade, 
-            preco_compra=preco_compra,
-            data_compra=data_compra_dt, 
-            user_id=current_user.id,
-            # Vinculação com categoria (necessária se quisermos rastrear o "custo" do investimento)
-            # Nota: O modelo Investimento não tem categoria_id no seu código anterior. 
-            # Assumindo que você irá adicionar se precisar vincular uma transação inicial.
-            # Por enquanto, vou salvar apenas os dados do investimento em si.
-        )
-        db.session.add(novo)
-        db.session.commit()
-        flash(f'Investimento em "{nome}" registrado!', 'success')
-        
-    except (ValueError, TypeError) as e:
-        flash(f'Erro de formato nos dados do investimento: {e}', 'danger')
-        db.session.rollback()
-        
-    return redirect(url_for('investimentos'))
 
 
 @app.route("/investimentos/editar/<int:id>", methods=["GET", "POST"])
 @login_required
 def editar_investimento(id):
-    """Rota para editar um investimento existente."""
-    investimento = Investimento.query.filter_by(id=id, user_id=current_user.id).first()
-    
+    """
+    Edita um investimento existente usando WTForms.
+    """
+    investimento = Investimento.query.filter_by(
+        id=id,
+        user_id=current_user.id,
+    ).first()
+
     if not investimento:
         flash("Investimento não encontrado ou você não tem permissão.", "danger")
         return redirect(url_for("investimentos"))
 
-    categorias_investimento = Categoria.query.filter_by(user_id=current_user.id, tipo='investimento').all()
-        
+    form = InvestimentoForm(obj=investimento)
+
+    # Categorias do tipo 'investimento' (caso queira mostrar na tela)
+    categorias_investimento = Categoria.query.filter_by(
+        user_id=current_user.id,
+        tipo="investimento",
+    ).all()
+
     if request.method == "POST":
-        novo_tipo = request.form.get('tipo')
-        novo_nome = request.form.get('nome')
-        nova_quantidade = float(request.form.get('quantidade') or 0)
-        novo_preco_compra = float(request.form.get('preco_compra') or 0)
-        nova_data_compra_str = request.form.get('data_compra')
-        
-        try:
-            nova_data_compra = date.fromisoformat(nova_data_compra_str)
+        if form.validate_on_submit():
+            try:
+                investimento.tipo = form.tipo.data.strip()
+                investimento.nome = form.nome.data.strip()
+                investimento.quantidade = form.quantidade.data
+                investimento.preco_compra = form.preco_compra.data
 
-            investimento.tipo = novo_tipo
-            investimento.nome = novo_nome
-            investimento.quantidade = nova_quantidade
-            investimento.preco_compra = novo_preco_compra
-            investimento.data_compra = nova_data_compra
-            
-            db.session.commit()
-            flash(f"Investimento '{investimento.nome}' atualizado com sucesso!", "success")
-            return redirect(url_for("investimentos"))
-            
-        except (ValueError, TypeError):
-            flash('Erro: Verifique os formatos de quantidade, preço e data.', 'danger')
+                data_compra_date = form.data_compra.data
+                if data_compra_date:
+                    investimento.data_compra = datetime.combine(
+                        data_compra_date,
+                        datetime.min.time(),
+                    )
 
-    return render_template("editar_investimento.html", investimento=investimento, categorias_investimento=categorias_investimento)
+                db.session.commit()
+                flash(
+                    f"Investimento '{investimento.nome}' atualizado com sucesso!",
+                    "success",
+                )
+                return redirect(url_for("investimentos"))
+
+            except (ValueError, TypeError) as e:
+                db.session.rollback()
+                flash(f"Erro ao atualizar o investimento: {e}", "danger")
+        else:
+            flash(
+                "Erro no formulário de edição. Verifique os campos e tente novamente.",
+                "danger",
+            )
+
+    # GET → garantir que o campo data_compra do form está preenchido com a data atual salva
+    if request.method == "GET" and investimento.data_compra:
+        form.data_compra.data = investimento.data_compra.date()
+
+    return render_template(
+        "editar_investimento.html",
+        investimento=investimento,
+        categorias_investimento=categorias_investimento,
+        form=form,
+    )
 
 
 @app.route("/investimentos/excluir/<int:id>", methods=["POST"])
 @login_required
 def excluir_investimento(id):
-    """Rota para excluir um investimento."""
-    investimento = Investimento.query.filter_by(id=id, user_id=current_user.id).first()
-    
+    """
+    Exclui um investimento do usuário logado.
+    """
+    investimento = Investimento.query.filter_by(
+        id=id,
+        user_id=current_user.id,
+    ).first()
+
     if not investimento:
         flash("Investimento não encontrado ou você não tem permissão para excluí-lo.", "danger")
         return redirect(url_for("investimentos"))
@@ -812,6 +922,7 @@ def excluir_investimento(id):
         flash(f"Erro ao excluir o investimento: {e}", "danger")
 
     return redirect(url_for("investimentos"))
+
 
 # ===========================
 # ROTAS: RELATÓRIOS E ANÁLISES

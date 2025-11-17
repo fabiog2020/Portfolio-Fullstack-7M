@@ -128,7 +128,12 @@
            class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-door-open mr-2"></i> Sair
         </a>
-    </div>
+    <!-- NOVO BOTÃO: Categorias -->
+    <a href="{{ url_for('gerenciar_categorias') }}"
+       class="flex-1 min-w-[180px] inline-flex items-center justify-center px-4 py-2 rounded-full bg-indigo-600 text-white font-medium shadow hover:bg-indigo-700 transition duration-150 transform hover:-translate-y-0.5">
+        <i class="fa-solid fa-tags mr-2"></i> Categorias
+    </a>
+</div>
 
     <!-- 4. Gráficos de Distribuição Mensal -->
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
