@@ -1,9 +1,11 @@
 from datetime import datetime
+
 from flask import flash
 from flask_login import current_user
 
 from database import db
-from models_finance import Transacao, Categoria
+from models_finance import Categoria, Transacao
+
 # Opcional: só para tipo de anotação, não é obrigatório
 # from forms.transacao_form import TransacaoForm
 
@@ -25,7 +27,7 @@ def criar_transacao_a_partir_formulario(form):
     data_python = form.data.data  # objeto date do Python
 
     # 2. Verifica se a categoria existe e pertence ao usuário logado
-    categoria = Categoria.query.get(categoria_id)
+    categoria = db.session.get(Categoria, categoria_id)
     if not categoria or categoria.user_id != current_user.id:
         flash("Categoria inválida ou não encontrada.", "danger")
         return False
@@ -52,4 +54,3 @@ def criar_transacao_a_partir_formulario(form):
         db.session.rollback()
         flash(f"Erro ao salvar a transação: {e}", "danger")
         return False
-

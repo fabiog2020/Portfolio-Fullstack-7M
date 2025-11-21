@@ -1,11 +1,11 @@
-from datetime import date, datetime
 import calendar
+from datetime import date, datetime
 
 from flask import flash
 from flask_login import current_user
 
 from database import db
-from models_finance import Parcela, Categoria, Transacao
+from models_finance import Categoria, Parcela, Transacao
 
 
 def criar_parcelas_a_partir_formulario(form):
@@ -79,12 +79,8 @@ def criar_parcelas_a_partir_formulario(form):
                     ano_vencimento, mes_vencimento, dia_vencimento_inicial
                 )
             except ValueError:
-                ultimo_dia_mes = calendar.monthrange(
-                    ano_vencimento, mes_vencimento
-                )[1]
-                data_vencimento = date(
-                    ano_vencimento, mes_vencimento, ultimo_dia_mes
-                )
+                ultimo_dia_mes = calendar.monthrange(ano_vencimento, mes_vencimento)[1]
+                data_vencimento = date(ano_vencimento, mes_vencimento, ultimo_dia_mes)
 
             # Ajuste da última parcela para fechar o total
             valor_final_parcela = valor_parcela
@@ -123,9 +119,7 @@ def pagar_parcela_service(parcela_id: int):
         True  -> se deu tudo certo
         False -> se houve algum erro
     """
-    parcela = Parcela.query.filter_by(
-        id=parcela_id, user_id=current_user.id
-    ).first()
+    parcela = Parcela.query.filter_by(id=parcela_id, user_id=current_user.id).first()
 
     if not parcela:
         flash(

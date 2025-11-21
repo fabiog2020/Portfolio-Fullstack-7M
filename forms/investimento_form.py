@@ -1,7 +1,8 @@
 # forms/investimento_form.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateField
+from wtforms import DateField, StringField
 from wtforms.validators import DataRequired, Length, NumberRange
+
 from .custom_fields import BrazilianFloatField
 
 
@@ -9,7 +10,9 @@ class InvestimentoForm(FlaskForm):
     tipo = StringField(
         "Tipo de Ativo",
         validators=[
-            DataRequired(message="Informe o tipo do investimento (ex: Ação, FII, CDB)."),
+            DataRequired(
+                message="Informe o tipo do investimento (ex: Ação, FII, CDB)."
+            ),
             Length(max=50, message="O tipo deve ter no máximo 50 caracteres."),
         ],
     )

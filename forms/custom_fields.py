@@ -7,6 +7,7 @@ class BrazilianFloatField(FloatField):
     Campo numérico que aceita ponto OU vírgula como separador decimal.
     Exemplos válidos: "10.5", "10,5"
     """
+
     def process_formdata(self, valuelist):
         if valuelist:
             raw = valuelist[0].strip()

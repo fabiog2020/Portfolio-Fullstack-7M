@@ -1,14 +1,14 @@
 # forms/transacao_form.py
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, StringField, DateField
+from wtforms import DateField, IntegerField, StringField
 from wtforms.validators import DataRequired, Length, NumberRange
+
 from .custom_fields import BrazilianFloatField
 
 
 class TransacaoForm(FlaskForm):
     categoria_id = IntegerField(
-        "Categoria",
-        validators=[DataRequired(message="Selecione uma categoria.")]
+        "Categoria", validators=[DataRequired(message="Selecione uma categoria.")]
     )
 
     descricao = StringField(

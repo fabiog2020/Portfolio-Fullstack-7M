@@ -9,25 +9,29 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+
 def check_base_flash():
-    p = ROOT / 'templates' / 'base.html'
-    text = p.read_text(encoding='utf-8')
-    return 'get_flashed_messages' in text
+    p = ROOT / "templates" / "base.html"
+    text = p.read_text(encoding="utf-8")
+    return "get_flashed_messages" in text
+
 
 def find_templates_without_css():
     r = []
-    for p in (ROOT / 'templates').rglob('*.html'):
-        text = p.read_text(encoding='utf-8')
+    for p in (ROOT / "templates").rglob("*.html"):
+        text = p.read_text(encoding="utf-8")
         if "url_for('static', filename='css/" not in text:
             r.append(str(p.relative_to(ROOT)))
     return r
 
-def main():
-    print('Running frontend quick checks...')
-    print('Base has flash block:', check_base_flash())
-    print('\nTemplates missing explicit css include (heurística):')
-    for f in find_templates_without_css():
-        print(' -', f)
 
-if __name__ == '__main__':
+def main():
+    print("Running frontend quick checks...")
+    print("Base has flash block:", check_base_flash())
+    print("\nTemplates missing explicit css include (heurística):")
+    for f in find_templates_without_css():
+        print(" -", f)
+
+
+if __name__ == "__main__":
     main()

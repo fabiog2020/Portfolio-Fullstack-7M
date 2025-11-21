@@ -1,6 +1,7 @@
 # config.py
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Carrega variáveis do arquivo .env, se existir
@@ -10,6 +11,7 @@ if ENV_PATH.exists():
     load_dotenv(ENV_PATH)
 
 INSTANCE_DIR = BASE_DIR / "instance"
+
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")

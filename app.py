@@ -1,29 +1,33 @@
 # app.py
 
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from datetime import datetime, date
 import os
-from sqlalchemy import func, extract
-import re 
-import calendar # Usado para o cálculo robusto de parcelas
-from services.transactions_service import criar_transacao_a_partir_formulario
-from services.parcelas_service import (
-    criar_parcelas_a_partir_formulario,
-    pagar_parcela_service,
+from datetime import date, datetime
+
+from flask import Flask, flash, redirect, render_template, request, url_for
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
 )
-from forms.auth_forms import LoginForm, RegisterForm
-from forms.transacao_form import TransacaoForm
-from forms.categoria_form import CategoriaForm
-from forms.investimento_form import InvestimentoForm
-
-
+from sqlalchemy import extract, func
 
 # ===========================
 # CONFIGURAÇÃO BÁSICA
 # ===========================
 from config import DevConfig
 from database import db
+from forms.auth_forms import LoginForm, RegisterForm
+from forms.categoria_form import CategoriaForm
+from forms.investimento_form import InvestimentoForm
+from forms.transacao_form import TransacaoForm
+from services.parcelas_service import (
+    criar_parcelas_a_partir_formulario,
+    pagar_parcela_service,
+)
+from services.transactions_service import criar_transacao_a_partir_formulario
+from tools.cli_commands import register_cli_commands
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -35,13 +39,16 @@ app.config.from_object(DevConfig)
 
 # Inicializa o SQLAlchemy com o app
 db.init_app(app)
+# Registra comandos CLI para flask seed-db
+with app.app_context():
+    register_cli_commands(app)  # <--- NOVO
 
 # =========================================================================
 # IMPORTAÇÃO DOS MODELOS
 # Assumimos que 'User' está em models.py e os demais em models_finance.py
 # =========================================================================
 from models import User
-from models_finance import Transacao, Categoria, Cartao, Parcela, Investimento
+from models_finance import Cartao, Categoria, Investimento, Parcela, Transacao
 
 # Cria o banco de dados e as tabelas
 with app.app_context():
@@ -55,10 +62,12 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 login_manager.login_message_category = "info"
 
+
 @login_manager.user_loader
 def load_user(user_id):
     # Usando a sintaxe moderna do SQLAlchemy 2.0 para compatibilidade
     return db.session.get(User, int(user_id))
+
 
 # ==================================================
 # UTILITY: CONVERSOR HEX-TO-RGB (Para Templates)
@@ -66,11 +75,11 @@ def load_user(user_id):
 def hex_to_rgb(hex_color):
     """Converte uma cor hexadecimal (#RRGGBB) para uma tupla RGB (R, G, B)."""
     # Remove # se presente
-    hex_color = hex_color.lstrip('#')
+    hex_color = hex_color.lstrip("#")
     # Se for hex de 3 dígitos (ex: #F00), expande para 6 (ex: #FF0000)
     if len(hex_color) == 3:
-        hex_color = hex_color[0]*2 + hex_color[1]*2 + hex_color[2]*2
-    
+        hex_color = hex_color[0] * 2 + hex_color[1] * 2 + hex_color[2] * 2
+
     try:
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
@@ -78,7 +87,8 @@ def hex_to_rgb(hex_color):
         return r, g, b
     except:
         # Fallback para cinza (#6c757d) se a conversão falhar
-        return 108, 117, 125 
+        return 108, 117, 125
+
 
 # Torna a função 'hex_to_rgb' disponível em todos os templates Jinja
 @app.context_processor
@@ -94,30 +104,76 @@ def inserir_categorias_padrao(user_id):
     # Ícones Font Awesome 6
     categorias = [
         # ENTRADAS
-        {'nome': 'Salário', 'tipo': 'entrada', 'icone': 'fa-solid fa-money-bill-wave', 'cor': '#28a745'}, # Verde
-        {'nome': 'Renda Extra', 'tipo': 'entrada', 'icone': 'fa-solid fa-sack-dollar', 'cor': '#17a2b8'}, # Azul Ciano
+        {
+            "nome": "Salário",
+            "tipo": "entrada",
+            "icone": "fa-solid fa-money-bill-wave",
+            "cor": "#28a745",
+        },  # Verde
+        {
+            "nome": "Renda Extra",
+            "tipo": "entrada",
+            "icone": "fa-solid fa-sack-dollar",
+            "cor": "#17a2b8",
+        },  # Azul Ciano
         # SAÍDAS ESSENCIAIS
-        {'nome': 'Moradia (Aluguel/Parcela)', 'tipo': 'saída', 'icone': 'fa-solid fa-house', 'cor': '#dc3545'}, # Vermelho
-        {'nome': 'Alimentação', 'tipo': 'saída', 'icone': 'fa-solid fa-burger', 'cor': '#ffc107'}, # Amarelo
-        {'nome': 'Transporte (Combustível)', 'tipo': 'saída', 'icone': 'fa-solid fa-car-side', 'cor': '#6f42c1'}, # Roxo
-        {'nome': 'Saúde (Farmácia)', 'tipo': 'saída', 'icone': 'fa-solid fa-briefcase-medical', 'cor': '#20c997'}, # Verde Água
-        {'nome': 'Lazer', 'tipo': 'saída', 'icone': 'fa-solid fa-champagne-glasses', 'cor': '#fd7e14'}, # Laranja
-        {'nome': 'Educação', 'tipo': 'saída', 'icone': 'fa-solid fa-graduation-cap', 'cor': '#007bff'}, # Azul Padrão
+        {
+            "nome": "Moradia (Aluguel/Parcela)",
+            "tipo": "saída",
+            "icone": "fa-solid fa-house",
+            "cor": "#dc3545",
+        },  # Vermelho
+        {
+            "nome": "Alimentação",
+            "tipo": "saída",
+            "icone": "fa-solid fa-burger",
+            "cor": "#ffc107",
+        },  # Amarelo
+        {
+            "nome": "Transporte (Combustível)",
+            "tipo": "saída",
+            "icone": "fa-solid fa-car-side",
+            "cor": "#6f42c1",
+        },  # Roxo
+        {
+            "nome": "Saúde (Farmácia)",
+            "tipo": "saída",
+            "icone": "fa-solid fa-briefcase-medical",
+            "cor": "#20c997",
+        },  # Verde Água
+        {
+            "nome": "Lazer",
+            "tipo": "saída",
+            "icone": "fa-solid fa-champagne-glasses",
+            "cor": "#fd7e14",
+        },  # Laranja
+        {
+            "nome": "Educação",
+            "tipo": "saída",
+            "icone": "fa-solid fa-graduation-cap",
+            "cor": "#007bff",
+        },  # Azul Padrão
         # INVESTIMENTOS
-        {'nome': 'Renda Variável (Ações)', 'tipo': 'investimento', 'icone': 'fa-solid fa-chart-line', 'cor': '#007bff'},
+        {
+            "nome": "Renda Variável (Ações)",
+            "tipo": "investimento",
+            "icone": "fa-solid fa-chart-line",
+            "cor": "#007bff",
+        },
     ]
 
     for c in categorias:
         nova_categoria = Categoria(
             user_id=user_id,
-            nome=c['nome'],
-            tipo=c['tipo'],
-            icone=c['icone'],
-            cor=c['cor']
+            nome=c["nome"],
+            tipo=c["tipo"],
+            icone=c["icone"],
+            cor=c["cor"],
         )
         db.session.add(nova_categoria)
-    
+
     db.session.commit()
+
 
 # ===========================
 # ROTAS DE LOGIN E CADASTRO
@@ -185,6 +241,7 @@ def register():
     # GET ou form inválido → volta a tela de cadastro com erros
     return render_template("register.html", form=form)
 
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -206,96 +263,123 @@ def home():
 @login_required
 def dashboard():
     # 1. DEFINIÇÃO DO PERÍODO (TORNANDO DINÂMICO)
-    mes_param = request.args.get('mes', type=int)
-    ano_param = request.args.get('ano', type=int)
+    mes_param = request.args.get("mes", type=int)
+    ano_param = request.args.get("ano", type=int)
 
     hoje = datetime.now()
-    
+
     mes_atual = mes_param if mes_param and 1 <= mes_param <= 12 else hoje.month
     ano_atual = ano_param if ano_param else hoje.year
 
     # 2. CÁLCULO REALIZADO (TRANSAÇÕES JÁ EFETUADAS)
-    entradas_realizadas = db.session.query(func.sum(Transacao.valor)).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        extract('month', Transacao.data_transacao) == mes_atual,
-        extract('year', Transacao.data_transacao) == ano_atual,
-        Categoria.tipo == 'entrada'
-    ).scalar() or 0.0
+    entradas_realizadas = (
+        db.session.query(func.sum(Transacao.valor))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            extract("month", Transacao.data_transacao) == mes_atual,
+            extract("year", Transacao.data_transacao) == ano_atual,
+            Categoria.tipo == "entrada",
+        )
+        .scalar()
+        or 0.0
+    )
 
     # 2.2. SAÍDAS REALIZADAS (DESPESAS)
-    saidas_realizadas = db.session.query(func.sum(Transacao.valor)).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        extract('month', Transacao.data_transacao) == mes_atual,
-        extract('year', Transacao.data_transacao) == ano_atual,
-        Categoria.tipo == 'saída'
-    ).scalar() or 0.0
+    saidas_realizadas = (
+        db.session.query(func.sum(Transacao.valor))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            extract("month", Transacao.data_transacao) == mes_atual,
+            extract("year", Transacao.data_transacao) == ano_atual,
+            Categoria.tipo == "saída",
+        )
+        .scalar()
+        or 0.0
+    )
 
     # 3. CÁLCULO PREVISTO (CONTAS A PAGAR/RECEBER - PARCELAS NÃO PAGAS)
-    
+
     # 3.1. DESPESAS PREVISTAS (SOMENTE PARCELAS A VENCER, COM DATA NO MÊS ATUAL, E NÃO PAGAS)
-    despesas_previstas_parcelas = db.session.query(func.sum(Parcela.valor)).join(Categoria).filter(
-        Parcela.user_id == current_user.id,
-        extract('month', Parcela.data_vencimento) == mes_atual,
-        extract('year', Parcela.data_vencimento) == ano_atual,
-        Categoria.tipo == 'saída', # Só consideramos parcelas de despesas
-        Parcela.pago == False       # Apenas as que ainda não foram pagas
-    ).scalar() or 0.0
+    despesas_previstas_parcelas = (
+        db.session.query(func.sum(Parcela.valor))
+        .join(Categoria)
+        .filter(
+            Parcela.user_id == current_user.id,
+            extract("month", Parcela.data_vencimento) == mes_atual,
+            extract("year", Parcela.data_vencimento) == ano_atual,
+            Categoria.tipo == "saída",  # Só consideramos parcelas de despesas
+            Parcela.pago == False,  # Apenas as que ainda não foram pagas
+        )
+        .scalar()
+        or 0.0
+    )
 
     # 4. CONSOLIDAÇÃO DO DASHBOARD
 
     saldo_realizado = entradas_realizadas - saidas_realizadas
     saldo_projetado = saldo_realizado - despesas_previstas_parcelas
-    
+
     # 5. TRANSAÇÕES RECENTES
-    transacoes_recentes = Transacao.query.filter(
-        Transacao.user_id == current_user.id
-    ).order_by(Transacao.data_transacao.desc()).limit(10).all()
+    transacoes_recentes = (
+        Transacao.query.filter(Transacao.user_id == current_user.id)
+        .order_by(Transacao.data_transacao.desc())
+        .limit(10)
+        .all()
+    )
 
     # =========================================================
     # 6. DADOS PARA GRÁFICOS (Adicionado para resolver o TypeError)
     # =========================================================
 
     # 6.1. DESPESAS POR CATEGORIA (SAÍDAS)
-    query_despesas = db.session.query(
-        Categoria.nome,
-        func.sum(Transacao.valor).label('total')
-    ).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        extract('month', Transacao.data_transacao) == mes_atual,
-        extract('year', Transacao.data_transacao) == ano_atual,
-        Categoria.tipo == 'saída'
-    ).group_by(Categoria.nome).order_by(func.sum(Transacao.valor).desc()).all()
+    query_despesas = (
+        db.session.query(Categoria.nome, func.sum(Transacao.valor).label("total"))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            extract("month", Transacao.data_transacao) == mes_atual,
+            extract("year", Transacao.data_transacao) == ano_atual,
+            Categoria.tipo == "saída",
+        )
+        .group_by(Categoria.nome)
+        .order_by(func.sum(Transacao.valor).desc())
+        .all()
+    )
 
     # Converte os resultados da query para um dicionário Python simples (nome: float)
     # Isso garante que o Jinja/tojson consiga serializar o objeto para o JavaScript.
     dados_despesas = {
-        nome: float(total) 
-        for nome, total in query_despesas if total is not None
+        nome: float(total) for nome, total in query_despesas if total is not None
     }
-    
+
     # 6.2. RECEITAS POR CATEGORIA (ENTRADAS)
-    query_receitas = db.session.query(
-        Categoria.nome,
-        func.sum(Transacao.valor).label('total')
-    ).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        extract('month', Transacao.data_transacao) == mes_atual,
-        extract('year', Transacao.data_transacao) == ano_atual,
-        Categoria.tipo == 'entrada'
-    ).group_by(Categoria.nome).order_by(func.sum(Transacao.valor).desc()).all()
+    query_receitas = (
+        db.session.query(Categoria.nome, func.sum(Transacao.valor).label("total"))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            extract("month", Transacao.data_transacao) == mes_atual,
+            extract("year", Transacao.data_transacao) == ano_atual,
+            Categoria.tipo == "entrada",
+        )
+        .group_by(Categoria.nome)
+        .order_by(func.sum(Transacao.valor).desc())
+        .all()
+    )
 
     # Converte os resultados da query para um dicionário Python simples (nome: float)
     dados_receitas = {
-        nome: float(total) 
-        for nome, total in query_receitas if total is not None
+        nome: float(total) for nome, total in query_receitas if total is not None
     }
-    
+
     # 7. RENDERIZAR O TEMPLATE (Passando os novos dados)
     return render_template(
         "dashboard.html",
         nome=current_user.nome,
-        mes_atual=mes_atual, 
-        ano_atual=ano_atual, 
+        mes_atual=mes_atual,
+        ano_atual=ano_atual,
         entradas_realizadas=entradas_realizadas,
         saidas_realizadas=saidas_realizadas,
         saldo_realizado=saldo_realizado,
@@ -304,8 +388,9 @@ def dashboard():
         transacoes_recentes=transacoes_recentes,
         # NOVOS DADOS PARA OS GRÁFICOS
         dados_despesas=dados_despesas,
-        dados_receitas=dados_receitas
+        dados_receitas=dados_receitas,
     )
+
 
 # ===========================
 # ROTAS DE TRANSAÇÕES (CRIAÇÃO, EDIÇÃO, EXCLUSÃO)
@@ -314,14 +399,16 @@ def dashboard():
 @login_required
 def formulario_adicionar_transacao():
     """Rota GET para exibir o formulário e passar a lista de categorias e cartões."""
-    
+
     form = TransacaoForm()
 
     # Traz as categorias do usuário logado
-    categorias = Categoria.query.filter_by(
-        user_id=current_user.id
-    ).order_by(Categoria.nome.asc()).all()
-    
+    categorias = (
+        Categoria.query.filter_by(user_id=current_user.id)
+        .order_by(Categoria.nome.asc())
+        .all()
+    )
+
     # Filtra as categorias de Investimento para não aparecerem em Transações Comuns (Entrada/Saída)
     categorias_transacao = [c for c in categorias if c.tipo in ["entrada", "saída"]]
     cartoes = Cartao.query.filter_by(user_id=current_user.id).all()  # cartões
@@ -369,38 +456,45 @@ def editar_transacao(id):
         flash("Transação não encontrada ou você não tem permissão.", "danger")
         return redirect(url_for("dashboard"))
 
-    categorias = Categoria.query.filter_by(user_id=current_user.id).filter(Categoria.tipo.in_(['entrada', 'saída'])).order_by(Categoria.nome.asc()).all()
-    
+    categorias = (
+        Categoria.query.filter_by(user_id=current_user.id)
+        .filter(Categoria.tipo.in_(["entrada", "saída"]))
+        .order_by(Categoria.nome.asc())
+        .all()
+    )
+
     if request.method == "POST":
         # Processamento da Edição
         categoria_id = int(request.form.get("categoria_id"))
         descricao = request.form.get("descricao")
         valor_str = request.form.get("valor")
         data_str = request.form.get("data")
-        
+
         try:
             valor = float(valor_str)
             data_transacao = date.fromisoformat(data_str)
-            
+
             nova_categoria = Categoria.query.get(categoria_id)
 
             if not nova_categoria or nova_categoria.user_id != current_user.id:
                 flash("Nova categoria inválida.", "danger")
-                return render_template("editar.html", transacao=transacao, categorias=categorias)
+                return render_template(
+                    "editar.html", transacao=transacao, categorias=categorias
+                )
 
             # Ajusta o valor para ser negativo se for uma despesa
-            valor_final = valor if nova_categoria.tipo == 'entrada' else -abs(valor)
-            
+            valor_final = valor if nova_categoria.tipo == "entrada" else -abs(valor)
+
             # Atualiza o objeto
             transacao.categoria_id = categoria_id
             transacao.descricao = descricao
             transacao.valor = valor_final
             transacao.data_transacao = data_transacao
-            
+
             db.session.commit()
             flash("Transação atualizada com sucesso!", "success")
             return redirect(url_for("dashboard"))
-            
+
         except (ValueError, TypeError) as e:
             flash(f"Erro no formato dos dados: {e}", "danger")
 
@@ -413,9 +507,12 @@ def editar_transacao(id):
 def excluir_transacao(id):
     """Rota para excluir uma transação."""
     transacao = Transacao.query.filter_by(id=id, user_id=current_user.id).first()
-    
+
     if not transacao:
-        flash("Transação não encontrada ou você não tem permissão para excluí-la.", "danger")
+        flash(
+            "Transação não encontrada ou você não tem permissão para excluí-la.",
+            "danger",
+        )
         return redirect(url_for("dashboard"))
 
     try:
@@ -432,6 +529,7 @@ def excluir_transacao(id):
 # ===============================================
 # ROTAS: CATEGORIAS (Adicionar, Listar, Excluir, EDITAR!)
 # ===============================================
+
 
 @app.route("/categorias", methods=["GET", "POST"])
 @login_required
@@ -475,16 +573,17 @@ def gerenciar_categorias():
         return redirect(url_for("gerenciar_categorias"))
 
     # GET → listar categorias e mostrar formulário
-    categorias = Categoria.query.filter_by(
-        user_id=current_user.id
-    ).order_by(Categoria.nome.asc()).all()
+    categorias = (
+        Categoria.query.filter_by(user_id=current_user.id)
+        .order_by(Categoria.nome.asc())
+        .all()
+    )
 
     return render_template(
         "categorias.html",
         categorias=categorias,
         form=form,
     )
-
 
 
 @app.route("/categorias/editar/<int:id>", methods=["GET", "POST"])
@@ -558,24 +657,28 @@ def editar_categoria(id):
     )
 
 
-
-
 @app.route("/categorias/excluir/<int:id>", methods=["POST"])
 @login_required
 def excluir_categoria(id):
     categoria = Categoria.query.filter_by(id=id, user_id=current_user.id).first()
 
     if not categoria:
-        flash("Categoria não encontrada ou você não tem permissão para excluí-la.", "danger")
+        flash(
+            "Categoria não encontrada ou você não tem permissão para excluí-la.",
+            "danger",
+        )
         return redirect(url_for("gerenciar_categorias"))
-    
+
     # VERIFICAÇÃO DE SEGURANÇA: Checa se há transações ou parcelas vinculadas
     transacoes_vinculadas = Transacao.query.filter_by(categoria_id=id).count()
     parcelas_vinculadas = Parcela.query.filter_by(categoria_id=id).count()
     total_vinculos = transacoes_vinculadas + parcelas_vinculadas
 
     if total_vinculos > 0:
-        flash(f"Não é possível excluir a categoria '{categoria.nome}'. Ela possui {total_vinculos} vinculos com transações e/ou parcelas.", "danger")
+        flash(
+            f"Não é possível excluir a categoria '{categoria.nome}'. Ela possui {total_vinculos} vinculos com transações e/ou parcelas.",
+            "danger",
+        )
         return redirect(url_for("gerenciar_categorias"))
 
     try:
@@ -592,40 +695,44 @@ def excluir_categoria(id):
 # ===========================
 # ROTAS: CARTÕES (CRUD COMPLETO)
 # ===========================
-@app.route('/cartoes', methods=['GET'])
+@app.route("/cartoes", methods=["GET"])
 @login_required
 def cartoes():
     cartoes = Cartao.query.filter_by(user_id=current_user.id).all()
     # Adicionando a contagem de parcelas não pagas por cartão (para o template)
     for cartao in cartoes:
-        cartao.parcelas_abertas = Parcela.query.filter_by(cartao_id=cartao.id, pago=False).count()
-    return render_template('cartoes.html', cartoes=cartoes)
+        cartao.parcelas_abertas = Parcela.query.filter_by(
+            cartao_id=cartao.id, pago=False
+        ).count()
+    return render_template("cartoes.html", cartoes=cartoes)
 
 
-@app.route('/cartoes/adicionar', methods=['POST'])
+@app.route("/cartoes/adicionar", methods=["POST"])
 @login_required
 def adicionar_cartao():
-    nome = request.form.get('nome')
-    limite = float(request.form.get('limite') or 0)
-    venc_str = request.form.get('vencimento_dia')
-    
+    nome = request.form.get("nome")
+    limite = float(request.form.get("limite") or 0)
+    venc_str = request.form.get("vencimento_dia")
+
     try:
         venc = int(venc_str) if venc_str else None
-        
+
         # Validação simples para dia de vencimento (1 a 31)
         if venc is not None and (venc < 1 or venc > 31):
-            flash('Dia de vencimento inválido. Use um número entre 1 e 31.', 'danger')
-            return redirect(url_for('cartoes'))
+            flash("Dia de vencimento inválido. Use um número entre 1 e 31.", "danger")
+            return redirect(url_for("cartoes"))
 
-        novo = Cartao(nome=nome, limite=limite, vencimento_dia=venc, user_id=current_user.id)
+        novo = Cartao(
+            nome=nome, limite=limite, vencimento_dia=venc, user_id=current_user.id
+        )
         db.session.add(novo)
         db.session.commit()
-        flash(f'Cartão "{nome}" adicionado com sucesso!', 'success')
-        
+        flash(f'Cartão "{nome}" adicionado com sucesso!', "success")
+
     except ValueError:
-        flash('Limite deve ser um número válido.', 'danger')
-        
-    return redirect(url_for('cartoes'))
+        flash("Limite deve ser um número válido.", "danger")
+
+    return redirect(url_for("cartoes"))
 
 
 @app.route("/cartoes/editar/<int:id>", methods=["GET", "POST"])
@@ -633,34 +740,34 @@ def adicionar_cartao():
 def editar_cartao(id):
     """Rota para editar um cartão existente."""
     cartao = Cartao.query.filter_by(id=id, user_id=current_user.id).first()
-    
+
     if not cartao:
         flash("Cartão não encontrado ou você não tem permissão.", "danger")
         return redirect(url_for("cartoes"))
-        
+
     if request.method == "POST":
-        novo_nome = request.form.get('nome')
-        novo_limite_str = request.form.get('limite')
-        novo_venc_str = request.form.get('vencimento_dia')
-        
+        novo_nome = request.form.get("nome")
+        novo_limite_str = request.form.get("limite")
+        novo_venc_str = request.form.get("vencimento_dia")
+
         try:
             novo_limite = float(novo_limite_str or 0)
             novo_venc = int(novo_venc_str) if novo_venc_str else None
-            
+
             if novo_venc is not None and (novo_venc < 1 or novo_venc > 31):
-                flash('Dia de vencimento inválido.', 'danger')
+                flash("Dia de vencimento inválido.", "danger")
                 return render_template("editar_cartao.html", cartao=cartao)
-            
+
             cartao.nome = novo_nome
             cartao.limite = novo_limite
             cartao.vencimento_dia = novo_venc
-            
+
             db.session.commit()
             flash(f"Cartão '{cartao.nome}' atualizado com sucesso!", "success")
             return redirect(url_for("cartoes"))
-            
+
         except ValueError:
-            flash('Erro: Limite ou dia de vencimento inválido.', 'danger')
+            flash("Erro: Limite ou dia de vencimento inválido.", "danger")
 
     return render_template("editar_cartao.html", cartao=cartao)
 
@@ -672,14 +779,19 @@ def excluir_cartao(id):
     cartao = Cartao.query.filter_by(id=id, user_id=current_user.id).first()
 
     if not cartao:
-        flash("Cartão não encontrado ou você não tem permissão para excluí-lo.", "danger")
+        flash(
+            "Cartão não encontrado ou você não tem permissão para excluí-lo.", "danger"
+        )
         return redirect(url_for("cartoes"))
-    
+
     # VERIFICAÇÃO DE SEGURANÇA: Checa se há parcelas vinculadas (mesmo as pagas)
     parcelas_vinculadas = Parcela.query.filter_by(cartao_id=id).count()
 
     if parcelas_vinculadas > 0:
-        flash(f"Não é possível excluir o cartão '{cartao.nome}'. Ele possui {parcelas_vinculadas} parcelas vinculadas. Exclua as parcelas primeiro ou desvincule-as.", "danger")
+        flash(
+            f"Não é possível excluir o cartão '{cartao.nome}'. Ele possui {parcelas_vinculadas} parcelas vinculadas. Exclua as parcelas primeiro ou desvincule-as.",
+            "danger",
+        )
         return redirect(url_for("cartoes"))
 
     try:
@@ -696,20 +808,29 @@ def excluir_cartao(id):
 # ===========================
 # ROTAS: PARCELAS (Lógica Avançada e Ações)
 # ===========================
-@app.route('/parcelas', methods=['GET'])
+@app.route("/parcelas", methods=["GET"])
 @login_required
 def listar_parcelas():
     # Trazendo todas as parcelas (pagas e não pagas)
-    parcelas = Parcela.query.filter_by(user_id=current_user.id).order_by(Parcela.data_vencimento.asc()).all()
-    
+    parcelas = (
+        Parcela.query.filter_by(user_id=current_user.id)
+        .order_by(Parcela.data_vencimento.asc())
+        .all()
+    )
+
     # Trazendo categorias (para o formulário)
-    categorias_saida = Categoria.query.filter_by(user_id=current_user.id, tipo='saída').order_by(Categoria.nome.asc()).all()
+    categorias_saida = (
+        Categoria.query.filter_by(user_id=current_user.id, tipo="saída")
+        .order_by(Categoria.nome.asc())
+        .all()
+    )
     cartoes = Cartao.query.filter_by(user_id=current_user.id).all()
-    
-    return render_template('parcelas.html', 
-        parcelas=parcelas, 
+
+    return render_template(
+        "parcelas.html",
+        parcelas=parcelas,
         categorias_saida=categorias_saida,
-        cartoes=cartoes
+        cartoes=cartoes,
     )
 
 
@@ -910,7 +1031,10 @@ def excluir_investimento(id):
     ).first()
 
     if not investimento:
-        flash("Investimento não encontrado ou você não tem permissão para excluí-lo.", "danger")
+        flash(
+            "Investimento não encontrado ou você não tem permissão para excluí-lo.",
+            "danger",
+        )
         return redirect(url_for("investimentos"))
 
     try:
@@ -931,61 +1055,69 @@ def excluir_investimento(id):
 @login_required
 def relatorios():
     """
-    Gera dados de Despesas e Receitas agrupados por Categoria para 
+    Gera dados de Despesas e Receitas agrupados por Categoria para
     renderizar os gráficos de pizza (doughnut charts).
     """
     # 1. DEFINIÇÃO DO PERÍODO
-    periodo_selecionado = request.args.get('periodo')
+    periodo_selecionado = request.args.get("periodo")
     hoje = datetime.now()
-    
+
     # Se um período foi selecionado no formulário, usa esse período
     if periodo_selecionado:
         try:
             # O input 'month' do HTML retorna 'YYYY-MM'
-            ano = int(periodo_selecionado.split('-')[0])
-            mes = int(periodo_selecionado.split('-')[1])
+            ano = int(periodo_selecionado.split("-")[0])
+            mes = int(periodo_selecionado.split("-")[1])
         except (ValueError, IndexError):
             # Fallback em caso de formato inválido
             mes = hoje.month
             ano = hoje.year
-            periodo_selecionado = hoje.strftime('%Y-%m') # Volta para o formato padrão
+            periodo_selecionado = hoje.strftime("%Y-%m")  # Volta para o formato padrão
     else:
         # Padrão: Mês e Ano atuais
         mes = hoje.month
         ano = hoje.year
-        periodo_selecionado = hoje.strftime('%Y-%m')
+        periodo_selecionado = hoje.strftime("%Y-%m")
 
     # 2. CONSULTA DE DESPESAS (Saídas) por Categoria
     # Nota: Transacao.valor é armazenado como negativo para saídas.
     # Usaremos ABS(func.sum) para que o gráfico mostre valores positivos.
-    despesas_por_categoria = db.session.query(
-        Categoria.nome,
-        func.sum(Transacao.valor)
-    ).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        Categoria.tipo == 'saída',
-        extract('month', Transacao.data_transacao) == mes,
-        extract('year', Transacao.data_transacao) == ano
-    ).group_by(Categoria.nome).all()
+    despesas_por_categoria = (
+        db.session.query(Categoria.nome, func.sum(Transacao.valor))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            Categoria.tipo == "saída",
+            extract("month", Transacao.data_transacao) == mes,
+            extract("year", Transacao.data_transacao) == ano,
+        )
+        .group_by(Categoria.nome)
+        .all()
+    )
 
     # Formata para o dict: {nome_categoria: valor_positivo}
-    dados_despesas = {nome: abs(valor) for nome, valor in despesas_por_categoria if valor is not None}
-
+    dados_despesas = {
+        nome: abs(valor) for nome, valor in despesas_por_categoria if valor is not None
+    }
 
     # 3. CONSULTA DE RECEITAS (Entradas) por Categoria
-    receitas_por_categoria = db.session.query(
-        Categoria.nome,
-        func.sum(Transacao.valor)
-    ).join(Categoria).filter(
-        Transacao.user_id == current_user.id,
-        Categoria.tipo == 'entrada',
-        extract('month', Transacao.data_transacao) == mes,
-        extract('year', Transacao.data_transacao) == ano
-    ).group_by(Categoria.nome).all()
+    receitas_por_categoria = (
+        db.session.query(Categoria.nome, func.sum(Transacao.valor))
+        .join(Categoria)
+        .filter(
+            Transacao.user_id == current_user.id,
+            Categoria.tipo == "entrada",
+            extract("month", Transacao.data_transacao) == mes,
+            extract("year", Transacao.data_transacao) == ano,
+        )
+        .group_by(Categoria.nome)
+        .all()
+    )
 
     # Formata para o dict: {nome_categoria: valor}
-    dados_receitas = {nome: valor for nome, valor in receitas_por_categoria if valor is not None}
-
+    dados_receitas = {
+        nome: valor for nome, valor in receitas_por_categoria if valor is not None
+    }
 
     # 4. Renderiza o template. Os dicionários são passados para o Jinja,
     # que os converterá para JSON para o JavaScript usar.
@@ -993,8 +1125,9 @@ def relatorios():
         "relatorios.html",
         periodo_selecionado=periodo_selecionado,
         dados_despesas=dados_despesas,
-        dados_receitas=dados_receitas
+        dados_receitas=dados_receitas,
     )
+
 
 # ===========================
 # ROTAS: EXTRATO (LISTAGEM E FILTRO)
@@ -1003,34 +1136,39 @@ def relatorios():
 @login_required
 def extrato():
     """
-    Lista e filtra todas as transações do usuário, permitindo filtros por 
+    Lista e filtra todas as transações do usuário, permitindo filtros por
     data, categoria e tipo (receita/despesa).
     """
     # 1. Obter Categorias para o filtro dropdown
     # Inclui apenas entradas e saídas, já que extratos geralmente não incluem Investimentos brutos.
-    categorias = Categoria.query.filter_by(user_id=current_user.id).filter(
-        Categoria.tipo.in_(['entrada', 'saída'])
-    ).order_by(Categoria.nome.asc()).all()
+    categorias = (
+        Categoria.query.filter_by(user_id=current_user.id)
+        .filter(Categoria.tipo.in_(["entrada", "saída"]))
+        .order_by(Categoria.nome.asc())
+        .all()
+    )
 
     # 2. Iniciar a Query de Transações e aplicar o JOIN
     # Selecionamos as colunas essenciais, incluindo nome e tipo da categoria.
     # Usamos func.abs para garantir que o valor seja sempre positivo no extrato (o sinal é dado pelo 'tipo').
-    selecao = db.session.query(
-        Transacao.id, 
-        Transacao.data_transacao.label('data'),
-        Transacao.descricao,
-        func.abs(Transacao.valor).label('valor'), 
-        Categoria.nome.label('categoria_nome'), 
-        Categoria.tipo.label('tipo_bd') # 'entrada' ou 'saída'
-    ).join(Categoria).filter(
-        Transacao.user_id == current_user.id
+    selecao = (
+        db.session.query(
+            Transacao.id,
+            Transacao.data_transacao.label("data"),
+            Transacao.descricao,
+            func.abs(Transacao.valor).label("valor"),
+            Categoria.nome.label("categoria_nome"),
+            Categoria.tipo.label("tipo_bd"),  # 'entrada' ou 'saída'
+        )
+        .join(Categoria)
+        .filter(Transacao.user_id == current_user.id)
     )
 
     # 3. Processar e Aplicar Filtros (vindo do formulário GET)
-    data_inicio_str = request.args.get('data_inicio')
-    data_fim_str = request.args.get('data_fim')
-    categoria_id_str = request.args.get('categoria_id')
-    tipo_str = request.args.get('tipo') # 'receita' ou 'despesa'
+    data_inicio_str = request.args.get("data_inicio")
+    data_fim_str = request.args.get("data_fim")
+    categoria_id_str = request.args.get("categoria_id")
+    tipo_str = request.args.get("tipo")  # 'receita' ou 'despesa'
 
     # 3.1. Filtro por Data
     try:
@@ -1052,14 +1190,14 @@ def extrato():
     # 3.3. Filtro por Tipo (Mapeando o valor do formulário para o banco)
     if tipo_str:
         tipo_bd = None
-        if tipo_str == 'receita':
-            tipo_bd = 'entrada'
-        elif tipo_str == 'despesa':
-            tipo_bd = 'saída'
-        
+        if tipo_str == "receita":
+            tipo_bd = "entrada"
+        elif tipo_str == "despesa":
+            tipo_bd = "saída"
+
         if tipo_bd:
             selecao = selecao.filter(Categoria.tipo == tipo_bd)
-    
+
     # 4. Finalizar Query: Ordenar e Executar
     selecao = selecao.order_by(Transacao.data_transacao.desc())
     resultados_db = selecao.all()
@@ -1070,20 +1208,18 @@ def extrato():
         # Cria um dicionário a partir do objeto Row
         d = r._asdict()
         # Converte o tipo do BD ('entrada'/'saída') para o tipo do Template ('receita'/'despesa')
-        d['tipo'] = 'receita' if d['tipo_bd'] == 'entrada' else 'despesa'
-        
+        d["tipo"] = "receita" if d["tipo_bd"] == "entrada" else "despesa"
+
         # Adiciona placeholders para campos que o template espera (e seu modelo Transacao não tem)
         # Se você tiver um modelo 'Conta', precisará fazer JOINs adicionais.
-        d['conta_nome'] = "Conta Padrão" 
-        d['cartao_nome'] = None 
-        
+        d["conta_nome"] = "Conta Padrão"
+        d["cartao_nome"] = None
+
         transacoes_formatadas.append(d)
-    
+
     # 6. Renderizar
     return render_template(
-        "extrato.html", 
-        transacoes=transacoes_formatadas, 
-        categorias=categorias
+        "extrato.html", transacoes=transacoes_formatadas, categorias=categorias
     )
 
 
