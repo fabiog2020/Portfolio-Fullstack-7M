@@ -4,13 +4,8 @@ import os
 from datetime import date, datetime
 
 from flask import Flask, flash, redirect, render_template, request, url_for
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
 from sqlalchemy import extract, func
 
 # ===========================
@@ -22,12 +17,12 @@ from forms.auth_forms import LoginForm, RegisterForm
 from forms.categoria_form import CategoriaForm
 from forms.investimento_form import InvestimentoForm
 from forms.transacao_form import TransacaoForm
-from services.parcelas_service import (
-    criar_parcelas_a_partir_formulario,
-    pagar_parcela_service,
-)
+from services.parcelas_service import (criar_parcelas_a_partir_formulario,
+                                       pagar_parcela_service)
 from services.transactions_service import criar_transacao_a_partir_formulario
 from tools.cli_commands import register_cli_commands
+from models import User
+from models_finance import Cartao, Categoria, Investimento, Parcela, Transacao
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -47,12 +42,12 @@ with app.app_context():
 # IMPORTAÇÃO DOS MODELOS
 # Assumimos que 'User' está em models.py e os demais em models_finance.py
 # =========================================================================
-from models import User
-from models_finance import Cartao, Categoria, Investimento, Parcela, Transacao
 
-# Cria o banco de dados e as tabelas
-with app.app_context():
-    db.create_all()
+# Durante execução normal da aplicação, criamos as tabelas caso ainda não existam.
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+
 
 
 # ===========================
@@ -74,19 +69,25 @@ def load_user(user_id):
 # ==================================================
 def hex_to_rgb(hex_color):
     """Converte uma cor hexadecimal (#RRGGBB) para uma tupla RGB (R, G, B)."""
-    # Remove # se presente
+    # 1. Pré-processamento
     hex_color = hex_color.lstrip("#")
-    # Se for hex de 3 dígitos (ex: #F00), expande para 6 (ex: #FF0000)
     if len(hex_color) == 3:
         hex_color = hex_color[0] * 2 + hex_color[1] * 2 + hex_color[2] * 2
-
+    
+    # 2. Tentativa de conversão
     try:
+        # Tenta converter os 6 dígitos hexadecimais para inteiros RGB
+        # O [0:2] pega os dois primeiros (R), [2:4] pega (G), [4:6] pega (B)
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
         b = int(hex_color[4:6], 16)
-        return r, g, b
-    except:
-        # Fallback para cinza (#6c757d) se a conversão falhar
+        return r, g, b # <--- Retorna a cor RGB
+    
+    # 3. Tratamento de erro (se a string for inválida)
+    except (ValueError, TypeError) as e: 
+        # Captura erros de conversão de inteiro ou problemas de tipo
+        print(f"Erro ao converter cor {hex_color}: {e}")
+        # Retorna a cor padrão (cinza) para evitar quebrar o app
         return 108, 117, 125
 
 
@@ -310,7 +311,7 @@ def dashboard():
             extract("month", Parcela.data_vencimento) == mes_atual,
             extract("year", Parcela.data_vencimento) == ano_atual,
             Categoria.tipo == "saída",  # Só consideramos parcelas de despesas
-            Parcela.pago == False,  # Apenas as que ainda não foram pagas
+           Parcela.pago.is_(False),  # Apenas as que ainda não foram pagas
         )
         .scalar()
         or 0.0
