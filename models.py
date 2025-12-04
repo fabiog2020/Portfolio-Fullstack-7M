@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
     foto_perfil = db.Column(db.String(200), default="default_user.png")
 
     # CAMPO ADICIONADO: Data de registro
-    data_cadastro = db.Column(db.DateTime, default=datetime.now(UTC))
+    data_cadastro = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     # Relações: Opcional, mas útil para debug e acesso reverso
     # 'Transacao' e 'Categoria' são classes definidas em 'models_finance.py'
