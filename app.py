@@ -26,8 +26,19 @@ from models_finance import Cartao, Categoria, Investimento, Parcela, Transacao
 
 app = Flask(__name__, instance_relative_config=True)
 
-# Garante que a pasta instance existe
-os.makedirs(app.instance_path, exist_ok=True)
+
+def ensure_instance_folder(flask_app: Flask) -> None:
+    """Garante que a pasta *instance* existe para armazenar configs/sessões."""
+
+    try:
+        os.makedirs(flask_app.instance_path, exist_ok=True)
+    except OSError as exc:  # pragma: no cover - comportamento dependente do SO
+        raise RuntimeError(
+            f"Não foi possível criar a pasta de instância '{flask_app.instance_path}'."
+        ) from exc
+
+
+ensure_instance_folder(app)
 
 # Carrega configuração de desenvolvimento (pode trocar para ProdConfig no futuro)
 app.config.from_object(DevConfig)
