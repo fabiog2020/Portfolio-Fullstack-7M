@@ -69,26 +69,28 @@ def load_user(user_id):
 # ==================================================
 def hex_to_rgb(hex_color):
     """Converte uma cor hexadecimal (#RRGGBB) para uma tupla RGB (R, G, B)."""
-    # 1. Pré-processamento
-    hex_color = hex_color.lstrip("#")
-    if len(hex_color) == 3:
-        hex_color = hex_color[0] * 2 + hex_color[1] * 2 + hex_color[2] * 2
-    
-    # 2. Tentativa de conversão
+    cor_padrao = (108, 117, 125)
+
     try:
+        # 1. Pré-processamento
+        hex_color = str(hex_color).lstrip("#")
+        if len(hex_color) == 3:
+            hex_color = hex_color[0] * 2 + hex_color[1] * 2 + hex_color[2] * 2
+
+        # 2. Tentativa de conversão
         # Tenta converter os 6 dígitos hexadecimais para inteiros RGB
         # O [0:2] pega os dois primeiros (R), [2:4] pega (G), [4:6] pega (B)
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
         b = int(hex_color[4:6], 16)
-        return r, g, b # <--- Retorna a cor RGB
-    
+        return r, g, b  # <--- Retorna a cor RGB
+
     # 3. Tratamento de erro (se a string for inválida)
-    except (ValueError, TypeError) as e: 
+    except (ValueError, TypeError, AttributeError) as e:
         # Captura erros de conversão de inteiro ou problemas de tipo
         print(f"Erro ao converter cor {hex_color}: {e}")
         # Retorna a cor padrão (cinza) para evitar quebrar o app
-        return 108, 117, 125
+        return cor_padrao
 
 
 # Torna a função 'hex_to_rgb' disponível em todos os templates Jinja
