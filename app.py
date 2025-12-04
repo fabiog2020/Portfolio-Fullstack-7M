@@ -289,8 +289,10 @@ def dashboard():
     )
 
     # 2.2. SAÍDAS REALIZADAS (DESPESAS)
+    # As saídas são persistidas como valores negativos para facilitar o balanço.
+    # Para apresentar o total gasto no mês, usamos o valor absoluto das transações.
     saidas_realizadas = (
-        db.session.query(func.sum(Transacao.valor))
+        db.session.query(func.sum(func.abs(Transacao.valor)))
         .join(Categoria)
         .filter(
             Transacao.user_id == current_user.id,
