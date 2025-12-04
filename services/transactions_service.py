@@ -26,6 +26,19 @@ def criar_transacao_a_partir_formulario(form):
     valor = form.valor.data
     data_python = form.data.data  # objeto date do Python
 
+    # 1.1. Validações defensivas adicionais (evitam erros silenciosos caso o form mude)
+    if categoria_id is None:
+        flash("Categoria não informada.", "danger")
+        return False
+
+    if valor is None:
+        flash("Valor da transação é obrigatório.", "danger")
+        return False
+
+    if data_python is None:
+        flash("Data da transação é obrigatória.", "danger")
+        return False
+
     # 2. Verifica se a categoria existe e pertence ao usuário logado
     categoria = db.session.get(Categoria, categoria_id)
     if not categoria or categoria.user_id != current_user.id:
