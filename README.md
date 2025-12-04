@@ -38,7 +38,7 @@ Este é um aplicativo de finanças pessoais desenvolvido com Flask. Ele permite 
 3. **Instale as dependências**:
    ```bash
    pip install -r requirements.txt
-   pip install -r requirements_dev.txtgit
+   pip install -r requirements_dev.txt
    ```
 
 4. **Configure o banco de dados**:
