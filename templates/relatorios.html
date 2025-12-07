@@ -18,18 +18,18 @@
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
             Filtro de Período
         </h2>
-        <form method="GET" action="{{ url_for('relatorios') }}" class="flex flex-col sm:flex-row gap-4 items-end">
-            
+        <form method="GET" action="{{ url_for('reports.relatorios') }}"
+            class="flex flex-col sm:flex-row gap-4 items-end">
+
             <div class="w-full sm:w-1/3">
                 <label for="periodo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mês/Ano:</label>
-                <input type="month" name="periodo" id="periodo" 
-                        value="{{ periodo_selecionado }}" 
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                <input type="month" name="periodo" id="periodo" value="{{ periodo_selecionado }}"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
             </div>
 
             <div class="w-full sm:w-auto">
                 <button type="submit"
-                        class="w-full inline-flex justify-center items-center px-6 py-2 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                    class="w-full inline-flex justify-center items-center px-6 py-2 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
                     <i class="fa-solid fa-sync-alt mr-2"></i> Gerar Relatório
                 </button>
             </div>
@@ -37,7 +37,7 @@
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
+
         <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
                 <i class="fa-solid fa-arrow-alt-circle-down mr-2 text-red-500"></i>
@@ -92,7 +92,7 @@
             return {};
         }
     }
-    
+
     dados_despesas = safeJsonParse(dados_despesas_json);
     dados_receitas = safeJsonParse(dados_receitas_json);
 
@@ -104,9 +104,9 @@
     function generateVibrantColors(numColors) {
         const colors = [];
         for (let i = 0; i < numColors; i++) {
-            const h = (i * (360 / numColors) + 50) % 360; 
-            const s = 75; 
-            const l = 60; 
+            const h = (i * (360 / numColors) + 50) % 360;
+            const s = 75;
+            const l = 60;
             colors.push(`hsl(${h}, ${s}%, ${l}%)`);
         }
         return colors;
@@ -123,11 +123,11 @@
         if (!data || Object.keys(data).length === 0) {
             canvas.style.display = 'none';
             // Garante que o canvas seja substituído pela mensagem
-            canvas.parentNode.innerHTML = 
+            canvas.parentNode.innerHTML =
                 '<p class="text-center text-gray-500 dark:text-gray-400 font-medium mt-12">Nenhum dado registrado para o período.</p>';
             return;
         }
-        
+
         // Se houver dados, garante que o canvas esteja pronto para desenhar
         canvas.style.display = 'block';
 
@@ -139,9 +139,9 @@
         const labels = Object.keys(data);
         const values = Object.values(data);
         const backgroundColors = generateVibrantColors(labels.length);
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -157,19 +157,19 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, 
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'right',
                         labels: {
-                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#cbd5e1' : '#475569', 
+                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#cbd5e1' : '#475569',
                             boxWidth: 20,
                             padding: 15
                         }
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 let label = context.label || '';
                                 if (label) {
                                     label += ': ';
@@ -198,4 +198,3 @@
 
 </script>
 {% endblock %}
-```eof

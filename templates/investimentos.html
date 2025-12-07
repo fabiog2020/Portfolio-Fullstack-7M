@@ -9,18 +9,18 @@
             <i class="fa-solid fa-chart-line mr-3 text-secondary-500"></i>
             Gerenciamento de Investimentos
         </h1>
-        <a href="{{ url_for('dashboard') }}"
-           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
+        <a href="{{ url_for('main.dashboard') }}"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
             <i class="fa-solid fa-arrow-left mr-2"></i> Voltar
         </a>
     </header>
 
     <!-- Mensagens Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="space-y-3 mb-6">
+    {% if messages %}
+    <div class="space-y-3 mb-6">
         {% for category, message in messages %}
-          <div class="p-4 rounded-xl shadow-md text-sm
+        <div class="p-4 rounded-xl shadow-md text-sm
                       {% if category == 'success' %}
                         bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100
                       {% elif category in ['error', 'danger'] %}
@@ -30,10 +30,10 @@
                       {% endif %}">
             <i class="fa-solid fa-bell mr-2"></i>
             {{ message }}
-          </div>
-        {% endfor %}
         </div>
-      {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -46,24 +46,26 @@
 
             <ul class="space-y-3">
                 {% for inv in investimentos %}
-                <li class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 flex justify-between items-center">
+                <li
+                    class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 flex justify-between items-center">
                     <div>
                         <p class="font-semibold text-gray-900 dark:text-white">
                             {{ inv.nome }} <span class="text-xs text-gray-500">({{ inv.tipo }})</span>
                         </p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Qtd: {{ inv.quantidade }} · Preço: R${{ '%.2f'|format(inv.preco_compra) }} · Data: {{ inv.data_compra.strftime('%d/%m/%Y') }}
+                            Qtd: {{ inv.quantidade }} · Preço: R${{ '%.2f'|format(inv.preco_compra) }} · Data: {{
+                            inv.data_compra.strftime('%d/%m/%Y') }}
                         </p>
                     </div>
                     <div class="flex space-x-2">
-                        <a href="{{ url_for('editar_investimento', id=inv.id) }}"
-                           class="text-gray-500 hover:text-secondary-600 dark:hover:text-secondary-400 text-sm flex items-center">
+                        <a href="{{ url_for('investments.editar_investimento', id=inv.id) }}"
+                            class="text-gray-500 hover:text-secondary-600 dark:hover:text-secondary-400 text-sm flex items-center">
                             <i class="fa-solid fa-pen mr-1"></i> Editar
                         </a>
-                        <form method="post" action="{{ url_for('excluir_investimento', id=inv.id) }}">
+                        <form method="post" action="{{ url_for('investments.excluir_investimento', id=inv.id) }}">
                             <button type="submit"
-                                    class="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center"
-                                    onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
+                                class="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center"
+                                onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
                                 <i class="fa-solid fa-trash-alt mr-1"></i> Excluir
                             </button>
                         </form>
@@ -84,18 +86,19 @@
                 <i class="fa-solid fa-plus-square mr-2 text-green-500"></i> Adicionar Investimento
             </h2>
 
-            <form method="post" action="{{ url_for('investimentos') }}" class="space-y-4">
+            <form method="post" action="{{ url_for('investments.investimentos') }}" class="space-y-4">
                 {{ form.hidden_tag() }}
 
                 <!-- Tipo -->
                 <div>
                     {{ form.tipo.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
                     {{ form.tipo(
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white",
-                        placeholder="Ex: Renda_fixa, Renda_variavel, Ação, FII, CDB"
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
+                    bg-gray-50 dark:bg-gray-700 dark:text-white",
+                    placeholder="Ex: Renda_fixa, Renda_variavel, Ação, FII, CDB"
                     ) }}
                     {% for error in form.tipo.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
 
@@ -103,11 +106,12 @@
                 <div>
                     {{ form.nome.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
                     {{ form.nome(
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white",
-                        placeholder="Ex: PETR4, HGLG11, Tesouro Selic"
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
+                    bg-gray-50 dark:bg-gray-700 dark:text-white",
+                    placeholder="Ex: PETR4, HGLG11, Tesouro Selic"
                     ) }}
                     {% for error in form.nome.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
 
@@ -117,7 +121,7 @@
                         Categoria de Investimento
                     </label>
                     <select name="categoria_id" required
-                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white">
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white">
                         <option value="">Selecione uma categoria</option>
                         {% for cat in categorias_investimento %}
                         <option value="{{ cat.id }}">{{ cat.nome }}</option>
@@ -129,11 +133,12 @@
                 <div>
                     {{ form.quantidade.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
                     {{ form.quantidade(
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white",
-                        step="0.0001", min="0"
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
+                    bg-gray-50 dark:bg-gray-700 dark:text-white",
+                    step="0.0001", min="0"
                     ) }}
                     {% for error in form.quantidade.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
 
@@ -141,11 +146,12 @@
                 <div>
                     {{ form.preco_compra.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
                     {{ form.preco_compra(
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white",
-                        step="0.01", min="0"
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
+                    bg-gray-50 dark:bg-gray-700 dark:text-white",
+                    step="0.01", min="0"
                     ) }}
                     {% for error in form.preco_compra.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
 
@@ -153,17 +159,18 @@
                 <div>
                     {{ form.data_compra.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
                     {{ form.data_compra(
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white",
-                        type="date"
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm
+                    bg-gray-50 dark:bg-gray-700 dark:text-white",
+                    type="date"
                     ) }}
                     {% for error in form.data_compra.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
 
                 <div class="pt-2">
                     <button type="submit"
-                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-[1.01]">
                         <i class="fa-solid fa-check-circle mr-2"></i> Registrar Investimento
                     </button>
                 </div>
@@ -172,4 +179,3 @@
     </div>
 </div>
 {% endblock %}
-

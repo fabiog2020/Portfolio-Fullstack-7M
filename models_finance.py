@@ -7,41 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import db
 
-# ==========================================================
-# 1. MODELO USUARIO (Tabela: users)
-# ==========================================================
-# UserMixin adiciona propriedades necessárias ao Flask-Login
-# class Usuario(UserMixin, db.Model):
-# __tablename__ é 'users' para corresponder aos ForeignKeys nos outros modelos
-# __tablename__ = 'users'
-
-# id: Mapped[int] = mapped_column(Integer, primary_key=True)
-# nome: Mapped[str] = mapped_column(String(100), nullable=False)
-# email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
-# senha_hash: Mapped[str] = mapped_column(String(256), nullable=False)
-# data_cadastro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-# Relações: facilita o acesso a todos os objetos do usuário
-# categorias = relationship('Categoria', backref='user', lazy=True)
-# transacoes = relationship('Transacao', backref='user', lazy=True)
-# cartoes = relationship('Cartao', backref='user', lazy=True)
-# parcelas = relationship('Parcela', backref='user', lazy=True)
-# investimentos = relationship('Investimento', backref='user', lazy=True)
-
-# Métodos de segurança (Hashing de Senha)
-# def set_senha(self, senha):
-#  """Gera o hash seguro da senha."""
-#  self.senha_hash = generate_password_hash(senha)
-
-# def check_senha(self, senha):
-#    """Verifica se a senha fornecida corresponde ao hash."""
-#  return check_password_hash(self.senha_hash, senha)
-
-# def __repr__(self):
-# return f'<Usuario {self.email}>'
-
-# models_finance.py (DENTRO DA CLASSE Categoria)
-
 
 # ==========================================================
 # 2. MODELO CATEGORIA (Tabela: categorias)

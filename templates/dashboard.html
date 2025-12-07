@@ -63,7 +63,7 @@
             <div class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400">
                 R$ {{ "%.2f"|format(despesas_previstas_parcelas) }}
             </div>
-            <a href="{{ url_for('listar_parcelas') }}"
+            <a href="{{ url_for('installments.listar_parcelas') }}"
                 class="mt-2 inline-flex items-center text-sm font-medium text-indigo-500 hover:text-indigo-600 transition">
                 Ver Detalhes <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
             </a>
@@ -107,27 +107,27 @@
     <!-- 3. Ações Rápidas -->
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Ações Rápidas</h2>
     <div class="flex flex-wrap gap-4 mb-10">
-        <a href="{{ url_for('formulario_adicionar_transacao') }}"
+        <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}"
             class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-green-600 hover:bg-green-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-plus-circle mr-2"></i> Adicionar Transação
         </a>
 
-        <a href="{{ url_for('relatorios') }}"
+        <a href="{{ url_for('reports.relatorios') }}"
             class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-tertiary-600 hover:bg-tertiary-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-chart-pie mr-2"></i> Relatórios
         </a>
 
-        <a href="{{ url_for('investimentos') }}"
+        <a href="{{ url_for('investments.investimentos') }}"
             class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-emerald-600 hover:bg-emerald-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-chart-area mr-2"></i> Investimentos
         </a>
 
-        <a href="{{ url_for('listar_parcelas') }}"
+        <a href="{{ url_for('installments.listar_parcelas') }}"
             class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-calendar-days mr-2"></i> Parcelas
         </a>
 
-        <a href="{{ url_for('cartoes') }}"
+        <a href="{{ url_for('cards.cartoes') }}"
             class="flex-1 min-w-[150px] inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-full shadow-xl text-white bg-amber-500 hover:bg-amber-600 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-credit-card mr-2"></i> Cartões
         </a>
@@ -137,7 +137,7 @@
             <i class="fa-solid fa-door-open mr-2"></i> Sair
         </a>
         <!-- NOVO BOTÃO: Categorias -->
-        <a href="{{ url_for('gerenciar_categorias') }}"
+        <a href="{{ url_for('categories.gerenciar_categorias') }}"
             class="flex-1 min-w-[180px] inline-flex items-center justify-center px-4 py-2 rounded-full bg-indigo-600 text-white font-medium shadow hover:bg-indigo-700 transition duration-150 transform hover:-translate-y-0.5">
             <i class="fa-solid fa-tags mr-2"></i> Categorias
         </a>
@@ -224,14 +224,14 @@
                         {{ t.data_transacao.strftime('%d/%m/%Y') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                        <a href="{{ url_for('editar_transacao', id=t.id) }}"
+                        <a href="{{ url_for('transactions.editar_transacao', id=t.id) }}"
                             class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-500 transition duration-150 hover:underline"
                             title="Editar">
                             <i class="fa-solid fa-pen-to-square"></i> Editar
                         </a>
                         <span class="text-gray-300 dark:text-gray-600">|</span>
-                        <a href="{{ url_for('excluir_transacao', id=t.id) }}"
-                            onclick="event.preventDefault(); showCustomModal('{{ url_for('excluir_transacao', id=t.id) }}');"
+                        <a href="{{ url_for('transactions.excluir_transacao', id=t.id) }}"
+                            onclick="event.preventDefault(); showCustomModal('{{ url_for('transactions.excluir_transacao', id=t.id) }}');"
                             class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-500 transition duration-150 hover:underline"
                             title="Excluir">
                             <i class="fa-solid fa-trash-can"></i> Excluir
@@ -246,7 +246,7 @@
             class="text-center p-12 bg-gray-50 dark:bg-gray-700 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
             <i class="fa-solid fa-database text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
             <p class="text-gray-500 dark:text-gray-400 font-medium">Nenhuma transação registrada neste mês.</p>
-            <a href="{{ url_for('formulario_adicionar_transacao') }}"
+            <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}"
                 class="mt-4 inline-block text-primary-500 hover:text-primary-600 font-semibold transition underline">
                 Adicionar a primeira transação agora!
             </a>
