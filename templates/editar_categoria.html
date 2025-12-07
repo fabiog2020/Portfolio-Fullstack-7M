@@ -60,7 +60,7 @@
             <span id="icon-preview-container"
               class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
               <i id="icon-preview" class="{{ form.icone.data or categoria.icone }} text-lg"
-                style="color: { form.cor.data or categoria.cor or '#6c757d' }"></i>
+                style="color: {{ form.cor.data or categoria.cor or '#6c757d' }}"></i>
             </span>
             {{ form.icone(
             class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-indigo-500
