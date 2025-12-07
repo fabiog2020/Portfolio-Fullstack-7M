@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
       margin: 80px auto;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .login-container h1 {
@@ -56,6 +57,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="login-container">
@@ -63,40 +65,40 @@
 
     <h1>FinanceApp 💰</h1>
 
-    <!-- MENSAGENS DE ALERTA -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('login') }}">
-      {# Token CSRF obrigatório quando usamos FlaskForm #}
+    <!-- ACTION ATUALIZADA PARA auth.login -->
+    <form method="POST" action="{{ url_for('auth.login') }}">
       {{ form.csrf_token }}
 
       <label for="email">E-mail:</label>
       <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required
-             value="{{ form.email.data if form and form.email.data else '' }}">
+        value="{{ form.email.data if form and form.email.data else '' }}">
       {% if form and form.email.errors %}
-        <div class="error-message">
-          {{ form.email.errors[0] }}
-        </div>
+      <div class="error-message">
+        {{ form.email.errors[0] }}
+      </div>
       {% endif %}
 
       <label for="senha">Senha:</label>
       <input type="password" name="senha" id="senha" placeholder="Digite sua senha" required>
       {% if form and form.senha.errors %}
-        <div class="error-message">
-          {{ form.senha.errors[0] }}
-        </div>
+      <div class="error-message">
+        {{ form.senha.errors[0] }}
+      </div>
       {% endif %}
 
       <button type="submit">Entrar</button>
     </form>
 
-    <p>Não tem uma conta? <a href="{{ url_for('register') }}">Cadastre-se aqui</a></p>
+    <!-- LINK ATUALIZADO PARA auth.register -->
+    <p>Não tem uma conta? <a href="{{ url_for('auth.register') }}">Cadastre-se aqui</a></p>
   </div>
 
   <footer>
@@ -104,5 +106,5 @@
   </footer>
 
 </body>
-</html>
 
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
       margin: 60px auto;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .register-container h1 {
@@ -56,6 +57,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="register-container">
@@ -63,48 +65,49 @@
 
     <h1>Criar Conta</h1>
 
-    <!-- MENSAGENS DE ALERTA -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('register') }}">
+    <!-- ACTION ATUALIZADA PARA auth.register -->
+    <form method="POST" action="{{ url_for('auth.register') }}">
       {{ form.csrf_token }}
 
       <label for="nome">Nome:</label>
       <input type="text" name="nome" id="nome" placeholder="Seu nome completo" required
-             value="{{ form.nome.data if form and form.nome.data else '' }}">
+        value="{{ form.nome.data if form and form.nome.data else '' }}">
       {% if form and form.nome.errors %}
-        <div class="error-message">
-          {{ form.nome.errors[0] }}
-        </div>
+      <div class="error-message">
+        {{ form.nome.errors[0] }}
+      </div>
       {% endif %}
 
       <label for="email">E-mail:</label>
       <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required
-             value="{{ form.email.data if form and form.email.data else '' }}">
+        value="{{ form.email.data if form and form.email.data else '' }}">
       {% if form and form.email.errors %}
-        <div class="error-message">
-          {{ form.email.errors[0] }}
-        </div>
+      <div class="error-message">
+        {{ form.email.errors[0] }}
+      </div>
       {% endif %}
 
       <label for="senha">Senha:</label>
       <input type="password" name="senha" id="senha" placeholder="Crie uma senha" required>
       {% if form and form.senha.errors %}
-        <div class="error-message">
-          {{ form.senha.errors[0] }}
-        </div>
+      <div class="error-message">
+        {{ form.senha.errors[0] }}
+      </div>
       {% endif %}
 
       <button type="submit">Cadastrar</button>
     </form>
 
-    <p>Já tem uma conta? <a href="{{ url_for('login') }}">Faça login aqui</a></p>
+    <!-- LINK ATUALIZADO PARA auth.login -->
+    <p>Já tem uma conta? <a href="{{ url_for('auth.login') }}">Faça login aqui</a></p>
   </div>
 
   <footer>
@@ -112,5 +115,5 @@
   </footer>
 
 </body>
-</html>
 
+</html>

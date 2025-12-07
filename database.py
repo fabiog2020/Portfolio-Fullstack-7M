@@ -8,5 +8,5 @@ db = SQLAlchemy()
 
 # Instancia o LoginManager (Movido do app.py para evitar ciclos)
 login_manager = LoginManager()
-login_manager.login_view = "login"
+login_manager.login_view = "auth.login"
 login_manager.login_message_category = "info"
