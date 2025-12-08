@@ -8,7 +8,6 @@ from forms.auth_forms import LoginForm, RegisterForm
 from models import User
 from models_finance import Categoria
 
-# Define o Blueprint
 auth_bp = Blueprint('auth', __name__)
 
 # ==================================================
@@ -16,16 +15,24 @@ auth_bp = Blueprint('auth', __name__)
 # ==================================================
 def inserir_categorias_padrao(user_id):
     """Insere categorias padrão para um NOVO usuário."""
+    # Lista simples (sem hierarquia complexa para registro rápido)
     categorias = [
+        # ENTRADAS
         {"nome": "Salário", "tipo": "entrada", "icone": "fa-solid fa-money-bill-wave", "cor": "#28a745"},
         {"nome": "Renda Extra", "tipo": "entrada", "icone": "fa-solid fa-sack-dollar", "cor": "#17a2b8"},
-        {"nome": "Moradia (Aluguel/Parcela)", "tipo": "saída", "icone": "fa-solid fa-house", "cor": "#dc3545"},
+        
+        # SAÍDAS
+        {"nome": "Moradia", "tipo": "saída", "icone": "fa-solid fa-house", "cor": "#dc3545"},
         {"nome": "Alimentação", "tipo": "saída", "icone": "fa-solid fa-burger", "cor": "#ffc107"},
-        {"nome": "Transporte (Combustível)", "tipo": "saída", "icone": "fa-solid fa-car-side", "cor": "#6f42c1"},
-        {"nome": "Saúde (Farmácia)", "tipo": "saída", "icone": "fa-solid fa-briefcase-medical", "cor": "#20c997"},
+        {"nome": "Transporte", "tipo": "saída", "icone": "fa-solid fa-car-side", "cor": "#6f42c1"},
+        {"nome": "Saúde", "tipo": "saída", "icone": "fa-solid fa-briefcase-medical", "cor": "#20c997"},
         {"nome": "Lazer", "tipo": "saída", "icone": "fa-solid fa-champagne-glasses", "cor": "#fd7e14"},
         {"nome": "Educação", "tipo": "saída", "icone": "fa-solid fa-graduation-cap", "cor": "#007bff"},
-        {"nome": "Renda Variável (Ações)", "tipo": "investimento", "icone": "fa-solid fa-chart-line", "cor": "#007bff"},
+        
+        # INVESTIMENTOS (ADICIONADOS AQUI)
+        {"nome": "Renda Fixa", "tipo": "investimento", "icone": "fa-solid fa-piggy-bank", "cor": "#2196F3"},
+        {"nome": "Renda Variável", "tipo": "investimento", "icone": "fa-solid fa-chart-line", "cor": "#FFC107"},
+        {"nome": "Consórcio", "tipo": "investimento", "icone": "fa-solid fa-car", "cor": "#9C27B0"},
     ]
 
     for c in categorias:
@@ -47,7 +54,7 @@ def inserir_categorias_padrao(user_id):
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
 
     form = LoginForm()
 
@@ -62,7 +69,7 @@ def login():
         if user and user.check_password(senha):
             login_user(user)
             flash(f"Bem-vindo, {user.nome}!", "success")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash("E-mail ou senha inválidos.", "danger")
 
@@ -72,7 +79,7 @@ def login():
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
 
     form = RegisterForm()
 
@@ -98,7 +105,6 @@ def register():
         inserir_categorias_padrao(novo.id)
 
         flash("Cadastro realizado com sucesso! Faça login.", "success")
-        # Redireciona para o login do blueprint auth
         return redirect(url_for('auth.login')) 
 
     return render_template('register.html', form=form)

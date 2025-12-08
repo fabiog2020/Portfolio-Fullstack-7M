@@ -1,6 +1,5 @@
 # tools/cli_commands.py
 
-
 import click
 from flask.cli import with_appcontext
 
@@ -13,13 +12,13 @@ from models_finance import Categoria
 # ==========================================================
 ENTRADA = "entrada"
 SAIDA = "saída"
+INVESTIMENTO = "investimento"  # <--- NOVO
 
 # ==========================================================
 # 2. DADOS DE SEED
-# Usamos 'parent_ref' para indicar o nome do Pai, que será mapeado para o ID.
 # ==========================================================
 CATEGORIAS_A_SEMEAR = [
-    # GERAL (Pais) - parent_ref: None
+    # --- GERAL (Pais) ---
     {
         "nome": "Receitas (Geral)",
         "tipo": ENTRADA,
@@ -34,7 +33,15 @@ CATEGORIAS_A_SEMEAR = [
         "cor": "#F44336",
         "parent_ref": None,
     },
-    # FILHAS (SAIDAS) - Usam 'Despesas (Geral)' como Pai
+    {   # <--- NOVO PAI PARA INVESTIMENTOS
+        "nome": "Carteira de Ativos",
+        "tipo": INVESTIMENTO,
+        "icone": "fa-chart-pie",
+        "cor": "#2196F3",
+        "parent_ref": None,
+    },
+
+    # --- FILHAS (SAIDAS) ---
     {
         "nome": "Aluguel",
         "tipo": SAIDA,
@@ -148,13 +155,15 @@ CATEGORIAS_A_SEMEAR = [
         "parent_ref": "Despesas (Geral)",
     },
     {
-        "nome": "Investimentos (Saída)",
+        # Categoria de SAÍDA para representar o dinheiro saindo para investir
+        "nome": "Aporte/Investimento",
         "tipo": SAIDA,
-        "icone": "fa-chart-line",
+        "icone": "fa-money-bill-transfer",
         "cor": "#009688",
         "parent_ref": "Despesas (Geral)",
     },
-    # FILHAS (ENTRADAS) - Usam 'Receitas (Geral)' como Pai
+
+    # --- FILHAS (ENTRADAS) ---
     {
         "nome": "Salário",
         "tipo": ENTRADA,
@@ -176,6 +185,29 @@ CATEGORIAS_A_SEMEAR = [
         "cor": "#8BC34A",
         "parent_ref": "Receitas (Geral)",
     },
+
+    # --- FILHAS (INVESTIMENTOS/ATIVOS) --- <--- NOVAS CATEGORIAS AQUI
+    {
+        "nome": "Renda Fixa",
+        "tipo": INVESTIMENTO,
+        "icone": "fa-piggy-bank",
+        "cor": "#2196F3",
+        "parent_ref": "Carteira de Ativos",
+    },
+    {
+        "nome": "Renda Variável",
+        "tipo": INVESTIMENTO,
+        "icone": "fa-chart-line",
+        "cor": "#FFC107",
+        "parent_ref": "Carteira de Ativos",
+    },
+    {
+        "nome": "Consórcio",
+        "tipo": INVESTIMENTO,
+        "icone": "fa-car",
+        "cor": "#9C27B0",
+        "parent_ref": "Carteira de Ativos",
+    },
 ]
 
 
@@ -187,23 +219,20 @@ CATEGORIAS_A_SEMEAR = [
 def seed_db_command():
     """Popula o banco de dados com dados iniciais (usuário e categorias)."""
 
-    # 1. Limpa e recria as tabelas
     db.drop_all()
     db.create_all()
 
-    # 2. Cria o usuário padrão 'admin'
     admin_user = User(nome="Admin", email="admin@finance.app")
     admin_user.set_password("123456")
     db.session.add(admin_user)
-    db.session.flush()  # Força o ID do admin a ser gerado imediatamente
+    db.session.flush()
 
     click.echo(f"✅ Usuário '{admin_user.email}' criado com sucesso! (Senha: 123456)")
 
-    # 3. Adiciona as categorias em duas fases: Pais e Filhas
-    parent_map = {}  # Dicionário para mapear nome do pai -> ID do pai
+    parent_map = {}
     user_id = admin_user.id
 
-    # FASE A: Cria as Categorias Pais (parent_ref é None)
+    # FASE A: Pais
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is None:
             nova_categoria = Categoria(
@@ -214,27 +243,28 @@ def seed_db_command():
                 user_id=user_id,
             )
             db.session.add(nova_categoria)
-            db.session.flush()  # Importante: Garante que o ID do Pai é gerado
-            parent_map[cat_data["nome"]] = nova_categoria.id  # Salva o ID do Pai
+            db.session.flush()
+            parent_map[cat_data["nome"]] = nova_categoria.id
 
-    # FASE B: Cria as Categorias Filhas (parent_ref tem o nome do Pai)
+    # FASE B: Filhas
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is not None:
             parent_name = cat_data.get("parent_ref")
-            parent_id = parent_map.get(parent_name)  # Busca o ID salvo na FASE A
+            parent_id = parent_map.get(parent_name)
 
-            nova_categoria = Categoria(
-                nome=cat_data["nome"],
-                tipo=cat_data["tipo"],
-                icone=cat_data["icone"],
-                cor=cat_data["cor"],
-                user_id=user_id,
-                parent_id=parent_id,  # Usa o ID encontrado
-            )
-            db.session.add(nova_categoria)
+            if parent_id:
+                nova_categoria = Categoria(
+                    nome=cat_data["nome"],
+                    tipo=cat_data["tipo"],
+                    icone=cat_data["icone"],
+                    cor=cat_data["cor"],
+                    user_id=user_id,
+                    parent_id=parent_id,
+                )
+                db.session.add(nova_categoria)
 
     db.session.commit()
-    click.echo(f"✅ {len(CATEGORIAS_A_SEMEAR)} categorias (Pais e Filhas) adicionadas.")
+    click.echo(f"✅ {len(CATEGORIAS_A_SEMEAR)} categorias adicionadas.")
     click.echo("✨ Banco de dados inicializado e populado com sucesso!")
 
 
