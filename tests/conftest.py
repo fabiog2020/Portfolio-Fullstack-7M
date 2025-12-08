@@ -1,67 +1,53 @@
+# tests/conftest.py
 import pytest
-from app import app, db
+from factory import create_app
+from database import db
 from models import User
 
-
-# ============================================================
-# FIXTURE PRINCIPAL: cria o app de teste e o banco em memória
-# ============================================================
 @pytest.fixture(scope="function")
 def test_app():
     """
     Cria uma instância da aplicação configurada para testes.
-    Tudo que usar 'test_app' estará no banco sqlite:///:memory:
+    Usa um banco de dados em memória e desabilita CSRF para facilitar os posts.
     """
+    # Cria o app usando a fábrica
+    app = create_app()
+    
+    # Sobrescreve configurações para o ambiente de teste
     app.config.update(
         TESTING=True,
         SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
-        WTF_CSRF_ENABLED=False,
+        WTF_CSRF_ENABLED=False, # Desabilita tokens CSRF nos forms de teste
         LOGIN_DISABLED=False,
     )
 
+    # Contexto da aplicação (cria e dropa tabelas a cada teste)
     with app.app_context():
         db.create_all()
         yield app
         db.session.remove()
         db.drop_all()
 
-
-# ============================================================
-# CLIENTE DE TESTE
-# ============================================================
 @pytest.fixture()
 def client(test_app):
-    """
-    Retorna um client limpo para cada teste.
-    """
+    """Retorna o cliente de teste (navegador simulado)."""
     return test_app.test_client()
 
-
-# ============================================================
-# USUÁRIO PADRÃO
-# ============================================================
 @pytest.fixture()
 def usuario_padrao(test_app):
-    """
-    Insere um usuário padrão no banco antes de cada teste que usar login.
-    """
+    """Cria e insere um usuário para testes que exigem login."""
     user = User(nome="Tester", email="tester@example.com")
     user.set_password("123456")
     db.session.add(user)
     db.session.commit()
     return user
 
-
-# ============================================================
-# CLIENTE LOGADO
-# ============================================================
 @pytest.fixture()
 def client_logado(client, usuario_padrao):
-    """
-    Retorna um client autenticado automaticamente.
-    """
+    """Retorna um cliente já autenticado."""
+    # Atenção: Rota atualizada para o blueprint de auth
     client.post(
-        "/login",
+        "/auth/login", 
         data={"email": usuario_padrao.email, "senha": "123456"},
         follow_redirects=True,
     )

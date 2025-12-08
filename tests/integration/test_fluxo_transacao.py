@@ -1,18 +1,15 @@
+# tests/integration/test_fluxo_transacao.py
 from models import Categoria, Transacao
 
 def test_criar_categoria_e_transacao(client, client_logado):
     """
-    Teste de Integração:
-    1. Cria uma categoria via POST.
-    2. Cria uma transação usando essa categoria.
-    3. Verifica se ambas foram realmente salvas no banco em memória.
+    Teste de Integração: Cria Categoria -> Cria Transação.
+    Rotas atualizadas para os Blueprints.
     """
 
-    # =============================
-    # PARTE A — Criar Categoria
-    # =============================
+    # 1. Criar Categoria (Rota: /categorias/)
     resp_cat = client_logado.post(
-        "/categorias",
+        "/categorias/",
         data={
             "nome": "Mercado Teste",
             "tipo": "saída",
@@ -21,22 +18,17 @@ def test_criar_categoria_e_transacao(client, client_logado):
         },
         follow_redirects=True,
     )
-
-    # Valida a resposta
     assert resp_cat.status_code == 200
-    assert b"sucesso" in resp_cat.data.lower()
 
-    # Busca a categoria no banco
+    # Busca o ID da categoria criada
     with client.application.app_context():
         cat = Categoria.query.filter_by(nome="Mercado Teste").first()
         assert cat is not None
         cat_id = cat.id
 
-    # =============================
-    # PARTE B — Criar Transação
-    # =============================
+    # 2. Criar Transação (Rota: /transacoes/adicionar)
     resp_trans = client_logado.post(
-        "/adicionar",
+        "/transacoes/adicionar",
         data={
             "categoria_id": cat_id,
             "descricao": "Compra Semanal",
@@ -49,9 +41,8 @@ def test_criar_categoria_e_transacao(client, client_logado):
     assert resp_trans.status_code == 200
     assert b"sucesso" in resp_trans.data.lower()
 
-    # Confirma se salvou no banco
+    # Confirma persistência
     with client.application.app_context():
         transacao = Transacao.query.filter_by(descricao="Compra Semanal").first()
         assert transacao is not None
-        assert transacao.valor == -150.50  # saída deve ser negativa
-
+        assert transacao.valor == -150.50

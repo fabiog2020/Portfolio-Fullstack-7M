@@ -1,9 +1,11 @@
 # factory.py
+
 import os
 from flask import Flask
 from config import DevConfig
 from database import db, login_manager
 from tools.cli_commands import register_cli_commands
+from models import User # Importe o modelo User
 
 # Importa TODOS os Blueprints
 from blueprints.auth_routes import auth_bp
@@ -34,18 +36,24 @@ def create_app(config_class=DevConfig):
     db.init_app(app)
     login_manager.init_app(app)
 
+    # --- CONFIGURAÇÃO DO USER_LOADER (CRUCIAL PARA OS TESTES) ---
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.get(User, int(user_id))
+    # ------------------------------------------------------------
+
     with app.app_context():
         register_cli_commands(app)
 
     # REGISTRO DOS BLUEPRINTS
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(main_bp) # Sem prefixo (home/dashboard)
-    app.register_blueprint(transactions_bp, url_prefix='/transacoes') # /transacoes/adicionar
+    app.register_blueprint(main_bp) 
+    app.register_blueprint(transactions_bp, url_prefix='/transacoes') 
     app.register_blueprint(categories_bp, url_prefix='/categorias')
     app.register_blueprint(cards_bp, url_prefix='/cartoes')
     app.register_blueprint(installments_bp, url_prefix='/parcelas')
     app.register_blueprint(investments_bp, url_prefix='/investimentos')
-    app.register_blueprint(reports_bp) # Sem prefixo ou /relatorios se preferir
+    app.register_blueprint(reports_bp)
 
     @app.context_processor
     def utility_processor():

@@ -1,5 +1,6 @@
 # Ferramentas de Teste e Qualidade (Ambiente de Desenvolvimento)
 pytest==9.0.1
+pytest-cov==4.1.0 
 black==24.4.2
 ruff==0.4.4
 isort==5.13.2
