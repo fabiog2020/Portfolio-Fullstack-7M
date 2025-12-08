@@ -3,7 +3,7 @@ from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func
 from database import db
-from models_finance import Transacao, Categoria, Parcela
+from models import Transacao, Categoria, Parcela
 
 main_bp = Blueprint('main', __name__)
 

@@ -2,7 +2,7 @@ from datetime import date, datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from database import db
-from models_finance import Transacao, Categoria, Cartao
+from models import Transacao, Categoria, Cartao
 from forms.transacao_form import TransacaoForm
 from services.transactions_service import criar_transacao_a_partir_formulario
 

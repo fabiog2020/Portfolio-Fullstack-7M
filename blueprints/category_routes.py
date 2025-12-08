@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from database import db
-from models_finance import Categoria, Transacao, Parcela
+from models import Categoria, Transacao, Parcela
 from forms.categoria_form import CategoriaForm
 
 categories_bp = Blueprint('categories', __name__)

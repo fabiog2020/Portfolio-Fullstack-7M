@@ -4,8 +4,7 @@ import click
 from flask.cli import with_appcontext
 
 from database import db
-from models import User
-from models_finance import Categoria
+from models import User, Categoria
 
 # ==========================================================
 # 1. CONSTANTES

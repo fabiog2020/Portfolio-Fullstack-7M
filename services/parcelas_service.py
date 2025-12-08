@@ -5,7 +5,7 @@ from flask import flash
 from flask_login import current_user
 
 from database import db
-from models_finance import Categoria, Parcela, Transacao
+from models import Categoria, Parcela, Transacao
 
 
 def criar_parcelas_a_partir_formulario(form):

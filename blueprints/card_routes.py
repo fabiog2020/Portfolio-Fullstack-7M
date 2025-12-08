@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from database import db
-from models_finance import Cartao, Parcela
+from models import Cartao, Parcela
 
 cards_bp = Blueprint('cards', __name__)
 

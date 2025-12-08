@@ -4,7 +4,7 @@ from flask import flash
 from flask_login import current_user
 
 from database import db
-from models_finance import Categoria, Transacao
+from models import Categoria, Transacao
 
 # Opcional: só para tipo de anotação, não é obrigatório
 # from forms.transacao_form import TransacaoForm

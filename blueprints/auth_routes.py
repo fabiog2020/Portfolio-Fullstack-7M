@@ -5,8 +5,8 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from database import db
 from forms.auth_forms import LoginForm, RegisterForm
-from models import User
-from models_finance import Categoria
+from models import User, Categoria
+
 
 auth_bp = Blueprint('auth', __name__)
 

@@ -3,7 +3,7 @@ from flask import Blueprint, flash, render_template, request
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func
 from database import db
-from models_finance import Categoria, Transacao
+from models import Categoria, Transacao
 
 reports_bp = Blueprint('reports', __name__)
 

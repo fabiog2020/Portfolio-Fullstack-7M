@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from models_finance import Parcela, Categoria, Cartao
+from models import Parcela, Categoria, Cartao
 from services.parcelas_service import criar_parcelas_a_partir_formulario, pagar_parcela_service
 
 installments_bp = Blueprint('installments', __name__)

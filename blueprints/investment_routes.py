@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from database import db
-from models_finance import Investimento, Categoria
+from models import Investimento, Categoria
 from forms.investimento_form import InvestimentoForm
 
 investments_bp = Blueprint('investments', __name__)

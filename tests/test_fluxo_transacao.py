@@ -1,4 +1,4 @@
-from models_finance import Categoria, Transacao
+from models import Categoria, Transacao
 
 def test_criar_categoria_e_transacao(client, client_logado):
     """
