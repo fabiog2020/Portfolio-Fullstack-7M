@@ -1,28 +1,199 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <!-- Título dinâmico: páginas filhas podem mudar esse bloco -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}FinanceApp{% endblock %}</title>
 
-  <!-- Linka nosso CSS dentro de /static/css/style.css -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#121212',       // Fundo principal
+              card: '#1e1e1e',     // Fundo dos cards
+              input: '#2c2c2c',    // Fundo dos inputs
+              text: '#e4e4e7',     // Texto principal
+              muted: '#a1a1aa'     // Texto secundário
+            },
+            brand: {
+              green: '#10b981',
+              red: '#ef4444',
+              blue: '#3b82f6',
+              yellow: '#f59e0b'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Lógica de Tema (Dark/Light) -->
+  <script>
+    // Verifica preferência salva ou do sistema ao carregar
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body>
-  <!-- mensagens de feedback (sucesso/erro), se usarmos flash no Flask -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-container">
-        {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
 
-  <!-- aqui é onde cada página “filha” insere seu conteúdo -->
-  {% block content %}{% endblock %}
+<body
+  class="bg-gray-100 dark:bg-dark-bg text-gray-900 dark:text-dark-text min-h-screen pb-20 md:pb-0 transition-colors duration-200">
+
+  <!-- Navbar Desktop (Topo) -->
+  <nav class="hidden md:block bg-white dark:bg-dark-card shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="{{ url_for('main.dashboard') }}" class="text-2xl font-bold text-brand-blue flex items-center">
+            <i class="fa-solid fa-chart-simple mr-2"></i> Finanças
+          </a>
+          <div class="ml-10 flex items-baseline space-x-2"> <!-- space-x-2 para caber tudo -->
+            <a href="{{ url_for('main.dashboard') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Dashboard</a>
+            <a href="{{ url_for('reports.extrato') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Extrato</a>
+
+            <!-- NOVOS LINKS AQUI -->
+            <a href="{{ url_for('cards.cartoes') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Cartões</a>
+            <a href="{{ url_for('installments.listar_parcelas') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Parcelas</a>
+
+            <a href="{{ url_for('investments.investimentos') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Investimentos</a>
+            <a href="{{ url_for('categories.gerenciar_categorias') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Categorias</a>
+            <a href="{{ url_for('reports.relatorios') }}"
+              class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Relatórios</a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="toggleTheme()"
+            class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none">
+            <i class="fa-solid fa-sun text-yellow-500 block dark:hidden"></i>
+            <i class="fa-solid fa-moon text-brand-blue hidden dark:block"></i>
+          </button>
+
+          <a href="{{ url_for('auth.logout') }}"
+            class="text-red-500 hover:text-red-400 text-sm font-medium flex items-center">
+            <i class="fa-solid fa-right-from-bracket mr-1"></i> Sair
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header Mobile -->
+  <div class="md:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-card sticky top-0 z-40 shadow-sm">
+    <h1 class="text-xl font-bold">{% block header_title %}Finanças{% endblock %}</h1>
+    <div class="flex items-center space-x-3">
+      <button onclick="toggleTheme()" class="p-2 rounded-full focus:outline-none">
+        <i class="fa-solid fa-sun text-yellow-500 block dark:hidden"></i>
+        <i class="fa-solid fa-moon text-brand-blue hidden dark:block"></i>
+      </button>
+      <a href="{{ url_for('auth.logout') }}" class="text-dark-muted"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </div>
+  </div>
+
+  <!-- MENSAGENS FLASH (Centralizadas) -->
+  <div class="max-w-4xl mx-auto px-4 mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div
+      class="p-4 mb-4 rounded-xl shadow-md text-sm flex items-center justify-between animate-fade-in-down
+                        {% if category == 'success' %} bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800
+                        {% elif category == 'error' or category == 'danger' %} bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800
+                        {% else %} bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 {% endif %}">
+      <div class="flex items-center">
+        <i class="fa-solid fa-bell mr-2"></i>
+        {{ message }}
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-lg font-bold hover:opacity-75">&times;</button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Bottom Navigation Bar (Mobile) -->
+  <nav
+    class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-800 flex justify-around items-center py-3 z-50 shadow-inner">
+    <a href="{{ url_for('main.dashboard') }}"
+      class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if request.endpoint == 'main.dashboard' else '' }}">
+      <i class="fa-solid fa-house text-xl mb-1"></i>
+      <span class="text-[10px]">Início</span>
+    </a>
+
+    <a href="{{ url_for('reports.extrato') }}"
+      class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'reports' in request.endpoint else '' }}">
+      <i class="fa-solid fa-list text-xl mb-1"></i>
+      <span class="text-[10px]">Extrato</span>
+    </a>
+
+    <!-- Botão Central -->
+    <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}"
+      class="flex items-center justify-center w-14 h-14 bg-brand-blue rounded-full text-white shadow-lg transform -translate-y-4 border-4 border-gray-100 dark:border-dark-bg">
+      <i class="fa-solid fa-plus text-2xl"></i>
+    </a>
+
+    <a href="{{ url_for('investments.investimentos') }}"
+      class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'investments' in request.endpoint else '' }}">
+      <i class="fa-solid fa-chart-line text-xl mb-1"></i>
+      <span class="text-[10px]">Investir</span>
+    </a>
+
+    <a href="{{ url_for('categories.gerenciar_categorias') }}"
+      class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'categories' in request.endpoint else '' }}">
+      <i class="fa-solid fa-layer-group text-xl mb-1"></i>
+      <span class="text-[10px]">Mais</span>
+    </a>
+  </nav>
+
 </body>
+
 </html>

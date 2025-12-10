@@ -43,7 +43,7 @@
 
     <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8">
         <div class="max-w-lg mx-auto">
-            <form method="POST" action="{{ url_for(''transactions.editar_transacao'', id=transacao.id) }}"
+            <form method="POST" action="{{ url_for('transactions.editar_transacao', id=transacao.id) }}"
                 class="space-y-6">
 
                 <!-- Categoria (Tipo de Transação) -->

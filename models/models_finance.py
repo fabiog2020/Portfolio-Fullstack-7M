@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.sqlite import TEXT 
 from database import db
 
 
@@ -114,17 +114,16 @@ class Parcela(db.Model):
     __tablename__ = "parcelas"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    
+    # --- NOVO CAMPO: Identificador do Grupo de Parcelas ---
+    # Permite agrupar parcelas de uma mesma compra
+    group_id: Mapped[str] = mapped_column(String(36), nullable=True) 
+    # ------------------------------------------------------
 
     # Chaves Estrangeiras
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False
-    )
-    cartao_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("cartoes.id"), nullable=True
-    )
-    categoria_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("categorias.id"), nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    cartao_id: Mapped[int] = mapped_column(Integer, ForeignKey("cartoes.id"), nullable=True)
+    categoria_id: Mapped[int] = mapped_column(Integer, ForeignKey("categorias.id"), nullable=False)
 
     descricao: Mapped[str] = mapped_column(String(200), nullable=True)
     valor: Mapped[float] = mapped_column(Float, nullable=False)

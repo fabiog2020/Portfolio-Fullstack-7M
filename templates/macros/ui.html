@@ -1,0 +1,72 @@
+{# --- MACRO: Card de Resumo (Estilo Imagem 43/68) --- #}
+{% macro render_summary_card(title, value, icon, color_class, subtext=None) %}
+<div class="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-lg border-l-4 {{ color_class }} relative overflow-hidden">
+    <div class="flex justify-between items-start">
+        <div>
+            <p class="text-sm font-medium text-gray-500 dark:text-dark-muted uppercase tracking-wider mb-1">{{ title }}
+            </p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ "%.2f"|format(value) }}</h3>
+            {% if subtext %}
+            <p class="text-xs text-gray-400 mt-1">{{ subtext }}</p>
+            {% endif %}
+        </div>
+        <div class="p-3 rounded-full bg-opacity-10 bg-gray-500">
+            <i class="fa-solid {{ icon }} text-xl {{ color_class.replace('border-', 'text-') }}"></i>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{# --- MACRO: Item de Lista de Transação (Estilo Imagem 39/55) --- #}
+{% macro render_transaction_item(transacao) %}
+<div
+    class="flex items-center justify-between p-4 bg-white dark:bg-dark-card rounded-xl shadow-sm mb-3 border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#252525] transition group">
+
+    <!-- Ícone e Categoria -->
+    <div class="flex items-center space-x-4">
+        <!-- Círculo do Ícone -->
+        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg shadow-sm"
+            style="background-color: {{ transacao.categoria.cor or '#6b7280' }};">
+            <i class="{{ transacao.categoria.icone }}"></i>
+        </div>
+
+        <!-- Textos -->
+        <div>
+            <h4 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+                {{ transacao.descricao or transacao.categoria.nome }}
+            </h4>
+            <p class="text-xs text-gray-500 dark:text-dark-muted flex items-center">
+                <i class="fa-regular fa-calendar mr-1"></i> {{ transacao.data_transacao.strftime('%d/%m') }}
+                <span class="mx-1">•</span>
+                {{ transacao.categoria.nome }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Valor e Ações -->
+    <div class="text-right">
+        {% if transacao.categoria.tipo == 'entrada' %}
+        <p class="font-bold text-brand-green text-sm sm:text-base">+ R$ {{ "%.2f"|format(transacao.valor) }}</p>
+        {% else %}
+        <p class="font-bold text-brand-red text-sm sm:text-base">R$ {{ "%.2f"|format(transacao.valor) }}</p>
+        {% endif %}
+
+        <div class="mt-1 space-x-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
+            <!-- Botão Editar -->
+            <a href="{{ url_for('transactions.editar_transacao', id=transacao.id) }}"
+                class="text-xs text-gray-400 hover:text-brand-blue" title="Editar">
+                <i class="fa-solid fa-pen"></i>
+            </a>
+
+            <!-- Botão Excluir (Formulário POST Inline) -->
+            <form action="{{ url_for('transactions.excluir_transacao', id=transacao.id) }}" method="POST" class="inline"
+                onsubmit="return confirm('Tem certeza que deseja excluir?');">
+                <button type="submit" class="text-xs text-gray-400 hover:text-brand-red" title="Excluir">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}

@@ -1,163 +1,108 @@
 {% extends 'base.html' %}
 
-{% block title %}Cartões de Crédito{% endblock %}
+{% block title %}Cartões{% endblock %}
+{% block header_title %}Meus Cartões{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <header class="mb-8 flex justify-between items-center border-b border-primary-300 dark:border-primary-700 pb-2">
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
-            <i class="fa-solid fa-credit-card mr-3 text-primary-500"></i>
-            Meus Cartões de Crédito
-        </h1>
-        <a href="{{ url_for('main.dashboard') }}"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-full text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 ease-in-out">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Dashboard
-        </a>
-    </header>
+<div class="max-w-6xl mx-auto px-4 py-8 mb-20">
 
-    <!-- Área de Mensagens Flash (usando o mesmo estilo de edição/adição) -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="space-y-3 mb-6">
-        {% for category, message in messages %}
-        {% set style_class = 'p-4 rounded-xl shadow-md text-sm ' %}
-        {% if category == 'success' %}
-        {% set style_class = style_class + 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800
-        dark:border-green-600 dark:text-green-100' %}
-        {% elif category == 'error' or category == 'danger' %}
-        {% set style_class = style_class + 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800
-        dark:border-red-600 dark:text-red-100' %}
-        {% else %}
-        {% set style_class = style_class + 'bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800
-        dark:border-blue-600 dark:text-blue-100' %}
-        {% endif %}
-        <div class="{{ style_class }}" role="alert">
-            <i class="fa-solid fa-bell mr-2"></i>
-            {{ message }}
-        </div>
-        {% endfor %}
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white hidden md:block">Gerenciar Cartões</h1>
     </div>
-    {% endif %}
-    {% endwith %}
 
-    <!-- Seção de Listagem de Cartões -->
-    <section class="mb-10">
-        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
-            Cartões Cadastrados
-        </h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Formulário -->
+        <div
+            class="bg-white dark:bg-dark-card p-6 rounded-3xl shadow-lg h-fit border border-gray-100 dark:border-gray-800 lg:sticky lg:top-24">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                <i class="fa-regular fa-credit-card mr-2 text-brand-yellow"></i> Novo Cartão
+            </h2>
+
+            <form method="post" action="{{ url_for('cards.adicionar_cartao') }}">
+                <!-- Campos manuais pois não temos WTForms específico para cartões no código antigo, 
+                     mas vamos estilizar como se fosse a macro -->
+
+                <div class="mb-4">
+                    <label
+                        class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Nome
+                        do Cartão</label>
+                    <input type="text" name="nome" required placeholder="Ex: Nubank"
+                        class="block w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue transition shadow-inner">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label
+                            class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Limite
+                            (R$)</label>
+                        <input type="number" step="0.01" name="limite" required placeholder="0.00"
+                            class="block w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue transition shadow-inner">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Vencimento
+                            (Dia)</label>
+                        <input type="number" min="1" max="31" name="vencimento_dia" required placeholder="Dia"
+                            class="block w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue transition shadow-inner">
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-4 rounded-xl shadow-lg text-white font-bold text-lg bg-brand-blue hover:bg-blue-600 transition transform hover:scale-[1.01] flex justify-center items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Adicionar
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Cartões (Visual de Cartão de Crédito) -->
+        <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for c in cartoes %}
             <div
-                class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border-l-4 border-primary-500 hover:shadow-2xl transition duration-300 relative">
-                <div class="absolute top-4 right-4 text-primary-500 text-2xl">
-                    <i class="fa-solid fa-credit-card"></i>
+                class="relative bg-gradient-to-br from-gray-800 to-black text-white p-6 rounded-3xl shadow-xl overflow-hidden transform transition hover:-translate-y-1">
+                <!-- Efeito visual -->
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl">
                 </div>
 
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">
-                    {{ c.nome }}
-                </h3>
-
-                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <p class="flex justify-between items-center">
-                        <span class="font-medium">Limite Total:</span>
-                        <span class="font-bold text-green-600 dark:text-green-400">R$ {{ '%.2f'|format(c.limite)
-                            }}</span>
-                    </p>
-                    <p class="flex justify-between items-center">
-                        <span class="font-medium">Vencimento:</span>
-                        <span class="font-semibold text-gray-800 dark:text-gray-200">Dia {{ c.vencimento_dia }}</span>
-                    </p>
-
-                    <!-- Simulação de Limite Disponível (Adicionar lógica real no backend depois) -->
-                    <p
-                        class="flex justify-between items-center pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
-                        <span class="font-medium text-xs">Limite Usado (simulado):</span>
-                        <span class="text-sm text-red-500">R$ 0.00</span>
-                    </p>
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 class="text-xl font-bold tracking-wide">{{ c.nome }}</h3>
+                        <p class="text-xs text-gray-400 uppercase tracking-widest">Crédito</p>
+                    </div>
+                    <i class="fa-brands fa-cc-mastercard text-3xl opacity-80"></i>
                 </div>
 
-                <!-- Botões de Ação para cada cartão -->
-                <div class="mt-4 flex space-x-2 justify-end">
-                    <!-- Link de Edição (Se implementado) -->
-                    <a href="#"
-                        class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 transition duration-150 text-sm">
-                        <i class="fa-solid fa-pen"></i> Editar
-                    </a>
-                    <!-- Link de Exclusão (Se implementado) -->
-                    <a href="#"
-                        class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition duration-150 text-sm">
-                        <i class="fa-solid fa-trash-alt"></i> Excluir
-                    </a>
+                <div class="mb-6">
+                    <p class="text-xs text-gray-400 uppercase mb-1">Limite Total</p>
+                    <p class="text-2xl font-mono tracking-tight">R$ {{ "%.2f"|format(c.limite) }}</p>
+                </div>
+
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase">Vencimento</p>
+                        <p class="font-medium">Dia {{ c.vencimento_dia }}</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{{ url_for('cards.editar_cartao', id=c.id) }}"
+                            class="p-2 bg-white/10 rounded-full hover:bg-white/20 transition"><i
+                                class="fa-solid fa-pen text-sm"></i></a>
+                        <form method="post" action="{{ url_for('cards.excluir_cartao', id=c.id) }}">
+                            <button type="submit" class="p-2 bg-white/10 rounded-full hover:bg-red-500/80 transition"
+                                onclick="return confirm('Excluir este cartão?')"><i
+                                    class="fa-solid fa-trash text-sm"></i></button>
+                        </form>
+                    </div>
                 </div>
             </div>
             {% else %}
             <div
-                class="md:col-span-3 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md text-center text-gray-500 dark:text-gray-400">
-                <i class="fa-solid fa-triangle-exclamation text-4xl mb-3 text-yellow-500"></i>
-                <p class="text-lg font-medium">Você não possui nenhum cartão de crédito cadastrado.</p>
-                <p class="text-sm mt-1">Utilize o formulário abaixo para adicionar seu primeiro cartão.</p>
+                class="col-span-full flex flex-col items-center justify-center py-16 text-gray-400 bg-white dark:bg-dark-card rounded-3xl border border-dashed border-gray-300 dark:border-gray-800">
+                <i class="fa-regular fa-credit-card text-5xl mb-4"></i>
+                <p>Nenhum cartão cadastrado.</p>
             </div>
             {% endfor %}
         </div>
-    </section>
 
-    <!-- Seção de Adicionar Cartão -->
-    <section class="pt-8 border-t border-gray-200 dark:border-gray-700">
-        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-            <i class="fa-solid fa-circle-plus mr-2 text-primary-500"></i> Adicionar Novo Cartão
-        </h2>
-
-        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8 max-w-xl mx-auto">
-            <form method="post" action="{{ url_for('cards.adicionar_cartao') }}" class="space-y-6">
-
-                <!-- Campo Nome -->
-                <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Nome do Cartão (Ex: Nubank, Visa BB)
-                    </label>
-                    <input type="text" name="nome" id="nome" required
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
-                        placeholder="Ex: Cartão Pessoal">
-                </div>
-
-                <!-- Campo Limite e Dia de Vencimento (Em Grid) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Limite -->
-                    <div>
-                        <label for="limite" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Limite Total (R$)
-                        </label>
-                        <div class="relative mt-1 rounded-lg shadow-sm">
-                            <input type="number" step="0.01" name="limite" id="limite" required
-                                class="block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
-                                placeholder="Ex: 5000.00">
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">R$</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dia de Vencimento -->
-                    <div>
-                        <label for="vencimento_dia" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Dia de Vencimento da Fatura
-                        </label>
-                        <input type="number" name="vencimento_dia" id="vencimento_dia" min="1" max="31" required
-                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
-                            placeholder="Ex: 10 (Dia 10)">
-                    </div>
-                </div>
-
-                <!-- Botão de Submissão -->
-                <div class="pt-4 flex justify-end">
-                    <button type="submit"
-                        class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
-                        <i class="fa-solid fa-plus-circle mr-2"></i> Cadastrar Cartão
-                    </button>
-                </div>
-            </form>
-        </div>
-    </section>
+    </div>
 </div>
 {% endblock %}

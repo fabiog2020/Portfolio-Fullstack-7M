@@ -11,7 +11,7 @@ from models import User, Categoria
 # ==========================================================
 ENTRADA = "entrada"
 SAIDA = "saída"
-INVESTIMENTO = "investimento"  # <--- NOVO
+INVESTIMENTO = "investimento"
 
 # ==========================================================
 # 2. DADOS DE SEED
@@ -21,21 +21,21 @@ CATEGORIAS_A_SEMEAR = [
     {
         "nome": "Receitas (Geral)",
         "tipo": ENTRADA,
-        "icone": "fa-sack-dollar",
+        "icone": "fa-solid fa-sack-dollar",
         "cor": "#4CAF50",
         "parent_ref": None,
     },
     {
         "nome": "Despesas (Geral)",
         "tipo": SAIDA,
-        "icone": "fa-minus",
+        "icone": "fa-solid fa-wallet", # Ajustado para um icone mais geral se preferir, ou fa-minus
         "cor": "#F44336",
         "parent_ref": None,
     },
     {   # <--- NOVO PAI PARA INVESTIMENTOS
         "nome": "Carteira de Ativos",
         "tipo": INVESTIMENTO,
-        "icone": "fa-chart-pie",
+        "icone": "fa-solid fa-chart-pie",
         "cor": "#2196F3",
         "parent_ref": None,
     },
@@ -44,112 +44,112 @@ CATEGORIAS_A_SEMEAR = [
     {
         "nome": "Aluguel",
         "tipo": SAIDA,
-        "icone": "fa-house",
+        "icone": "fa-solid fa-house",
         "cor": "#F44336",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Energia Elétrica",
         "tipo": SAIDA,
-        "icone": "fa-bolt",
+        "icone": "fa-solid fa-bolt",
         "cor": "#F44336",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Água",
         "tipo": SAIDA,
-        "icone": "fa-droplet",
+        "icone": "fa-solid fa-droplet",
         "cor": "#F44336",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Internet/Streaming",
         "tipo": SAIDA,
-        "icone": "fa-video",
+        "icone": "fa-solid fa-video",
         "cor": "#F44336",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Supermercado",
         "tipo": SAIDA,
-        "icone": "fa-cart-shopping",
+        "icone": "fa-solid fa-cart-shopping",
         "cor": "#FF9800",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Restaurante/Lanche",
         "tipo": SAIDA,
-        "icone": "fa-burger",
+        "icone": "fa-solid fa-burger",
         "cor": "#FF9800",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Transporte Público/Uber",
         "tipo": SAIDA,
-        "icone": "fa-train",
+        "icone": "fa-solid fa-train", # ou fa-taxi
         "cor": "#2196F3",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Combustível",
         "tipo": SAIDA,
-        "icone": "fa-gas-pump",
+        "icone": "fa-solid fa-gas-pump",
         "cor": "#2196F3",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Manutenção Veicular",
         "tipo": SAIDA,
-        "icone": "fa-car-wrench",
+        "icone": "fa-solid fa-car-wrench",
         "cor": "#2196F3",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Hospital/Plano de Saúde",
         "tipo": SAIDA,
-        "icone": "fa-suitcase-medical",
+        "icone": "fa-solid fa-suitcase-medical",
         "cor": "#00BCD4",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Farmácia",
         "tipo": SAIDA,
-        "icone": "fa-pills",
+        "icone": "fa-solid fa-pills",
         "cor": "#00BCD4",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Educação/Cursos",
         "tipo": SAIDA,
-        "icone": "fa-graduation-cap",
+        "icone": "fa-solid fa-graduation-cap",
         "cor": "#673AB7",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Lazer/Viagens",
         "tipo": SAIDA,
-        "icone": "fa-plane",
+        "icone": "fa-solid fa-plane",
         "cor": "#E91E63",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Manutenção Residencial",
         "tipo": SAIDA,
-        "icone": "fa-screwdriver-wrench",
+        "icone": "fa-solid fa-screwdriver-wrench",
         "cor": "#9E9E9E",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "Contabilidade",
         "tipo": SAIDA,
-        "icone": "fa-calculator",
+        "icone": "fa-solid fa-calculator",
         "cor": "#9C27B0",
         "parent_ref": "Despesas (Geral)",
     },
     {
         "nome": "MEI/CNPJ",
         "tipo": SAIDA,
-        "icone": "fa-building",
+        "icone": "fa-solid fa-building",
         "cor": "#9C27B0",
         "parent_ref": "Despesas (Geral)",
     },
@@ -157,7 +157,7 @@ CATEGORIAS_A_SEMEAR = [
         # Categoria de SAÍDA para representar o dinheiro saindo para investir
         "nome": "Aporte/Investimento",
         "tipo": SAIDA,
-        "icone": "fa-money-bill-transfer",
+        "icone": "fa-solid fa-money-bill-transfer",
         "cor": "#009688",
         "parent_ref": "Despesas (Geral)",
     },
@@ -166,44 +166,44 @@ CATEGORIAS_A_SEMEAR = [
     {
         "nome": "Salário",
         "tipo": ENTRADA,
-        "icone": "fa-wallet",
+        "icone": "fa-solid fa-wallet",
         "cor": "#4CAF50",
         "parent_ref": "Receitas (Geral)",
     },
     {
         "nome": "Rendimentos de Investimento",
         "tipo": ENTRADA,
-        "icone": "fa-money-bill-trend-up",
+        "icone": "fa-solid fa-money-bill-trend-up",
         "cor": "#009688",
         "parent_ref": "Receitas (Geral)",
     },
     {
         "nome": "Freelance/Extra",
         "tipo": ENTRADA,
-        "icone": "fa-briefcase",
+        "icone": "fa-solid fa-briefcase",
         "cor": "#8BC34A",
         "parent_ref": "Receitas (Geral)",
     },
 
-    # --- FILHAS (INVESTIMENTOS/ATIVOS) --- <--- NOVAS CATEGORIAS AQUI
+    # --- FILHAS (INVESTIMENTOS/ATIVOS) ---
     {
         "nome": "Renda Fixa",
         "tipo": INVESTIMENTO,
-        "icone": "fa-piggy-bank",
+        "icone": "fa-solid fa-piggy-bank",
         "cor": "#2196F3",
         "parent_ref": "Carteira de Ativos",
     },
     {
         "nome": "Renda Variável",
         "tipo": INVESTIMENTO,
-        "icone": "fa-chart-line",
+        "icone": "fa-solid fa-chart-line",
         "cor": "#FFC107",
         "parent_ref": "Carteira de Ativos",
     },
     {
         "nome": "Consórcio",
         "tipo": INVESTIMENTO,
-        "icone": "fa-car",
+        "icone": "fa-solid fa-car",
         "cor": "#9C27B0",
         "parent_ref": "Carteira de Ativos",
     },
@@ -218,20 +218,22 @@ CATEGORIAS_A_SEMEAR = [
 def seed_db_command():
     """Popula o banco de dados com dados iniciais (usuário e categorias)."""
 
+    # 1. Limpa e recria as tabelas
     db.drop_all()
     db.create_all()
 
+    # 2. Cria o usuário padrão 'admin'
     admin_user = User(nome="Admin", email="admin@finance.app")
     admin_user.set_password("123456")
     db.session.add(admin_user)
-    db.session.flush()
+    db.session.flush()  # Força o ID do admin a ser gerado imediatamente
 
     click.echo(f"✅ Usuário '{admin_user.email}' criado com sucesso! (Senha: 123456)")
 
     parent_map = {}
     user_id = admin_user.id
 
-    # FASE A: Pais
+    # FASE A: Cria as Categorias Pais (parent_ref é None)
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is None:
             nova_categoria = Categoria(
@@ -242,14 +244,14 @@ def seed_db_command():
                 user_id=user_id,
             )
             db.session.add(nova_categoria)
-            db.session.flush()
-            parent_map[cat_data["nome"]] = nova_categoria.id
+            db.session.flush()  # Importante: Garante que o ID do Pai é gerado
+            parent_map[cat_data["nome"]] = nova_categoria.id  # Salva o ID do Pai
 
-    # FASE B: Filhas
+    # FASE B: Cria as Categorias Filhas (parent_ref tem o nome do Pai)
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is not None:
             parent_name = cat_data.get("parent_ref")
-            parent_id = parent_map.get(parent_name)
+            parent_id = parent_map.get(parent_name)  # Busca o ID salvo na FASE A
 
             if parent_id:
                 nova_categoria = Categoria(
@@ -258,12 +260,12 @@ def seed_db_command():
                     icone=cat_data["icone"],
                     cor=cat_data["cor"],
                     user_id=user_id,
-                    parent_id=parent_id,
+                    parent_id=parent_id,  # Usa o ID encontrado
                 )
                 db.session.add(nova_categoria)
 
     db.session.commit()
-    click.echo(f"✅ {len(CATEGORIAS_A_SEMEAR)} categorias adicionadas.")
+    click.echo(f"✅ {len(CATEGORIAS_A_SEMEAR)} categorias (Pais e Filhas) adicionadas.")
     click.echo("✨ Banco de dados inicializado e populado com sucesso!")
 
 
