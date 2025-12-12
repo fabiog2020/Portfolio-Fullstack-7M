@@ -1,3 +1,4 @@
+<!-- START OF FILE editar_investimento.html -->
 {% extends "base.html" %}
 
 {% block title %}Editar Investimento - {{ investimento.nome }}{% endblock %}
@@ -7,28 +8,19 @@
     <header class="mb-6">
         <h1
             class="text-3xl font-extrabold text-gray-900 dark:text-white border-b border-primary-300 dark:border-primary-700 pb-2 flex items-center">
-            <i class="fa-solid fa-chart-line mr-3 text-primary-500"></i>
+            <i class="fa-solid fa-chart-line mr-3 text-primary-500" aria-hidden="true"></i>
             Editar Investimento: {{ investimento.nome }}
         </h1>
-        <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Ajuste os detalhes e o valor do seu ativo financeiro.
-        </p>
     </header>
 
     <!-- Mensagens Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="space-y-3 mb-6">
+    <div class="space-y-3 mb-6" aria-live="polite">
         {% for category, message in messages %}
-        <div class="p-4 rounded-xl shadow-md text-sm
-                      {% if category == 'success' %}
-                        bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-100
-                      {% elif category == 'error' or category == 'danger' %}
-                        bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-100
-                      {% else %}
-                        bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100
-                      {% endif %}">
-            <i class="fa-solid fa-bell mr-2"></i>
+        <div class="p-4 rounded-xl shadow-md text-sm bg-blue-100 border border-blue-400 text-blue-700 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100"
+            role="alert">
+            <i class="fa-solid fa-bell mr-2" aria-hidden="true"></i>
             {{ message }}
         </div>
         {% endfor %}
@@ -38,59 +30,54 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Formulário de Edição -->
+        <!-- Formulário -->
         <div class="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <i class="fa-solid fa-pen-to-square mr-2 text-primary-500"></i>
+                <i class="fa-solid fa-pen-to-square mr-2 text-primary-500" aria-hidden="true"></i>
                 Detalhes do Investimento
             </h2>
 
             <form method="POST" action="{{ url_for('investments.editar_investimento', id=investimento.id) }}"
                 class="space-y-6">
-                <!-- Nome / Ticker -->
+                <!-- Nome -->
                 <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Nome/Ticker
-                    </label>
+                    <label for="nome"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome/Ticker</label>
                     <input type="text" id="nome" name="nome" value="{{ investimento.nome }}" required
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
                 </div>
 
                 <!-- Tipo -->
                 <div>
-                    <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Tipo de Ativo
-                    </label>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de
+                        Ativo</label>
                     <input type="text" id="tipo" name="tipo" value="{{ investimento.tipo or '' }}"
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150"
-                        placeholder="Ex: Ação, FII, CDB, Tesouro">
+                        placeholder="Ex: Ação, FII, CDB">
                 </div>
 
                 <!-- Quantidade -->
                 <div>
-                    <label for="quantidade" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Quantidade
-                    </label>
+                    <label for="quantidade"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantidade</label>
                     <input type="number" id="quantidade" name="quantidade" step="0.0001" min="0"
                         value="{{ investimento.quantidade }}"
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
                 </div>
 
-                <!-- Preço de Compra -->
+                <!-- Preço -->
                 <div>
-                    <label for="preco_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Preço de compra (R$)
-                    </label>
+                    <label for="preco_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço
+                        de compra (R$)</label>
                     <input type="number" id="preco_compra" name="preco_compra" step="0.01" min="0"
                         value="{{ investimento.preco_compra }}"
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
                 </div>
 
-                <!-- Data da Compra -->
+                <!-- Data -->
                 <div>
-                    <label for="data_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Data da compra
-                    </label>
+                    <label for="data_compra" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Data da
+                        compra</label>
                     <input type="date" id="data_compra" name="data_compra"
                         value="{{ investimento.data_compra.strftime('%Y-%m-%d') if investimento.data_compra else '' }}"
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
@@ -98,34 +85,32 @@
 
                 <div class="flex justify-end space-x-3 pt-4">
                     <a href="{{ url_for('investments.investimentos') }}"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition">
-                        <i class="fa-solid fa-arrow-left mr-2"></i>
-                        Cancelar
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i> Cancelar
                     </a>
                     <button type="submit"
                         class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
-                        <i class="fa-solid fa-save mr-2"></i>
-                        Salvar Alterações
+                        <i class="fa-solid fa-save mr-2" aria-hidden="true"></i> Salvar Alterações
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Card de Exclusão -->
-        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 border border-red-300 dark:border-red-700">
-            <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
-                <i class="fa-solid fa-triangle-exclamation mr-2"></i>
-                Zona de Perigo
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 border border-red-300 dark:border-red-700"
+            role="region" aria-labelledby="delete-inv-title">
+            <h2 id="delete-inv-title"
+                class="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
+                <i class="fa-solid fa-triangle-exclamation mr-2" aria-hidden="true"></i> Zona de Perigo
             </h2>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Excluir este investimento irá removê-lo permanentemente do seu histórico de controle de investimentos.
+                Excluir este investimento irá removê-lo permanentemente.
             </p>
             <form method="POST" action="{{ url_for('investments.excluir_investimento', id=investimento.id) }}"
                 onsubmit="return confirm('Tem certeza que deseja excluir este investimento? Esta ação não pode ser desfeita.');">
                 <button type="submit"
                     class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
-                    <i class="fa-solid fa-trash-can mr-2"></i>
-                    Excluir Investimento
+                    <i class="fa-solid fa-trash-can mr-2" aria-hidden="true"></i> Excluir Investimento
                 </button>
             </form>
         </div>

@@ -1,3 +1,4 @@
+<!-- START OF FILE investimentos.html -->
 {% extends "base.html" %}
 
 {% block title %}Investimentos{% endblock %}
@@ -6,18 +7,18 @@
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20">
 
-    <!-- Cabeçalho com Botão de Voltar -->
+    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
-            <i class="fa-solid fa-chart-line mr-3 text-brand-blue"></i>
+            <i class="fa-solid fa-chart-line mr-3 text-brand-blue" aria-hidden="true"></i>
             Meus Investimentos
         </h1>
     </div>
 
-    <!-- Layout Grid: Lista à Esquerda, Formulário à Direita -->
+    <!-- Layout Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Coluna 1: Lista de Investimentos (Ocupa 2 colunas no desktop) -->
+        <!-- Coluna 1: Lista -->
         <div class="lg:col-span-2 space-y-4">
             <h2
                 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -29,9 +30,9 @@
             <div
                 class="bg-white dark:bg-dark-card p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center hover:shadow-md transition">
                 <div class="flex items-center space-x-4">
-                    <div
-                        class="w-12 h-12 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue text-xl">
-                        <i class="fa-solid fa-piggy-bank"></i> <!-- Ícone genérico ou baseado no tipo -->
+                    <div class="w-12 h-12 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue text-xl"
+                        aria-hidden="true">
+                        <i class="fa-solid fa-piggy-bank"></i>
                     </div>
                     <div>
                         <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ inv.nome }}</h3>
@@ -47,10 +48,14 @@
 
                     <div class="mt-2 space-x-3 text-sm">
                         <a href="{{ url_for('investments.editar_investimento', id=inv.id) }}"
-                            class="text-brand-blue hover:underline">Editar</a>
+                            class="text-brand-blue hover:underline focus:outline-none focus:ring-2 focus:ring-brand-blue rounded px-1"
+                            aria-label="Editar investimento {{ inv.nome }}">Editar</a>
+
                         <form method="post" action="{{ url_for('investments.excluir_investimento', id=inv.id) }}"
                             class="inline">
-                            <button type="submit" class="text-brand-red hover:underline"
+                            <button type="submit"
+                                class="text-brand-red hover:underline focus:outline-none focus:ring-2 focus:ring-brand-red rounded px-1"
+                                aria-label="Excluir investimento {{ inv.nome }}"
                                 onclick="return confirm('Excluir investimento?')">Excluir</button>
                         </form>
                     </div>
@@ -60,16 +65,16 @@
             {% else %}
             <div
                 class="text-center py-10 bg-white dark:bg-dark-card rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-                <i class="fa-solid fa-folder-open text-4xl text-gray-400 mb-3"></i>
+                <i class="fa-solid fa-folder-open text-4xl text-gray-400 mb-3" aria-hidden="true"></i>
                 <p class="text-gray-500 dark:text-dark-muted">Sua carteira está vazia.</p>
             </div>
             {% endif %}
         </div>
 
-        <!-- Coluna 2: Formulário de Adicionar (Ocupa 1 coluna) -->
+        <!-- Coluna 2: Formulário -->
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg h-fit sticky top-24">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                <i class="fa-solid fa-plus-circle mr-2 text-brand-green"></i> Novo Aporte
+                <i class="fa-solid fa-plus-circle mr-2 text-brand-green" aria-hidden="true"></i> Novo Aporte
             </h2>
 
             {% from "macros/forms.html" import render_field, render_submit %}
@@ -77,11 +82,10 @@
             <form method="post" action="{{ url_for('investments.investimentos') }}">
                 {{ form.hidden_tag() }}
 
-                <!-- Select Manual Customizado -->
                 <div class="mb-4">
-                    <label
+                    <label for="categoria_inv"
                         class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Categoria</label>
-                    <select name="categoria_id" required
+                    <select name="categoria_id" id="categoria_inv" required
                         class="block w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue transition cursor-pointer">
                         <option value="" disabled selected>Selecione o tipo...</option>
                         {% for cat in categorias_investimento %}

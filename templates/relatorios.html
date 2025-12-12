@@ -1,3 +1,4 @@
+<!-- START OF FILE relatorios.html -->
 {% extends 'base.html' %}
 
 {% block title %}Relatórios e Análise Financeira{% endblock %}
@@ -6,7 +7,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <header class="mb-8 border-b border-primary-300 dark:border-primary-700 pb-2">
         <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
-            <i class="fa-solid fa-chart-pie mr-3 text-tertiary-500"></i>
+            <i class="fa-solid fa-chart-pie mr-3 text-tertiary-500" aria-hidden="true"></i>
             Relatórios Detalhados
         </h1>
         <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
@@ -14,8 +15,8 @@
         </p>
     </header>
 
-    <section class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
+    <section class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-8" aria-labelledby="filter-heading">
+        <h2 id="filter-heading" class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
             Filtro de Período
         </h2>
         <form method="GET" action="{{ url_for('reports.relatorios') }}"
@@ -30,7 +31,7 @@
             <div class="w-full sm:w-auto">
                 <button type="submit"
                     class="w-full inline-flex justify-center items-center px-6 py-2 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
-                    <i class="fa-solid fa-sync-alt mr-2"></i> Gerar Relatório
+                    <i class="fa-solid fa-sync-alt mr-2" aria-hidden="true"></i> Gerar Relatório
                 </button>
             </div>
         </form>
@@ -38,69 +39,56 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <i class="fa-solid fa-arrow-alt-circle-down mr-2 text-red-500"></i>
+        <section class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6" aria-labelledby="chart-despesas-heading">
+            <h2 id="chart-despesas-heading"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                <i class="fa-solid fa-arrow-alt-circle-down mr-2 text-red-500" aria-hidden="true"></i>
                 Despesas por Categoria
             </h2>
             <div class="h-80 flex items-center justify-center">
-                <canvas id="despesasChart"></canvas>
+                <canvas id="despesasChart" role="img"
+                    aria-label="Gráfico de pizza mostrando a distribuição de despesas por categoria"></canvas>
             </div>
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
                 Análise de onde o seu dinheiro foi gasto neste período.
             </p>
-        </div>
+        </section>
 
-        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <i class="fa-solid fa-arrow-alt-circle-up mr-2 text-green-500"></i>
+        <section class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6" aria-labelledby="chart-receitas-heading">
+            <h2 id="chart-receitas-heading"
+                class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                <i class="fa-solid fa-arrow-alt-circle-up mr-2 text-green-500" aria-hidden="true"></i>
                 Receitas por Categoria
             </h2>
             <div class="h-80 flex items-center justify-center">
-                <canvas id="receitasChart"></canvas>
+                <canvas id="receitasChart" role="img"
+                    aria-label="Gráfico de pizza mostrando a distribuição de receitas por categoria"></canvas>
             </div>
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
                 Análise das suas principais fontes de rendimento neste período.
             </p>
-        </div>
+        </section>
     </div>
 </div>
 
+<!-- Mantive o script igual, pois a estrutura HTML já provê os IDs necessários -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <script>
-    // Variáveis injetadas pelo Flask.
     const dados_despesas_json = '{{ dados_despesas | tojson | safe }}';
     const dados_receitas_json = '{{ dados_receitas | tojson | safe }}';
 
     let dados_despesas, dados_receitas;
 
-    // --- Lógica de Injeção de Dados do Flask ---
-
-    /**
-     * Tenta fazer o parse de uma string JSON. Retorna um objeto vazio {} em caso de erro
-     * ou se a string for vazia/null/None (sem dados).
-     */
     function safeJsonParse(jsonString) {
         if (!jsonString || jsonString.trim() === '' || jsonString.trim() === 'None' || jsonString.trim() === 'null') {
             return {};
         }
-        try {
-            return JSON.parse(jsonString);
-        } catch (e) {
-            console.error("Erro ao fazer parse do JSON. Verifique se o Flask está passando um dicionário válido:", e, "String recebida:", jsonString);
-            return {};
-        }
+        try { return JSON.parse(jsonString); } catch (e) { return {}; }
     }
 
     dados_despesas = safeJsonParse(dados_despesas_json);
     dados_receitas = safeJsonParse(dados_receitas_json);
 
-
-    /**
-     * Gera cores aleatórias vibrantes para os gráficos de pizza.
-     * Usa HSL para melhor controle de vibração.
-     */
     function generateVibrantColors(numColors) {
         const colors = [];
         for (let i = 0; i < numColors; i++) {
@@ -112,26 +100,18 @@
         return colors;
     }
 
-
-    /**
-     * Inicializa e renderiza um gráfico de rosca (Doughnut Chart)
-     */
     function renderDoughnutChart(canvasId, data) {
         const canvas = document.getElementById(canvasId);
 
-        // Verifica se o objeto de dados está vazio para exibir a mensagem de "Sem dados"
         if (!data || Object.keys(data).length === 0) {
             canvas.style.display = 'none';
-            // Garante que o canvas seja substituído pela mensagem
             canvas.parentNode.innerHTML =
                 '<p class="text-center text-gray-500 dark:text-gray-400 font-medium mt-12">Nenhum dado registrado para o período.</p>';
             return;
         }
 
-        // Se houver dados, garante que o canvas esteja pronto para desenhar
         canvas.style.display = 'block';
 
-        // Destrói o gráfico anterior antes de criar um novo (importante para o filtro de período)
         if (Chart.getChart(canvasId)) {
             Chart.getChart(canvasId).destroy();
         }
@@ -171,11 +151,8 @@
                         callbacks: {
                             label: function (context) {
                                 let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
+                                if (label) { label += ': '; }
                                 if (context.parsed !== null) {
-                                    // Formatação em Reais (BRL)
                                     label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
                                 }
                                 return label;
@@ -187,14 +164,9 @@
         });
     }
 
-    // Inicializa os gráficos ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
-        // Renderiza Despesas
         renderDoughnutChart('despesasChart', dados_despesas);
-
-        // Renderiza Receitas
         renderDoughnutChart('receitasChart', dados_receitas);
     });
-
 </script>
 {% endblock %}

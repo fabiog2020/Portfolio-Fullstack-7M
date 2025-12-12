@@ -1,22 +1,22 @@
+<!-- START OF FILE dashboard.html -->
 {% extends 'base.html' %}
 
 {% block title %}Dashboard{% endblock %}
 {% block header_title %}Visão Geral{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-6 mb-24"> <!-- Margem inferior grande p/ mobile -->
+<div class="max-w-5xl mx-auto px-4 py-6 mb-24">
 
-    <!-- TOPO: Boas-vindas e Botão de Ação (Desktop) -->
+    <!-- TOPO -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-8">
         <div class="mb-4 md:mb-0 text-center md:text-left">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Olá, {{ nome.split()[0] }}! 👋</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400">Resumo financeiro de {{ mes_atual }}/{{ ano_atual }}</p>
         </div>
 
-        <!-- Botão Principal de Ação (Visível apenas no Desktop, no mobile fica na barra inferior) -->
         <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}"
-            class="hidden md:inline-flex items-center px-6 py-3 bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
-            <i class="fa-solid fa-plus mr-2"></i> Nova Transação
+            class="hidden md:inline-flex items-center px-6 py-3 bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
+            <i class="fa-solid fa-plus mr-2" aria-hidden="true"></i> Nova Transação
         </a>
     </div>
 
@@ -31,18 +31,19 @@
         " + "%.2f"|format(saldo_projetado)) }}
     </div>
 
-    <!-- 2. GRÁFICOS (Com verificação de dados vazios) -->
+    <!-- 2. GRÁFICOS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
         <!-- Gráfico Despesas -->
         <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-800">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Despesas</h3>
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Despesas</h2>
             <div class="relative h-64 flex items-center justify-center">
                 {% if dados_despesas and dados_despesas|length > 0 %}
-                <canvas id="despesasChart"></canvas>
+                <canvas id="despesasChart" role="img"
+                    aria-label="Gráfico de rosca exibindo a distribuição das despesas por categoria"></canvas>
                 {% else %}
                 <div class="text-center text-gray-400">
-                    <i class="fa-solid fa-chart-pie text-4xl mb-2 opacity-50"></i>
+                    <i class="fa-solid fa-chart-pie text-4xl mb-2 opacity-50" aria-hidden="true"></i>
                     <p class="text-sm">Sem despesas este mês.</p>
                 </div>
                 {% endif %}
@@ -51,13 +52,14 @@
 
         <!-- Gráfico Receitas -->
         <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-800">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Receitas</h3>
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Receitas</h2>
             <div class="relative h-64 flex items-center justify-center">
                 {% if dados_receitas and dados_receitas|length > 0 %}
-                <canvas id="receitasChart"></canvas>
+                <canvas id="receitasChart" role="img"
+                    aria-label="Gráfico de rosca exibindo a distribuição das receitas por categoria"></canvas>
                 {% else %}
                 <div class="text-center text-gray-400">
-                    <i class="fa-solid fa-chart-pie text-4xl mb-2 opacity-50"></i>
+                    <i class="fa-solid fa-chart-pie text-4xl mb-2 opacity-50" aria-hidden="true"></i>
                     <p class="text-sm">Sem receitas este mês.</p>
                 </div>
                 {% endif %}
@@ -68,8 +70,9 @@
     <!-- 3. ÚLTIMAS TRANSAÇÕES -->
     <div class="mb-4 flex justify-between items-center">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Últimas Transações</h2>
-        <a href="{{ url_for('reports.extrato') }}" class="text-sm text-brand-blue hover:underline">Ver extrato
-            completo</a>
+        <a href="{{ url_for('reports.extrato') }}"
+            class="text-sm text-brand-blue hover:underline focus:outline-none focus:ring-2 focus:ring-brand-blue rounded">Ver
+            extrato completo</a>
     </div>
 
     <div class="space-y-2">
@@ -82,7 +85,7 @@
             class="text-center py-12 bg-white dark:bg-dark-card rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
             <div
                 class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
-                <i class="fa-solid fa-ghost text-2xl"></i>
+                <i class="fa-solid fa-ghost text-2xl" aria-hidden="true"></i>
             </div>
             <p class="text-gray-500 dark:text-dark-muted font-medium">Nenhuma transação recente.</p>
             <p class="text-xs text-gray-400 mt-1">Toque em "+" para começar.</p>
@@ -92,20 +95,19 @@
 
 </div>
 
-<!-- Scripts Chart.js -->
+<!-- Scripts Chart.js (Mantido igual, apenas estrutura HTML alterada acima) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     Chart.defaults.color = '#9ca3af';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
     Chart.defaults.font.family = "'Inter', sans-serif";
 
-    // Dados injetados com segurança
     const dados_despesas = {{ dados_despesas | tojson | default ({}, true) | safe }};
     const dados_receitas = {{ dados_receitas | tojson | default ({}, true) | safe }};
 
     function renderDoughnutChart(canvasId, data) {
         const canvas = document.getElementById(canvasId);
-        if (!canvas) return; // Se não tiver dados, o canvas nem é renderizado pelo HTML
+        if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
 

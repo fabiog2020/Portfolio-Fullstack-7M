@@ -1,3 +1,4 @@
+<!-- START OF FILE editar_categoria.html -->
 {% extends "base.html" %}
 
 {% block title %}Editar Categoria: {{ categoria.nome }}{% endblock %}
@@ -10,7 +11,7 @@
   </h1>
 
   <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6">
-    <!-- FORMULÁRIO USANDO WTForms -->
+    <!-- FORMULÁRIO -->
     <form action="{{ url_for('categories.editar_categoria', id=categoria.id) }}" method="POST" class="space-y-6">
       {{ form.hidden_tag() }}
 
@@ -19,10 +20,11 @@
         {{ form.nome.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
         {{ form.nome(
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500
-        dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+        id="nome_categoria"
         ) }}
         {% for error in form.nome.errors %}
-        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+        <p class="text-sm text-red-600 mt-1" role="alert">{{ error }}</p>
         {% endfor %}
       </div>
 
@@ -31,33 +33,32 @@
         {{ form.tipo.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
         {{ form.tipo(
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500
-        dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+        id="tipo_categoria"
         ) }}
         {% for error in form.tipo.errors %}
-        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+        <p class="text-sm text-red-600 mt-1" role="alert">{{ error }}</p>
         {% endfor %}
       </div>
 
-      <!-- Campo Cor + Ícone lado a lado -->
+      <!-- Campo Cor + Ícone -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Cor -->
         <div>
           {{ form.cor.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
           {{ form.cor(
           type="color",
-          class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600
-          p-0.5"
+          class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 p-0.5
+          cursor-pointer",
+          id="cor"
           ) }}
-          {% for error in form.cor.errors %}
-          <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-          {% endfor %}
         </div>
 
-        <!-- Ícone com pré-visualização -->
+        <!-- Ícone -->
         <div>
           {{ form.icone.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
           <div class="mt-1 flex rounded-md shadow-sm">
-            <span id="icon-preview-container"
+            <span id="icon-preview-container" aria-hidden="true"
               class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
               <i id="icon-preview" class="{{ form.icone.data or categoria.icone }} text-lg"
                 style="color: {{ form.cor.data or categoria.cor or '#6c757d' }}"></i>
@@ -69,47 +70,42 @@
             id="icone"
             ) }}
           </div>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Use classes do Font Awesome (ex: fa-solid fa-car).
-          </p>
-          {% for error in form.icone.errors %}
-          <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-          {% endfor %}
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="icon-help">Use classes Font Awesome.</p>
         </div>
       </div>
 
       <!-- BOTÕES -->
       <div class="flex justify-end space-x-3 pt-4">
         <a href="{{ url_for('categories.gerenciar_categorias') }}"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800 transition duration-150">
-          <i class="fa-solid fa-arrow-left mr-2"></i> Cancelar
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i> Cancelar
         </a>
         <button type="submit"
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
-          <i class="fa-solid fa-floppy-disk mr-2"></i> Salvar Alterações
+          <i class="fa-solid fa-floppy-disk mr-2" aria-hidden="true"></i> Salvar
         </button>
       </div>
     </form>
 
-    <!-- Zona de perigo: Excluir categoria -->
-    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Zona de Perigo</h2>
+    <!-- Zona de perigo -->
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700" role="region"
+      aria-labelledby="danger-zone-title">
+      <h2 id="danger-zone-title" class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Zona de Perigo</h2>
       <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-        <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1"></i>
-        A exclusão desta categoria é permanente e será bloqueada se houver transações ou parcelas vinculadas.
+        <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1" aria-hidden="true"></i>
+        A exclusão é permanente e será bloqueada se houver transações vinculadas.
       </p>
-      <form action="{{ url_for(	'categories.excluir_categoria', id=categoria.id) }}" method="POST">
+      <form action="{{ url_for('categories.excluir_categoria', id=categoria.id) }}" method="POST">
         <button type="submit"
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150"
           onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
-          <i class="fa-solid fa-trash-can mr-2"></i> Excluir Categoria
+          <i class="fa-solid fa-trash-can mr-2" aria-hidden="true"></i> Excluir Categoria
         </button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Script para pré-visualização em tempo real do ícone e cor -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const iconInput = document.getElementById('icone');

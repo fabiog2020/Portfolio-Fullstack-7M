@@ -1,3 +1,4 @@
+<!-- START OF FILE categorias.html -->
 {% extends 'base.html' %}
 
 {% block title %}Categorias{% endblock %}
@@ -10,19 +11,22 @@
 <div
     class="flex items-center p-4 bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 relative group overflow-hidden transition-all duration-200">
     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm mr-4 shadow-sm"
-        style="background-color: {{ c.cor }};">
+        style="background-color: {{ c.cor }};" aria-hidden="true">
         <i class="{{ c.icone }}"></i>
     </div>
     <span class="text-gray-900 dark:text-gray-100 font-medium truncate text-sm flex-grow">{{ c.nome }}</span>
 
     <!-- Ações Hover -->
     <div
-        class="absolute right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white dark:bg-dark-card pl-2">
-        <a href="{{ url_for('categories.editar_categoria', id=c.id) }}"
-            class="p-2 text-gray-400 hover:text-brand-blue"><i class="fa-solid fa-pen"></i></a>
+        class="absolute right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white dark:bg-dark-card pl-2 focus-within:opacity-100">
+        <a href="{{ url_for('categories.editar_categoria', id=c.id) }}" aria-label="Editar categoria {{ c.nome }}"
+            class="p-2 text-gray-400 hover:text-brand-blue focus:text-brand-blue focus:outline-none"><i
+                class="fa-solid fa-pen" aria-hidden="true"></i></a>
+
         <form method="post" action="{{ url_for('categories.excluir_categoria', id=c.id) }}">
-            <button type="submit" class="p-2 text-gray-400 hover:text-brand-red" onclick="return confirm('Excluir?')"><i
-                    class="fa-solid fa-trash"></i></button>
+            <button type="submit" class="p-2 text-gray-400 hover:text-brand-red focus:text-brand-red focus:outline-none"
+                aria-label="Excluir categoria {{ c.nome }}" onclick="return confirm('Excluir?')"><i
+                    class="fa-solid fa-trash" aria-hidden="true"></i></button>
         </form>
     </div>
 </div>
@@ -35,7 +39,7 @@
         <div
             class="bg-white dark:bg-dark-card p-6 rounded-3xl shadow-lg h-fit border border-gray-100 dark:border-gray-800 lg:sticky lg:top-24">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                <i class="fa-solid fa-plus-circle mr-2 text-brand-blue"></i> Nova Categoria
+                <i class="fa-solid fa-plus-circle mr-2 text-brand-blue" aria-hidden="true"></i> Nova Categoria
             </h2>
 
             {% from "macros/forms.html" import render_field, render_submit %}
@@ -46,10 +50,10 @@
                 {{ render_field(form.nome, placeholder="Nome (ex: Mercado)") }}
 
                 <div class="mb-4">
-                    <label
+                    <label for="tipo_categoria"
                         class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Tipo</label>
                     <div class="relative">
-                        <select name="tipo"
+                        <select name="tipo" id="tipo_categoria"
                             class="block w-full pl-4 pr-10 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue cursor-pointer appearance-none">
                             <option value="saída">Despesa (Saída)</option>
                             <option value="entrada">Receita (Entrada)</option>
@@ -57,7 +61,8 @@
                         </select>
                         <div
                             class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                            <i class="fa-solid fa-chevron-down text-xs"></i></div>
+                            <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -74,34 +79,37 @@
         <div class="lg:col-span-2 space-y-8">
 
             <!-- Despesas -->
-            <div>
-                <h3 class="text-brand-red font-bold uppercase text-xs mb-3 tracking-widest px-1">Despesas</h3>
+            <section aria-labelledby="header-despesas">
+                <h3 id="header-despesas" class="text-brand-red font-bold uppercase text-xs mb-3 tracking-widest px-1">
+                    Despesas</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {% for c in categorias if c.tipo == 'saída' %}
                     {{ render_category_card(c) }}
                     {% endfor %}
                 </div>
-            </div>
+            </section>
 
             <!-- Receitas -->
-            <div>
-                <h3 class="text-brand-green font-bold uppercase text-xs mb-3 tracking-widest px-1">Receitas</h3>
+            <section aria-labelledby="header-receitas">
+                <h3 id="header-receitas" class="text-brand-green font-bold uppercase text-xs mb-3 tracking-widest px-1">
+                    Receitas</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {% for c in categorias if c.tipo == 'entrada' %}
                     {{ render_category_card(c) }}
                     {% endfor %}
                 </div>
-            </div>
+            </section>
 
             <!-- Investimentos -->
-            <div>
-                <h3 class="text-brand-blue font-bold uppercase text-xs mb-3 tracking-widest px-1">Investimentos</h3>
+            <section aria-labelledby="header-investimentos">
+                <h3 id="header-investimentos"
+                    class="text-brand-blue font-bold uppercase text-xs mb-3 tracking-widest px-1">Investimentos</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {% for c in categorias if c.tipo == 'investimento' %}
                     {{ render_category_card(c) }}
                     {% endfor %}
                 </div>
-            </div>
+            </section>
 
         </div>
     </div>

@@ -1,3 +1,4 @@
+<!-- START OF FILE register.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -60,45 +61,46 @@
 
 <body>
 
-  <div class="register-container">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
+  <main class="register-container" role="main">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo FinanceApp" class="logo">
 
     <h1>Criar Conta</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    {% for category, message in messages %}
-    <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
+    <div role="alert">
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
     {% endwith %}
 
-    <!-- ACTION ATUALIZADA PARA auth.register -->
     <form method="POST" action="{{ url_for('auth.register') }}">
       {{ form.csrf_token }}
 
       <label for="nome">Nome:</label>
       <input type="text" name="nome" id="nome" placeholder="Seu nome completo" required
-        value="{{ form.nome.data if form and form.nome.data else '' }}">
+        value="{{ form.nome.data if form and form.nome.data else '' }}" aria-required="true">
       {% if form and form.nome.errors %}
-      <div class="error-message">
+      <div class="error-message" role="alert">
         {{ form.nome.errors[0] }}
       </div>
       {% endif %}
 
       <label for="email">E-mail:</label>
       <input type="email" name="email" id="email" placeholder="Digite seu e-mail" required
-        value="{{ form.email.data if form and form.email.data else '' }}">
+        value="{{ form.email.data if form and form.email.data else '' }}" aria-required="true">
       {% if form and form.email.errors %}
-      <div class="error-message">
+      <div class="error-message" role="alert">
         {{ form.email.errors[0] }}
       </div>
       {% endif %}
 
       <label for="senha">Senha:</label>
-      <input type="password" name="senha" id="senha" placeholder="Crie uma senha" required>
+      <input type="password" name="senha" id="senha" placeholder="Crie uma senha" required aria-required="true">
       {% if form and form.senha.errors %}
-      <div class="error-message">
+      <div class="error-message" role="alert">
         {{ form.senha.errors[0] }}
       </div>
       {% endif %}
@@ -106,9 +108,8 @@
       <button type="submit">Cadastrar</button>
     </form>
 
-    <!-- LINK ATUALIZADO PARA auth.login -->
     <p>Já tem uma conta? <a href="{{ url_for('auth.login') }}">Faça login aqui</a></p>
-  </div>
+  </main>
 
   <footer>
     <p>FinanceApp © 2025 — Desenvolvido por Fábio Gundim</p>

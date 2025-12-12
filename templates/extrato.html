@@ -1,3 +1,4 @@
+<!-- START OF FILE extrato.html -->
 {% extends 'base.html' %}
 
 {% block title %}Extrato{% endblock %}
@@ -11,16 +12,16 @@
             Extrato de Transações
         </h1>
         <a href="{{ url_for('main.dashboard') }}"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Voltar
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i> Voltar
         </a>
     </div>
 
-    <!-- Área de Filtros (Visual Clean) -->
+    <!-- Área de Filtros -->
     <div class="bg-white dark:bg-dark-card shadow-sm border border-gray-100 dark:border-gray-800 rounded-2xl p-5 mb-8">
         <h2
-            class="text-sm font-bold text-gray-500 dark:text-dark-muted uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
-            <i class="fa-solid fa-filter mr-1"></i> Filtros
+            class="text-sm font-bold text-gray-500 dark:text-dark-muted uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2 flex items-center">
+            <i class="fa-solid fa-filter mr-1" aria-hidden="true"></i> Filtros
         </h2>
 
         <form method="GET" action="{{ url_for('reports.extrato') }}"
@@ -44,9 +45,9 @@
 
             <!-- Categoria -->
             <div>
-                <label for="categoria_id"
+                <label for="categoria_filter"
                     class="block text-xs font-semibold text-gray-500 dark:text-dark-muted mb-1">Categoria</label>
-                <select name="categoria_id" id="categoria_id"
+                <select name="categoria_id" id="categoria_filter"
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
                     <option value="">Todas</option>
                     {% for categoria in categorias %}
@@ -57,9 +58,9 @@
 
             <!-- Tipo -->
             <div>
-                <label for="tipo"
+                <label for="tipo_filter"
                     class="block text-xs font-semibold text-gray-500 dark:text-dark-muted mb-1">Tipo</label>
-                <select name="tipo" id="tipo"
+                <select name="tipo" id="tipo_filter"
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
                     <option value="">Todos</option>
                     <option value="receita">Receita</option>
@@ -70,61 +71,58 @@
             <!-- Botão -->
             <div>
                 <button type="submit"
-                    class="w-full py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-blue-600 transition shadow-md text-sm">
+                    class="w-full py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-blue-600 transition shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
                     Aplicar
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Lista de Transações (Usando a Macro) -->
-    <div class="space-y-1">
-        {% from "macros/ui.html" import render_transaction_item %}
-
+    <!-- Lista de Transações -->
+    <div class="space-y-1" role="list" aria-label="Lista de transações filtradas">
         {% if transacoes %}
         <!-- Contador -->
-        <p class="text-xs text-right text-gray-400 mb-2">{{ transacoes|length }} registros encontrados</p>
+        <p class="text-xs text-right text-gray-400 mb-2" aria-live="polite">{{ transacoes|length }} registros
+            encontrados</p>
 
         {% for t in transacoes %}
-        {# Convertendo dicionário para objeto compatível com a macro se necessário,
-        mas a macro espera objeto. O extrato retorna dicionários.
-        Vamos ajustar a chamada da macro ou garantir que a macro aceite dict. #}
-
-        {# TRUQUE JINJA: A macro espera 'transacao.categoria.icone'.
-        Se 't' for dict, usamos t['categoria_nome'], etc.
-        Vou adaptar a macro aqui inline para garantir compatibilidade com o formato do extrato
-        OU (Melhor) criar um objeto fake wrapper #}
-
-        <div
+        <div role="listitem"
             class="flex items-center justify-between p-4 bg-white dark:bg-dark-card rounded-xl shadow-sm mb-3 border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#252525] transition group">
             <div class="flex items-center space-x-4">
-                <!-- Ícone (Genérico pois o extrato atual não traz cor/ícone no dict, vamos melhorar isso) -->
+                <!-- Ícone visual -->
                 <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg shadow-sm"
-                    style="background-color: {{ '#10b981' if t.tipo == 'receita' else '#ef4444' }};">
+                    style="background-color: {{ '#10b981' if t.tipo == 'receita' else '#ef4444' }};" aria-hidden="true">
                     <i class="fa-solid {{ 'fa-arrow-up' if t.tipo == 'receita' else 'fa-arrow-down' }}"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">{{ t.descricao }}</h4>
                     <p class="text-xs text-gray-500 dark:text-dark-muted">
-                        {{ t.data.strftime('%d/%m/%Y') }} • {{ t.categoria_nome }}
+                        <span class="sr-only">Data: </span>{{ t.data.strftime('%d/%m/%Y') }}
+                        <span aria-hidden="true">•</span>
+                        <span class="sr-only">Categoria: </span>{{ t.categoria_nome }}
                     </p>
                 </div>
             </div>
             <div class="text-right">
-                <p
-                    class="font-bold {{ 'text-brand-green' if t.tipo == 'receita' else 'text-brand-red' }} text-sm sm:text-base">
+                <p class="font-bold {{ 'text-brand-green' if t.tipo == 'receita' else 'text-brand-red' }} text-sm sm:text-base"
+                    aria-label="{{ 'Receita de' if t.tipo == 'receita' else 'Despesa de' }} {{ '%.2f'|format(t.valor) }} reais">
                     {{ '+' if t.tipo == 'receita' else '-' }} R$ {{ "%.2f"|format(t.valor) }}
                 </p>
 
                 <!-- Ações -->
-                <div class="mt-1 space-x-2 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                    class="mt-1 space-x-2 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
                     <a href="{{ url_for('transactions.editar_transacao', id=t.id) }}"
-                        class="text-xs text-gray-400 hover:text-brand-blue"><i class="fa-solid fa-pen"></i></a>
+                        aria-label="Editar transação {{ t.descricao }}"
+                        class="text-xs text-gray-400 hover:text-brand-blue focus:text-brand-blue focus:outline-none"><i
+                            class="fa-solid fa-pen" aria-hidden="true"></i></a>
 
                     <form action="{{ url_for('transactions.excluir_transacao', id=t.id) }}" method="POST" class="inline"
                         onsubmit="return confirm('Excluir?')">
-                        <button type="submit" class="text-xs text-gray-400 hover:text-brand-red"><i
-                                class="fa-solid fa-trash"></i></button>
+                        <button type="submit"
+                            class="text-xs text-gray-400 hover:text-brand-red focus:text-brand-red focus:outline-none"
+                            aria-label="Excluir transação {{ t.descricao }}"><i class="fa-solid fa-trash"
+                                aria-hidden="true"></i></button>
                     </form>
                 </div>
             </div>
@@ -132,7 +130,8 @@
         {% endfor %}
         {% else %}
         <div class="text-center py-16">
-            <i class="fa-solid fa-magnifying-glass text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+            <i class="fa-solid fa-magnifying-glass text-4xl text-gray-300 dark:text-gray-700 mb-3"
+                aria-hidden="true"></i>
             <p class="text-gray-500 dark:text-dark-muted">Nenhum resultado encontrado.</p>
         </div>
         {% endif %}

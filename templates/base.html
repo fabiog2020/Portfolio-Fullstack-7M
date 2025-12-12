@@ -1,9 +1,11 @@
+<!-- START OF FILE base.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Aplicativo de Gestão Financeira Pessoal">
   <title>{% block title %}FinanceApp{% endblock %}</title>
 
   <!-- Tailwind CSS -->
@@ -15,11 +17,11 @@
         extend: {
           colors: {
             dark: {
-              bg: '#121212',       // Fundo principal
-              card: '#1e1e1e',     // Fundo dos cards
-              input: '#2c2c2c',    // Fundo dos inputs
-              text: '#e4e4e7',     // Texto principal
-              muted: '#a1a1aa'     // Texto secundário
+              bg: '#121212',
+              card: '#1e1e1e',
+              input: '#2c2c2c',
+              text: '#e4e4e7',
+              muted: '#a1a1aa'
             },
             brand: {
               green: '#10b981',
@@ -38,7 +40,6 @@
 
   <!-- Lógica de Tema (Dark/Light) -->
   <script>
-    // Verifica preferência salva ou do sistema ao carregar
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark')
     } else {
@@ -79,43 +80,41 @@
   class="bg-gray-100 dark:bg-dark-bg text-gray-900 dark:text-dark-text min-h-screen pb-20 md:pb-0 transition-colors duration-200">
 
   <!-- Navbar Desktop (Topo) -->
-  <nav class="hidden md:block bg-white dark:bg-dark-card shadow-md sticky top-0 z-50">
+  <nav class="hidden md:block bg-white dark:bg-dark-card shadow-md sticky top-0 z-50" aria-label="Navegação Principal">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <div class="flex items-center">
-          <a href="{{ url_for('main.dashboard') }}" class="text-2xl font-bold text-brand-blue flex items-center">
-            <i class="fa-solid fa-chart-simple mr-2"></i> Finanças
+          <a href="{{ url_for('main.dashboard') }}" class="text-2xl font-bold text-brand-blue flex items-center"
+            aria-label="FinanceApp Dashboard">
+            <i class="fa-solid fa-chart-simple mr-2" aria-hidden="true"></i> Finanças
           </a>
-          <div class="ml-10 flex items-baseline space-x-2"> <!-- space-x-2 para caber tudo -->
-            <a href="{{ url_for('main.dashboard') }}"
+          <div class="ml-10 flex items-baseline space-x-2" role="menubar">
+            <a href="{{ url_for('main.dashboard') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Dashboard</a>
-            <a href="{{ url_for('reports.extrato') }}"
+            <a href="{{ url_for('reports.extrato') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Extrato</a>
-
-            <!-- NOVOS LINKS AQUI -->
-            <a href="{{ url_for('cards.cartoes') }}"
+            <a href="{{ url_for('cards.cartoes') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Cartões</a>
-            <a href="{{ url_for('installments.listar_parcelas') }}"
+            <a href="{{ url_for('installments.listar_parcelas') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Parcelas</a>
-
-            <a href="{{ url_for('investments.investimentos') }}"
+            <a href="{{ url_for('investments.investimentos') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Investimentos</a>
-            <a href="{{ url_for('categories.gerenciar_categorias') }}"
+            <a href="{{ url_for('categories.gerenciar_categorias') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Categorias</a>
-            <a href="{{ url_for('reports.relatorios') }}"
+            <a href="{{ url_for('reports.relatorios') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Relatórios</a>
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <button onclick="toggleTheme()"
-            class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none">
-            <i class="fa-solid fa-sun text-yellow-500 block dark:hidden"></i>
-            <i class="fa-solid fa-moon text-brand-blue hidden dark:block"></i>
+          <button onclick="toggleTheme()" aria-label="Alternar entre modo claro e escuro"
+            class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            <i class="fa-solid fa-sun text-yellow-500 block dark:hidden" aria-hidden="true"></i>
+            <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
           </button>
 
-          <a href="{{ url_for('auth.logout') }}"
+          <a href="{{ url_for('auth.logout') }}" aria-label="Sair da conta"
             class="text-red-500 hover:text-red-400 text-sm font-medium flex items-center">
-            <i class="fa-solid fa-right-from-bracket mr-1"></i> Sair
+            <i class="fa-solid fa-right-from-bracket mr-1" aria-hidden="true"></i> Sair
           </a>
         </div>
       </div>
@@ -123,32 +122,36 @@
   </nav>
 
   <!-- Header Mobile -->
-  <div class="md:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-card sticky top-0 z-40 shadow-sm">
+  <header
+    class="md:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-card sticky top-0 z-40 shadow-sm">
     <h1 class="text-xl font-bold">{% block header_title %}Finanças{% endblock %}</h1>
     <div class="flex items-center space-x-3">
-      <button onclick="toggleTheme()" class="p-2 rounded-full focus:outline-none">
-        <i class="fa-solid fa-sun text-yellow-500 block dark:hidden"></i>
-        <i class="fa-solid fa-moon text-brand-blue hidden dark:block"></i>
+      <button onclick="toggleTheme()" aria-label="Alternar tema"
+        class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-blue">
+        <i class="fa-solid fa-sun text-yellow-500 block dark:hidden" aria-hidden="true"></i>
+        <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
       </button>
-      <a href="{{ url_for('auth.logout') }}" class="text-dark-muted"><i class="fa-solid fa-right-from-bracket"></i></a>
+      <a href="{{ url_for('auth.logout') }}" class="text-dark-muted" aria-label="Sair"><i
+          class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></a>
     </div>
-  </div>
+  </header>
 
-  <!-- MENSAGENS FLASH (Centralizadas) -->
-  <div class="max-w-4xl mx-auto px-4 mt-4">
+  <!-- MENSAGENS FLASH -->
+  <div class="max-w-4xl mx-auto px-4 mt-4" aria-live="polite">
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     {% for category, message in messages %}
-    <div
+    <div role="alert"
       class="p-4 mb-4 rounded-xl shadow-md text-sm flex items-center justify-between animate-fade-in-down
                         {% if category == 'success' %} bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800
                         {% elif category == 'error' or category == 'danger' %} bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800
                         {% else %} bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 {% endif %}">
       <div class="flex items-center">
-        <i class="fa-solid fa-bell mr-2"></i>
-        {{ message }}
+        <i class="fa-solid fa-bell mr-2" aria-hidden="true"></i>
+        <span>{{ message }}</span>
       </div>
-      <button onclick="this.parentElement.remove()" class="text-lg font-bold hover:opacity-75">&times;</button>
+      <button onclick="this.parentElement.remove()" aria-label="Fechar mensagem"
+        class="text-lg font-bold hover:opacity-75 focus:outline-none">&times;</button>
     </div>
     {% endfor %}
     {% endif %}
@@ -156,40 +159,41 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <main class="flex-grow">
+  <main class="flex-grow" role="main">
     {% block content %}{% endblock %}
   </main>
 
   <!-- Bottom Navigation Bar (Mobile) -->
-  <nav
+  <nav aria-label="Navegação Mobile"
     class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-800 flex justify-around items-center py-3 z-50 shadow-inner">
+
     <a href="{{ url_for('main.dashboard') }}"
       class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if request.endpoint == 'main.dashboard' else '' }}">
-      <i class="fa-solid fa-house text-xl mb-1"></i>
+      <i class="fa-solid fa-house text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Início</span>
     </a>
 
     <a href="{{ url_for('reports.extrato') }}"
       class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'reports' in request.endpoint else '' }}">
-      <i class="fa-solid fa-list text-xl mb-1"></i>
+      <i class="fa-solid fa-list text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Extrato</span>
     </a>
 
     <!-- Botão Central -->
-    <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}"
-      class="flex items-center justify-center w-14 h-14 bg-brand-blue rounded-full text-white shadow-lg transform -translate-y-4 border-4 border-gray-100 dark:border-dark-bg">
-      <i class="fa-solid fa-plus text-2xl"></i>
+    <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}" aria-label="Adicionar Nova Transação"
+      class="flex items-center justify-center w-14 h-14 bg-brand-blue rounded-full text-white shadow-lg transform -translate-y-4 border-4 border-gray-100 dark:border-dark-bg focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
+      <i class="fa-solid fa-plus text-2xl" aria-hidden="true"></i>
     </a>
 
     <a href="{{ url_for('investments.investimentos') }}"
       class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'investments' in request.endpoint else '' }}">
-      <i class="fa-solid fa-chart-line text-xl mb-1"></i>
+      <i class="fa-solid fa-chart-line text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Investir</span>
     </a>
 
     <a href="{{ url_for('categories.gerenciar_categorias') }}"
       class="flex flex-col items-center text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'categories' in request.endpoint else '' }}">
-      <i class="fa-solid fa-layer-group text-xl mb-1"></i>
+      <i class="fa-solid fa-layer-group text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Mais</span>
     </a>
   </nav>
