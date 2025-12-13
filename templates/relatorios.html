@@ -1,172 +1,368 @@
 <!-- START OF FILE relatorios.html -->
 {% extends 'base.html' %}
 
-{% block title %}Relatórios e Análise Financeira{% endblock %}
+{% block title %}Relatórios Avançados{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <header class="mb-8 border-b border-primary-300 dark:border-primary-700 pb-2">
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
-            <i class="fa-solid fa-chart-pie mr-3 text-tertiary-500" aria-hidden="true"></i>
-            Relatórios Detalhados
-        </h1>
-        <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
-            Análise visual das suas finanças: Receitas vs. Despesas por Categoria.
-        </p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20">
+
+    <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center">
+                <i class="fa-solid fa-chart-line mr-3 text-brand-blue"></i>
+                Relatórios Financeiros
+            </h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Visão completa das suas finanças e investimentos.</p>
+        </div>
+
+        <!-- Botões Visuais (Apenas UI) -->
+        <div
+            class="mt-4 md:mt-0 flex space-x-2 bg-white dark:bg-dark-card p-1 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <button class="px-3 py-1 text-xs font-bold rounded-md bg-brand-blue text-white shadow">12 Meses</button>
+            <button
+                class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">YTD</button>
+        </div>
     </header>
 
-    <section class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-8" aria-labelledby="filter-heading">
-        <h2 id="filter-heading" class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
-            Filtro de Período
-        </h2>
-        <form method="GET" action="{{ url_for('reports.relatorios') }}"
-            class="flex flex-col sm:flex-row gap-4 items-end">
+    <!-- 1. CARDS DE RESUMO (KPIs Calculados no Template para exibição rápida) -->
+    {% set ultimo_patrimonio = data_patrimonio[-1] if data_patrimonio else 0 %}
+    {% set ultimo_saldo = data_saldos[-1] if data_saldos else 0 %}
+    {% set ultima_receita = data_receitas[-1] if data_receitas else 0 %}
+    {% set ultima_despesa = data_despesas[-1] if data_despesas else 0 %}
 
-            <div class="w-full sm:w-1/3">
-                <label for="periodo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mês/Ano:</label>
-                <input type="month" name="periodo" id="periodo" value="{{ periodo_selecionado }}"
-                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+    {% set taxa_poupanca = 0 %}
+    {% if ultima_receita > 0 %}
+    {% set taxa_poupanca = ((ultima_receita - ultima_despesa) / ultima_receita) * 100 %}
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- Card Patrimônio -->
+        <div class="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Patrimônio Total</span>
+                <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <i class="fa-solid fa-arrow-trend-up text-brand-green text-sm"></i>
+                </div>
             </div>
-
-            <div class="w-full sm:w-auto">
-                <button type="submit"
-                    class="w-full inline-flex justify-center items-center px-6 py-2 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out transform hover:scale-[1.02]">
-                    <i class="fa-solid fa-sync-alt mr-2" aria-hidden="true"></i> Gerar Relatório
-                </button>
-            </div>
-        </form>
-    </section>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        <section class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6" aria-labelledby="chart-despesas-heading">
-            <h2 id="chart-despesas-heading"
-                class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <i class="fa-solid fa-arrow-alt-circle-down mr-2 text-red-500" aria-hidden="true"></i>
-                Despesas por Categoria
-            </h2>
-            <div class="h-80 flex items-center justify-center">
-                <canvas id="despesasChart" role="img"
-                    aria-label="Gráfico de pizza mostrando a distribuição de despesas por categoria"></canvas>
-            </div>
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                Análise de onde o seu dinheiro foi gasto neste período.
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ "%.2f"|format(ultimo_patrimonio) }}</p>
+            <p class="text-brand-green text-xs mt-1 font-semibold flex items-center">
+                <i class="fa-solid fa-caret-up mr-1"></i> Acumulado
             </p>
-        </section>
+        </div>
 
-        <section class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6" aria-labelledby="chart-receitas-heading">
-            <h2 id="chart-receitas-heading"
-                class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                <i class="fa-solid fa-arrow-alt-circle-up mr-2 text-green-500" aria-hidden="true"></i>
-                Receitas por Categoria
-            </h2>
-            <div class="h-80 flex items-center justify-center">
-                <canvas id="receitasChart" role="img"
-                    aria-label="Gráfico de pizza mostrando a distribuição de receitas por categoria"></canvas>
+        <!-- Card Saldo Mensal -->
+        <div class="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Saldo do Mês</span>
+                <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <i class="fa-solid fa-wallet text-brand-blue text-sm"></i>
+                </div>
             </div>
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                Análise das suas principais fontes de rendimento neste período.
-            </p>
-        </section>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ "%.2f"|format(ultimo_saldo) }}</p>
+            <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">Receitas - Despesas</p>
+        </div>
+
+        <!-- Card Taxa de Poupança -->
+        <div class="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Taxa de Poupança</span>
+                <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <i class="fa-solid fa-piggy-bank text-purple-500 text-sm"></i>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ "%.1f"|format(taxa_poupanca) }}%</p>
+            <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">Da receita mensal</p>
+        </div>
+
+        <!-- Card Rentabilidade (Mock Visual) -->
+        <div class="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Rentabilidade Real</span>
+                <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <i class="fa-solid fa-chart-simple text-orange-500 text-sm"></i>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">+1.2%</p>
+            <p class="text-orange-500 text-xs mt-1 font-semibold">Acima da Inflação (IPCA)</p>
+        </div>
     </div>
+
+    <!-- 2. GRÁFICO DE ÁREA: EVOLUÇÃO PATRIMONIAL -->
+    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Evolução Patrimonial</h2>
+        <div class="h-80 w-full">
+            <canvas id="patrimonioChart"></canvas>
+        </div>
+    </div>
+
+    <!-- GRID DE 2 COLUNAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        <!-- 3. BARRAS: RECEITAS VS DESPESAS -->
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Receitas vs Despesas</h2>
+            <div class="h-72 w-full">
+                <canvas id="receitaDespesaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 4. ROSCA: DISTRIBUIÇÃO DE DESPESAS -->
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Distribuição de Despesas</h2>
+            <div class="h-72 w-full flex items-center justify-center relative">
+                {% if despesas_por_categoria %}
+                <canvas id="despesasPieChart"></canvas>
+                {% else %}
+                <p class="text-gray-400">Sem dados de despesa este mês.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- GRID DE INVESTIMENTOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        <!-- 5. PIZZA: ALOCAÇÃO DE ATIVOS -->
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Alocação de Investimentos</h2>
+            <div class="h-72 w-full flex items-center justify-center relative">
+                {% if alocacao_ativos %}
+                <canvas id="investimentosChart"></canvas>
+                {% else %}
+                <div class="text-center">
+                    <i class="fa-solid fa-piggy-bank text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-400 text-sm">Sem investimentos cadastrados.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 6. LINHA: PERFORMANCE VS BENCHMARK -->
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Performance vs Benchmarks</h2>
+            <div class="h-72 w-full">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. METAS FINANCEIRAS -->
+    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Progresso das Metas</h2>
+            <button class="text-sm text-brand-blue hover:text-blue-600 font-medium transition">Adicionar Meta</button>
+        </div>
+
+        <div class="space-y-6">
+            {% for meta in metas %}
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300 text-sm">{{ meta.nome }}</span>
+                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400">
+                        R$ {{ "%.0f"|format(meta.atual) }} / R$ {{ "%.0f"|format(meta.alvo) }}
+                    </span>
+                </div>
+                <!-- Barra Background -->
+                <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                    <!-- Barra Progresso com Gradiente -->
+                    <div class="h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2 bg-gradient-to-r {{ meta.cor.replace('bg-', 'from-').replace('-500', '-500') }} to-purple-500"
+                        style="width: {{ (meta.atual / meta.alvo * 100)|round }}%">
+                        <span class="text-[10px] font-bold text-white shadow-sm">{{ (meta.atual / meta.alvo * 100)|int
+                            }}%</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 
-<!-- Mantive o script igual, pois a estrutura HTML já provê os IDs necessários -->
+<!-- CHART.JS LOGIC -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    const dados_despesas_json = '{{ dados_despesas | tojson | safe }}';
-    const dados_receitas_json = '{{ dados_receitas | tojson | safe }}';
+    // --- Configuração Global ---
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#94a3b8'; // Slate 400
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
 
-    let dados_despesas, dados_receitas;
+    // --- Dados do Backend (Flask) ---
+    // O JavaScript APENAS recebe os dados já calculados. Sem lógica de negócio aqui.
+    const labels = {{ labels | tojson | safe }};
+    const dataPatrimonio = {{ data_patrimonio | tojson | safe }};
+    const dataReceitas = {{ data_receitas | tojson | safe }};
+    const dataDespesas = {{ data_despesas | tojson | safe }};
+    const despesasCat = {{ despesas_por_categoria | tojson | safe }};
+    const investAloc = {{ alocacao_ativos | tojson | safe }};
 
-    function safeJsonParse(jsonString) {
-        if (!jsonString || jsonString.trim() === '' || jsonString.trim() === 'None' || jsonString.trim() === 'null') {
-            return {};
+    // --- 1. Gráfico de Evolução Patrimonial (Area Chart) ---
+    const ctxPat = document.getElementById('patrimonioChart').getContext('2d');
+
+    // Gradiente Visual
+    const gradientPat = ctxPat.createLinearGradient(0, 0, 0, 400);
+    gradientPat.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+    gradientPat.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+    new Chart(ctxPat, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Patrimônio',
+                data: dataPatrimonio,
+                borderColor: '#6366F1',
+                backgroundColor: gradientPat,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#6366F1',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: gridColor }, border: { display: false } }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false }
         }
-        try { return JSON.parse(jsonString); } catch (e) { return {}; }
-    }
+    });
 
-    dados_despesas = safeJsonParse(dados_despesas_json);
-    dados_receitas = safeJsonParse(dados_receitas_json);
-
-    function generateVibrantColors(numColors) {
-        const colors = [];
-        for (let i = 0; i < numColors; i++) {
-            const h = (i * (360 / numColors) + 50) % 360;
-            const s = 75;
-            const l = 60;
-            colors.push(`hsl(${h}, ${s}%, ${l}%)`);
+    // --- 2. Receitas vs Despesas (Bar Chart) ---
+    new Chart(document.getElementById('receitaDespesaChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: dataReceitas,
+                    backgroundColor: '#10B981',
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                },
+                {
+                    label: 'Despesas',
+                    data: dataDespesas,
+                    backgroundColor: '#EF4444',
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', align: 'end' } },
+            scales: {
+                x: { grid: { display: false }, stacked: false },
+                y: { grid: { color: gridColor }, border: { display: false }, beginAtZero: true }
+            }
         }
-        return colors;
-    }
+    });
 
-    function renderDoughnutChart(canvasId, data) {
-        const canvas = document.getElementById(canvasId);
-
-        if (!data || Object.keys(data).length === 0) {
-            canvas.style.display = 'none';
-            canvas.parentNode.innerHTML =
-                '<p class="text-center text-gray-500 dark:text-gray-400 font-medium mt-12">Nenhum dado registrado para o período.</p>';
-            return;
-        }
-
-        canvas.style.display = 'block';
-
-        if (Chart.getChart(canvasId)) {
-            Chart.getChart(canvasId).destroy();
-        }
-
-        const labels = Object.keys(data);
-        const values = Object.values(data);
-        const backgroundColors = generateVibrantColors(labels.length);
-
-        const ctx = canvas.getContext('2d');
-
-        new Chart(ctx, {
+    // --- 3. Distribuição de Despesas (Doughnut) ---
+    if (Object.keys(despesasCat).length > 0) {
+        new Chart(document.getElementById('despesasPieChart'), {
             type: 'doughnut',
             data: {
-                labels: labels,
+                labels: Object.keys(despesasCat),
                 datasets: [{
-                    label: 'Valor (R$)',
-                    data: values,
-                    backgroundColor: backgroundColors,
-                    hoverOffset: 10,
-                    borderColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                    borderWidth: 2
+                    data: Object.values(despesasCat),
+                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#A8E6CF', '#C7CEEA'],
+                    borderWidth: 0,
+                    hoverOffset: 15
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#cbd5e1' : '#475569',
-                            boxWidth: 20,
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
+                cutout: '70%',
+                plugins: { legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } } }
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        renderDoughnutChart('despesasChart', dados_despesas);
-        renderDoughnutChart('receitasChart', dados_receitas);
+    // --- 4. Alocação de Investimentos (Pie) ---
+    if (Object.keys(investAloc).length > 0) {
+        new Chart(document.getElementById('investimentosChart'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(investAloc),
+                datasets: [{
+                    data: Object.values(investAloc),
+                    backgroundColor: ['#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } } }
+            }
+        });
+    }
+
+    // --- 5. Performance (MOCK VISUAL APENAS) ---
+    // Este gráfico usa dados aleatórios para visualização, pois CDI/IPCA não estão no banco.
+    // Isso não afeta a lógica financeira do usuário (saldos e despesas).
+    const mockCDI = labels.map(() => 0.8 + Math.random() * 0.2);
+    const mockIPCA = labels.map(() => 0.3 + Math.random() * 0.4);
+    const mockCarteira = mockCDI.map(v => v * (1 + Math.random()));
+
+    new Chart(document.getElementById('performanceChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Minha Carteira',
+                    data: mockCarteira,
+                    borderColor: '#8B5CF6',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 0
+                },
+                {
+                    label: 'CDI',
+                    data: mockCDI,
+                    borderColor: '#10B981',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0
+                },
+                {
+                    label: 'IPCA',
+                    data: mockIPCA,
+                    borderColor: '#EF4444',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', align: 'end' },
+                tooltip: {
+                    callbacks: { label: (c) => `${c.dataset.label}: ${c.raw.toFixed(2)}%` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: gridColor }, ticks: { callback: (v) => v + '%' } }
+            }
+        }
     });
 </script>
 {% endblock %}
