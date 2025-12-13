@@ -6,7 +6,7 @@
 
 {% block content %}
 
-{# --- MACRO --- #}
+{# --- MACRO DE CARD (Mantida igual) --- #}
 {% macro render_category_card(c) %}
 <div
     class="flex items-center p-4 bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 relative group overflow-hidden transition-all duration-200">
@@ -35,7 +35,7 @@
 <div class="max-w-6xl mx-auto px-4 py-8 mb-20">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Formulário (Fixo no Desktop) -->
+        <!-- Formulário de Nova Categoria -->
         <div
             class="bg-white dark:bg-dark-card p-6 rounded-3xl shadow-lg h-fit border border-gray-100 dark:border-gray-800 lg:sticky lg:top-24">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
@@ -66,19 +66,45 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div>{{ render_field(form.cor, type="color", label_visible=True) }}</div>
-                    <div>{{ render_field(form.icone, placeholder="fa-solid fa-tag") }}</div>
+                <!-- SELETOR DE COR VISUAL -->
+                <div class="mb-4">
+                    <label
+                        class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-2 ml-1">Cor</label>
+                    <!-- Input Oculto -->
+                    {{ form.cor(class="hidden", id="input_cor") }}
+
+                    <div class="flex flex-wrap gap-2" id="color-palette">
+                        <!-- As bolinhas serão geradas via JS -->
+                    </div>
+                </div>
+
+                <!-- SELETOR DE ÍCONE VISUAL -->
+                <div class="mb-6">
+                    <label
+                        class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-2 ml-1">Ícone</label>
+                    <!-- Input Oculto -->
+                    {{ form.icone(class="hidden", id="input_icone") }}
+
+                    <div class="grid grid-cols-6 gap-2 p-2 bg-gray-50 dark:bg-dark-input rounded-xl max-h-48 overflow-y-auto no-scrollbar"
+                        id="icon-grid">
+                        <!-- Os ícones serão gerados via JS -->
+                    </div>
+                    <!-- Preview Selecionado -->
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <span class="mr-2">Selecionado:</span>
+                        <div id="preview-selected"
+                            class="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all shadow-md">
+                            <i id="preview-icon-i" class="fa-solid fa-tag"></i>
+                        </div>
+                    </div>
                 </div>
 
                 {{ render_submit(text="Criar", icon="fa-plus") }}
             </form>
         </div>
 
-        <!-- Lista -->
+        <!-- Listagem de Categorias (Mantida igual) -->
         <div class="lg:col-span-2 space-y-8">
-
-            <!-- Despesas -->
             <section aria-labelledby="header-despesas">
                 <h3 id="header-despesas" class="text-brand-red font-bold uppercase text-xs mb-3 tracking-widest px-1">
                     Despesas</h3>
@@ -89,7 +115,6 @@
                 </div>
             </section>
 
-            <!-- Receitas -->
             <section aria-labelledby="header-receitas">
                 <h3 id="header-receitas" class="text-brand-green font-bold uppercase text-xs mb-3 tracking-widest px-1">
                     Receitas</h3>
@@ -100,7 +125,6 @@
                 </div>
             </section>
 
-            <!-- Investimentos -->
             <section aria-labelledby="header-investimentos">
                 <h3 id="header-investimentos"
                     class="text-brand-blue font-bold uppercase text-xs mb-3 tracking-widest px-1">Investimentos</h3>
@@ -110,8 +134,97 @@
                     {% endfor %}
                 </div>
             </section>
-
         </div>
     </div>
 </div>
+
+<script>
+    // --- DADOS DE CONFIGURAÇÃO ---
+    const colors = [
+        '#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981', '#06B6D4',
+        '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF', '#F43F5E', '#64748B'
+    ];
+
+    // Lista de ícones populares para finanças
+    const icons = [
+        'fa-house', 'fa-cart-shopping', 'fa-utensils', 'fa-car', 'fa-bus',
+        'fa-plane', 'fa-heart-pulse', 'fa-pills', 'fa-graduation-cap', 'fa-gamepad',
+        'fa-shirt', 'fa-bag-shopping', 'fa-wrench', 'fa-bolt', 'fa-droplet',
+        'fa-wifi', 'fa-mobile-screen', 'fa-paw', 'fa-gift', 'fa-dumbbell',
+        'fa-wallet', 'fa-sack-dollar', 'fa-piggy-bank', 'fa-chart-line', 'fa-briefcase',
+        'fa-money-bill-transfer', 'fa-building', 'fa-landmark'
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputCor = document.getElementById('input_cor');
+        const inputIcone = document.getElementById('input_icone');
+        const paletteContainer = document.getElementById('color-palette');
+        const iconGrid = document.getElementById('icon-grid');
+        const previewDiv = document.getElementById('preview-selected');
+        const previewIconI = document.getElementById('preview-icon-i');
+
+        // Valores Iniciais (Padrão)
+        let currentColor = inputCor.value || colors[0];
+        let currentIcon = inputIcone.value || 'fa-solid ' + icons[0];
+
+        // Atualiza inputs ocultos caso estejam vazios
+        inputCor.value = currentColor;
+        inputIcone.value = currentIcon;
+        updatePreview();
+
+        // 1. GERAR PALETA DE CORES
+        colors.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-8 h-8 rounded-full cursor-pointer hover:scale-110 transition shadow-sm border-2 border-transparent focus:outline-none';
+            btn.style.backgroundColor = color;
+            btn.ariaLabel = `Selecionar cor ${color}`;
+
+            btn.onclick = () => {
+                // Remove seleção visual dos outros
+                Array.from(paletteContainer.children).forEach(c => c.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400'));
+                // Adiciona neste
+                btn.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+
+                inputCor.value = color;
+                currentColor = color;
+                updatePreview();
+            };
+
+            // Marca o selecionado inicial
+            if (color.toUpperCase() === currentColor.toUpperCase()) {
+                btn.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+            }
+
+            paletteContainer.appendChild(btn);
+        });
+
+        // 2. GERAR GRID DE ÍCONES
+        icons.forEach(iconName => {
+            const fullClass = 'fa-solid ' + iconName;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-500 dark:text-gray-400 focus:outline-none';
+            btn.innerHTML = `<i class="${fullClass}"></i>`;
+
+            btn.onclick = () => {
+                // Remove destaque dos outros
+                Array.from(iconGrid.children).forEach(c => c.classList.remove('bg-blue-100', 'text-brand-blue', 'dark:bg-blue-900', 'dark:text-blue-300'));
+                // Adiciona neste
+                btn.classList.add('bg-blue-100', 'text-brand-blue', 'dark:bg-blue-900', 'dark:text-blue-300');
+
+                inputIcone.value = fullClass;
+                currentIcon = fullClass;
+                updatePreview();
+            };
+
+            iconGrid.appendChild(btn);
+        });
+
+        function updatePreview() {
+            previewDiv.style.backgroundColor = currentColor;
+            previewIconI.className = currentIcon;
+        }
+    });
+</script>
 {% endblock %}

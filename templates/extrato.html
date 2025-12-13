@@ -31,7 +31,7 @@
             <div>
                 <label for="data_inicio"
                     class="block text-xs font-semibold text-gray-500 dark:text-dark-muted mb-1">De</label>
-                <input type="date" name="data_inicio" id="data_inicio"
+                <input type="date" name="data_inicio" id="data_inicio" value="{{ data_inicio }}"
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
             </div>
 
@@ -39,7 +39,7 @@
             <div>
                 <label for="data_fim"
                     class="block text-xs font-semibold text-gray-500 dark:text-dark-muted mb-1">Até</label>
-                <input type="date" name="data_fim" id="data_fim"
+                <input type="date" name="data_fim" id="data_fim" value="{{ data_fim }}"
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
             </div>
 
@@ -51,7 +51,8 @@
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
                     <option value="">Todas</option>
                     {% for categoria in categorias %}
-                    <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                    <option value="{{ categoria.id }}" {% if filtro_cat|int==categoria.id %}selected{% endif %}>{{
+                        categoria.nome }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -63,8 +64,8 @@
                 <select name="tipo" id="tipo_filter"
                     class="block w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue text-sm">
                     <option value="">Todos</option>
-                    <option value="receita">Receita</option>
-                    <option value="despesa">Despesa</option>
+                    <option value="receita" {% if filtro_tipo=='receita' %}selected{% endif %}>Receita</option>
+                    <option value="despesa" {% if filtro_tipo=='despesa' %}selected{% endif %}>Despesa</option>
                 </select>
             </div>
 

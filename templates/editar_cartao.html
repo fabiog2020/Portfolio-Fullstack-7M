@@ -1,137 +1,109 @@
 <!-- START OF FILE editar_cartao.html -->
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Financeiro Pessoal{% endblock %}</title>
+{% block title %}Editar Cartão - {{ cartao.nome }}{% endblock %}
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        'primary': {
-                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
-                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e',
-                        },
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-
-<body class="bg-gray-100 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 min-h-screen">
-
-    <!-- Nav Bar -->
-    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-10" aria-label="Navegação Principal">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ url_for('main.dashboard') }}"
-                        class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                        <i class="fa-solid fa-chart-line mr-2" aria-hidden="true"></i> Finanças
-                    </a>
-                </div>
-
-                <!-- Links -->
-                <div class="hidden sm:ml-6 sm:flex sm:space-x-8 items-center" role="menubar">
-                    <a href="{{ url_for('main.dashboard') }}" role="menuitem"
-                        class="border-b-2 border-primary-500 text-gray-900 dark:text-white px-3 py-2 font-medium">Dashboard</a>
-                    <a href="{{ url_for('reports.extrato') }}" role="menuitem"
-                        class="border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-2 font-medium">Transações</a>
-                    <a href="{{ url_for('cards.cartoes') }}" role="menuitem"
-                        class="border-b-2 border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-2 font-medium">Cartões</a>
-                </div>
-
-                <!-- Perfil -->
-                <div class="hidden sm:ml-6 sm:flex sm:items-center">
-                    <button
-                        class="p-1 rounded-full text-gray-400 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150"
-                        aria-label="Ver notificações">
-                        <i class="fa-solid fa-bell h-6 w-6" aria-hidden="true"></i>
-                    </button>
-                    <a href="{{ url_for('auth.logout') }}"
-                        class="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-150 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                        aria-label="Sair">
-                        <i class="fa-solid fa-right-from-bracket mr-1" aria-hidden="true"></i> Sair
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="mb-6">
+        <h1
+            class="text-3xl font-extrabold text-gray-900 dark:text-white border-b border-primary-300 dark:border-primary-700 pb-2 flex items-center">
+            <i class="fa-solid fa-pen-to-square mr-3 text-primary-500" aria-hidden="true"></i>
+            Editar Cartão: {{ cartao.nome }}
+        </h1>
+    </header>
 
     <!-- Mensagens Flash -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" aria-live="polite">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="space-y-3 mb-6" aria-live="polite">
         {% for category, message in messages %}
-        <div class="rounded-md p-4 mb-4 
-                        {% if category == 'success' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% elif category == 'error' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% else %}bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200{% endif %}"
-            role="alert">
-            <p class="font-medium">{{ message }}</p>
+        <div
+            class="p-4 rounded-xl shadow-md text-sm
+                    {% if category == 'success' %} bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:text-green-100
+                    {% elif category == 'error' or category == 'danger' %} bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:text-red-100
+                    {% else %} bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:text-blue-100 {% endif %}">
+            <i class="fa-solid fa-bell mr-2" aria-hidden="true"></i> {{ message }}
         </div>
         {% endfor %}
-        {% endif %}
-        {% endwith %}
     </div>
+    {% endif %}
+    {% endwith %}
 
-    <!-- Conteúdo -->
-    <main role="main">
-        {% block content %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- FORMULÁRIO DE EDIÇÃO DE CARTÃO INJETADO AQUI -->
-        <!-- Como o arquivo original era um wrapper, assumimos que o conteúdo específico vem aqui.
-             Para garantir a funcionalidade caso este arquivo seja usado diretamente, 
-             vou incluir o formulário base de edição de cartão. -->
+        <!-- Formulário -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                <i class="fa-regular fa-credit-card mr-2 text-brand-blue" aria-hidden="true"></i>
+                Detalhes do Cartão
+            </h2>
 
-        <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-10">
-            <h2 class="text-xl font-bold mb-4 dark:text-white">Editar Cartão</h2>
-            <form method="POST"> <!-- Action deve ser definida na rota ou injetada -->
+            <form method="POST" action="{{ url_for('cards.editar_cartao', id=cartao.id) }}" class="space-y-6">
 
-                <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do
-                    Cartão</label>
-                <input type="text" name="nome" id="nome" value="{{ cartao.nome if cartao else '' }}" required
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 mb-4 px-3 py-2">
+                <!-- Nome -->
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do
+                        Cartão</label>
+                    <input type="text" id="nome" name="nome" value="{{ cartao.nome }}" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                </div>
 
-                <label for="limite" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Limite
-                    (R$)</label>
-                <input type="number" step="0.01" name="limite" id="limite" value="{{ cartao.limite if cartao else '' }}"
-                    required
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 mb-4 px-3 py-2">
+                <!-- 4 Dígitos -->
+                <div>
+                    <label for="digitos_finais"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Últimos 4 Dígitos</label>
+                    <input type="text" id="digitos_finais" name="digitos_finais" maxlength="4" pattern="\d{4}"
+                        value="{{ cartao.digitos_finais if cartao.digitos_finais else '' }}"
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150 tracking-widest font-mono">
+                    <p class="text-xs text-gray-500 mt-1">Deixe em branco se não quiser identificar.</p>
+                </div>
 
-                <label for="vencimento_dia" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dia
-                    Vencimento</label>
-                <input type="number" min="1" max="31" name="vencimento_dia" id="vencimento_dia"
-                    value="{{ cartao.vencimento_dia if cartao else '' }}" required
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 mb-6 px-3 py-2">
+                <!-- Grid Limite e Vencimento -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="limite" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Limite
+                            (R$)</label>
+                        <input type="number" step="0.01" id="limite" name="limite" value="{{ cartao.limite }}" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                    </div>
 
-                <button type="submit"
-                    class="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Salvar
-                    Alterações</button>
+                    <div>
+                        <label for="vencimento_dia"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dia Vencimento</label>
+                        <input type="number" min="1" max="31" id="vencimento_dia" name="vencimento_dia"
+                            value="{{ cartao.vencimento_dia }}" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 dark:text-white transition duration-150">
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <a href="{{ url_for('cards.cartoes') }}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i> Voltar
+                    </a>
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                        <i class="fa-solid fa-floppy-disk mr-2" aria-hidden="true"></i> Salvar
+                    </button>
+                </div>
             </form>
-            <div class="mt-4 text-center">
-                <a href="{{ url_for('cards.cartoes') }}"
-                    class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400">Voltar</a>
-            </div>
         </div>
 
-        {% endblock %}
-    </main>
+        <!-- Zona de Perigo (Info) -->
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 border border-yellow-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                <i class="fa-solid fa-circle-info mr-2 text-brand-blue" aria-hidden="true"></i> Sobre o Limite
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                O saldo utilizado é calculado automaticamente somando todas as parcelas não pagas vinculadas a este
+                cartão.
+                <br><br>
+                Ao pagar uma fatura (marcar parcelas como pagas), o limite é liberado automaticamente.
+            </p>
+        </div>
 
-    <footer
-        class="mt-12 py-4 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
-        &copy; 2024 Gerenciador Financeiro Pessoal.
-    </footer>
-
-</body>
-
-</html>
+    </div>
+</div>
+{% endblock %}

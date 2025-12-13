@@ -7,77 +7,62 @@
 
 <div class="max-w-xl mx-auto p-4 sm:p-6 lg:p-8">
   <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6 border-b pb-2">
-    Editar Categoria: {{ categoria.nome }}
+    Editar Categoria
   </h1>
 
   <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6">
-    <!-- FORMULÁRIO -->
     <form action="{{ url_for('categories.editar_categoria', id=categoria.id) }}" method="POST" class="space-y-6">
       {{ form.hidden_tag() }}
 
       <!-- Campo Nome -->
       <div>
-        {{ form.nome.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
+        <label for="nome_categoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
         {{ form.nome(
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500
         dark:bg-gray-700 dark:border-gray-600 dark:text-white",
         id="nome_categoria"
         ) }}
-        {% for error in form.nome.errors %}
-        <p class="text-sm text-red-600 mt-1" role="alert">{{ error }}</p>
-        {% endfor %}
       </div>
 
       <!-- Campo Tipo -->
       <div>
-        {{ form.tipo.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
+        <label for="tipo_categoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
         {{ form.tipo(
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500
         dark:bg-gray-700 dark:border-gray-600 dark:text-white",
         id="tipo_categoria"
         ) }}
-        {% for error in form.tipo.errors %}
-        <p class="text-sm text-red-600 mt-1" role="alert">{{ error }}</p>
-        {% endfor %}
       </div>
 
-      <!-- Campo Cor + Ícone -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Cor -->
-        <div>
-          {{ form.cor.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
-          {{ form.cor(
-          type="color",
-          class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 p-0.5
-          cursor-pointer",
-          id="cor"
-          ) }}
-        </div>
+      <!-- SELETOR DE COR -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cor</label>
+        {{ form.cor(class="hidden", id="input_cor") }}
+        <div class="flex flex-wrap gap-2" id="color-palette"></div>
+      </div>
 
-        <!-- Ícone -->
-        <div>
-          {{ form.icone.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
-          <div class="mt-1 flex rounded-md shadow-sm">
-            <span id="icon-preview-container" aria-hidden="true"
-              class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
-              <i id="icon-preview" class="{{ form.icone.data or categoria.icone }} text-lg"
-                style="color: {{ form.cor.data or categoria.cor or '#6c757d' }}"></i>
-            </span>
-            {{ form.icone(
-            class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-indigo-500
-            focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white",
-            placeholder="Ex: fa-solid fa-house",
-            id="icone"
-            ) }}
+      <!-- SELETOR DE ÍCONE -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ícone</label>
+        {{ form.icone(class="hidden", id="input_icone") }}
+
+        <div
+          class="grid grid-cols-8 sm:grid-cols-10 gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-xl max-h-48 overflow-y-auto no-scrollbar"
+          id="icon-grid"></div>
+
+        <div class="mt-3 flex items-center text-sm text-gray-500">
+          <span class="mr-3">Pré-visualização:</span>
+          <div id="preview-selected"
+            class="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-md">
+            <i id="preview-icon-i" class="text-lg"></i>
           </div>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="icon-help">Use classes Font Awesome.</p>
         </div>
       </div>
 
       <!-- BOTÕES -->
       <div class="flex justify-end space-x-3 pt-4">
         <a href="{{ url_for('categories.gerenciar_categorias') }}"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i> Cancelar
         </a>
         <button type="submit"
@@ -91,10 +76,6 @@
     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700" role="region"
       aria-labelledby="danger-zone-title">
       <h2 id="danger-zone-title" class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Zona de Perigo</h2>
-      <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-        <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1" aria-hidden="true"></i>
-        A exclusão é permanente e será bloqueada se houver transações vinculadas.
-      </p>
       <form action="{{ url_for('categories.excluir_categoria', id=categoria.id) }}" method="POST">
         <button type="submit"
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150"
@@ -107,19 +88,86 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const iconInput = document.getElementById('icone');
-    const colorInput = document.getElementById('cor');
-    const iconPreview = document.getElementById('icon-preview');
+  const colors = [
+    '#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981', '#06B6D4',
+    '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF', '#F43F5E', '#64748B', '#000000'
+  ];
 
-    if (iconInput && colorInput && iconPreview) {
-      const updateIconPreview = () => {
-        iconPreview.className = iconInput.value + ' text-lg';
-        iconPreview.style.color = colorInput.value;
+  const icons = [
+    'fa-house', 'fa-cart-shopping', 'fa-utensils', 'fa-car', 'fa-bus',
+    'fa-plane', 'fa-heart-pulse', 'fa-pills', 'fa-graduation-cap', 'fa-gamepad',
+    'fa-shirt', 'fa-bag-shopping', 'fa-wrench', 'fa-bolt', 'fa-droplet',
+    'fa-wifi', 'fa-mobile-screen', 'fa-paw', 'fa-gift', 'fa-dumbbell',
+    'fa-wallet', 'fa-sack-dollar', 'fa-piggy-bank', 'fa-chart-line', 'fa-briefcase',
+    'fa-money-bill-transfer', 'fa-building', 'fa-landmark'
+  ];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const inputCor = document.getElementById('input_cor');
+    const inputIcone = document.getElementById('input_icone');
+    const paletteContainer = document.getElementById('color-palette');
+    const iconGrid = document.getElementById('icon-grid');
+    const previewDiv = document.getElementById('preview-selected');
+    const previewIconI = document.getElementById('preview-icon-i');
+
+    // Valores atuais vindos do backend (Jinja injetado no value do input)
+    // Se o value estiver vazio, usa fallback
+    let currentColor = inputCor.value || "{{ categoria.cor }}";
+    let currentIcon = inputIcone.value || "{{ categoria.icone }}";
+
+    // Garante que o input tenha o valor correto se o JS carregar
+    inputCor.value = currentColor;
+    inputIcone.value = currentIcon;
+    updatePreview();
+
+    // Gerar Paleta
+    colors.forEach(color => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'w-8 h-8 rounded-full cursor-pointer hover:scale-110 transition shadow-sm border-2 border-transparent focus:outline-none';
+      btn.style.backgroundColor = color;
+
+      btn.onclick = () => {
+        Array.from(paletteContainer.children).forEach(c => c.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400'));
+        btn.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+        inputCor.value = color;
+        currentColor = color;
+        updatePreview();
       };
 
-      iconInput.addEventListener('input', updateIconPreview);
-      colorInput.addEventListener('input', updateIconPreview);
+      if (color.toUpperCase() === currentColor.toUpperCase()) {
+        btn.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+      }
+      paletteContainer.appendChild(btn);
+    });
+
+    // Gerar Ícones
+    icons.forEach(iconName => {
+      const fullClass = 'fa-solid ' + iconName;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-gray-500 dark:text-gray-400 focus:outline-none';
+      btn.innerHTML = `<i class="${fullClass}"></i>`;
+
+      // Verifica se este é o ícone atual (ignora 'fa-solid ' na comparação se necessário)
+      if (currentIcon.includes(iconName)) {
+        btn.classList.add('bg-indigo-100', 'text-indigo-600', 'dark:bg-indigo-900', 'dark:text-indigo-300');
+      }
+
+      btn.onclick = () => {
+        Array.from(iconGrid.children).forEach(c => c.classList.remove('bg-indigo-100', 'text-indigo-600', 'dark:bg-indigo-900', 'dark:text-indigo-300'));
+        btn.classList.add('bg-indigo-100', 'text-indigo-600', 'dark:bg-indigo-900', 'dark:text-indigo-300');
+        inputIcone.value = fullClass;
+        currentIcon = fullClass;
+        updatePreview();
+      };
+
+      iconGrid.appendChild(btn);
+    });
+
+    function updatePreview() {
+      previewDiv.style.backgroundColor = currentColor;
+      previewIconI.className = currentIcon;
     }
   });
 </script>

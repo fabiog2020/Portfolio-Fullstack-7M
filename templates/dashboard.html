@@ -103,16 +103,43 @@
 </div>
 
 <!-- Scripts Chart.js (Mantido igual, apenas estrutura HTML alterada acima) -->
+<!-- Scripts Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     Chart.defaults.color = '#9ca3af';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
     Chart.defaults.font.family = "'Inter', sans-serif";
 
+    // Dados injetados pelo Flask
     const dados_despesas = {{ dados_despesas | tojson | default ({}, true) | safe }};
     const dados_receitas = {{ dados_receitas | tojson | default ({}, true) | safe }};
 
-    function renderDoughnutChart(canvasId, data) {
+    // 1. Paleta para DESPESAS (Tons Quentes: Vermelho, Laranja, Amarelo, Rosa)
+    const coresDespesas = [
+        '#ef4444', // Red 500
+        '#f97316', // Orange 500
+        '#eab308', // Yellow 500
+        '#ec4899', // Pink 500
+        '#dc2626', // Red 600
+        '#ea580c', // Orange 600
+        '#ca8a04', // Yellow 600
+        '#db2777'  // Pink 600
+    ];
+
+    // 2. Paleta para RECEITAS (Tons Frios: Verde, Azul, Ciano, Esmeralda)
+    const coresReceitas = [
+        '#10b981', // Emerald 500 (Verde Principal)
+        '#3b82f6', // Blue 500 (Azul para Investimentos/Outros)
+        '#22c55e', // Green 500
+        '#06b6d4', // Cyan 500
+        '#0ea5e9', // Sky 500
+        '#059669', // Emerald 600
+        '#2563eb', // Blue 600
+        '#0891b2'  // Cyan 600
+    ];
+
+    // Função agora aceita um terceiro argumento: "cores"
+    function renderDoughnutChart(canvasId, data, palette) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
 
@@ -126,9 +153,8 @@
                     data: Object.values(data),
                     borderWidth: 0,
                     hoverOffset: 10,
-                    backgroundColor: [
-                        '#ef4444', '#f97316', '#eab308', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'
-                    ]
+                    // AQUI ESTÁ A MUDANÇA: Usamos a paleta passada por parâmetro
+                    backgroundColor: palette
                 }]
             },
             options: {
@@ -161,8 +187,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        renderDoughnutChart('despesasChart', dados_despesas);
-        renderDoughnutChart('receitasChart', dados_receitas);
+        // Renderiza Despesas com a paleta QUENTE
+        renderDoughnutChart('despesasChart', dados_despesas, coresDespesas);
+
+        // Renderiza Receitas com a paleta FRIA (Verdes e Azuis)
+        renderDoughnutChart('receitasChart', dados_receitas, coresReceitas);
     });
 </script>
 {% endblock %}

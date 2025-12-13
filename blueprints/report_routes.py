@@ -1,5 +1,6 @@
+import calendar
 from datetime import date, datetime
-from flask import Blueprint, flash, render_template, request
+from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func
 from database import db
@@ -43,18 +44,48 @@ def extrato():
         Categoria.tipo.label("tipo_bd")
     ).join(Categoria).filter(Transacao.user_id == current_user.id)
 
-    dt_ini = request.args.get("data_inicio")
-    dt_fim = request.args.get("data_fim")
+    # 1. Obter Parâmetros da URL
+    dt_ini_param = request.args.get("data_inicio")
+    dt_fim_param = request.args.get("data_fim")
     cat_id = request.args.get("categoria_id")
     tipo = request.args.get("tipo")
 
-    if dt_ini: query = query.filter(Transacao.data_transacao >= date.fromisoformat(dt_ini))
-    if dt_fim: query = query.filter(Transacao.data_transacao <= date.fromisoformat(dt_fim))
-    if cat_id and cat_id.isdigit(): query = query.filter(Transacao.categoria_id == int(cat_id))
-    if tipo == 'receita': query = query.filter(Categoria.tipo == 'entrada')
-    elif tipo == 'despesa': query = query.filter(Categoria.tipo == 'saída')
+    # 2. Lógica de Data Padrão (Mês Atual)
+    hoje = date.today()
+    
+    # Se dt_ini_param for None, significa que é o primeiro carregamento da página.
+    # Se for uma string vazia "", significa que o usuário limpou o filtro intencionalmente.
+    if dt_ini_param is None:
+        dt_ini = date(hoje.year, hoje.month, 1).isoformat()
+    else:
+        dt_ini = dt_ini_param
+
+    if dt_fim_param is None:
+        # Pega o último dia do mês atual
+        _, ultimo_dia = calendar.monthrange(hoje.year, hoje.month)
+        dt_fim = date(hoje.year, hoje.month, ultimo_dia).isoformat()
+    else:
+        dt_fim = dt_fim_param
+
+    # 3. Aplicação dos Filtros
+    if dt_ini: 
+        query = query.filter(func.date(Transacao.data_transacao) >= dt_ini)
+    
+    if dt_fim: 
+        query = query.filter(func.date(Transacao.data_transacao) <= dt_fim)
+    
+    if cat_id and cat_id.isdigit(): 
+        query = query.filter(Transacao.categoria_id == int(cat_id))
+    
+    if tipo == 'receita': 
+        query = query.filter(Categoria.tipo == 'entrada')
+    elif tipo == 'despesa': 
+        query = query.filter(Categoria.tipo == 'saída')
 
     res = query.order_by(Transacao.data_transacao.desc()).all()
     lista = [dict(r._asdict(), tipo="receita" if r.tipo_bd == "entrada" else "despesa", conta_nome="Padrão") for r in res]
 
-    return render_template("extrato.html", transacoes=lista, categorias=cats)
+    # Retornamos as datas para o template preencher os inputs
+    return render_template("extrato.html", transacoes=lista, categorias=cats, 
+                           data_inicio=dt_ini, data_fim=dt_fim, 
+                           filtro_tipo=tipo, filtro_cat=cat_id)
