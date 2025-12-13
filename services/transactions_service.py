@@ -19,31 +19,47 @@ def criar_transacao_a_partir_formulario(form):
 
     # --- DESVIO DE FLUXO: PARCELADO OU RECORRENTE ---
     if tipo in ['parcelado', 'recorrente']:
-        # Montamos um dicionário com os dados misturados para o serviço de parcelas
+        
+        # Pega o valor original digitado pelo usuário
+        valor_original = float(form.valor.data)
+
+        # Montamos um dicionário base
         dados_adaptados = {
             "descricao": form.descricao.data,
-            "valor_total": str(form.valor.data), # Convertendo para string pois o serviço espera string ou float
             "data_vencimento_primeira": str(form.data.data),
-            "categoria_id": str(form.categoria_id.data), # Pega o ID selecionado no select manual
-            "cartao_id": request.form.get('cartao_id', ''), # Campo manual
+            "categoria_id": str(form.categoria_id.data), 
+            "cartao_id": request.form.get('cartao_id', ''), 
         }
 
         if tipo == 'parcelado':
+            # Parcelado: O valor digitado É o valor total
+            dados_adaptados["valor_total"] = str(valor_original)
             dados_adaptados["num_parcelas"] = request.form.get('num_parcelas')
-        else:
-            # Recorrente: usa o input de meses ou define 12 como padrão
-            meses = request.form.get('meses_recorrencia') or '12'
-            dados_adaptados["num_parcelas"] = meses
+        
+        else: # Recorrente
+            # Recorrente: O valor digitado é o valor MENSAL.
+            # O serviço de parcelas vai dividir o total pela quantidade.
+            # Então, multiplicamos agora para que a divisão resulte no valor mensal correto.
+            
+            meses_str = request.form.get('meses_recorrencia')
+            # Se vier vazio ou 0, assumimos 12 meses por segurança
+            if not meses_str or int(meses_str) < 2:
+                meses = 12
+            else:
+                meses = int(meses_str)
+
+            valor_total_calculado = valor_original * meses
+            
+            dados_adaptados["valor_total"] = str(valor_total_calculado)
+            dados_adaptados["num_parcelas"] = str(meses)
             dados_adaptados["descricao"] += " (Recorrente)"
 
-        # Chama o serviço de parcelas com o dicionário
+        # Chama o serviço de parcelas com o dicionário ajustado
         return criar_parcelas_a_partir_formulario(dados_adaptados)
 
     # --- FLUXO PADRÃO: TRANSAÇÃO ÚNICA ---
     
     # Validação dos dados do Form
-    # O campo categoria_id é um select manual no HTML, então form.categoria_id.data pode vir vazio se o WTForms não validar.
-    # Vamos garantir pegando do request se necessário.
     try:
         categoria_id = int(request.form.get('categoria_id'))
     except (TypeError, ValueError):
