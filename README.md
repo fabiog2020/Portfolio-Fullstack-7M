@@ -96,11 +96,13 @@ code
 Bash
 python app.py
 Acesse no navegador: http://127.0.0.1:5000
-🧪 Testes
-O projeto utiliza pytest. Graças ao padrão Factory, os testes rodam em um banco de dados isolado em memória.
-code
-Bash
-# Instale as dependências de teste (se ainda não fez)
+## 🧪 Testes e Qualidade de Código
+
+O projeto utiliza **Pytest** para testes unitários e de integração. A arquitetura de *Application Factory* permite que cada teste rode em uma instância isolada com banco de dados em memória, garantindo velocidade e segurança (sem afetar dados reais).
+
+### Pré-requisitos de Teste
+Certifique-se de que as dependências de desenvolvimento estão instaladas:
+```bash
 pip install -r requirements_dev.txt
 
 # Execute os testes

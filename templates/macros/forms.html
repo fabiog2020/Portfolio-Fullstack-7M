@@ -1,4 +1,4 @@
-{% macro render_field(field, label_visible=True, placeholder=None, type=None, icon=None) %}
+{% macro render_field(field, label_visible=True, icon=None) %}
 <div class="mb-4">
     {% if label_visible %}
     {{ field.label(class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1") }}
@@ -13,17 +13,22 @@
 
         {% set padding_class = "pl-10" if icon else "pl-4" %}
 
+        {# Define as classes padrões do Tailwind #}
         {% set class_list = "block w-full " + padding_class + " pr-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-input
         text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue placeholder-gray-400 transition
         shadow-inner text-base" %}
 
+        {# Adiciona borda vermelha se houver erro #}
         {% if field.errors %}
         {% set class_list = class_list + " ring-2 ring-brand-red" %}
         {% endif %}
 
-        {% set kwargs = {'class': class_list} %}
-        {% if placeholder %} {% set _ = kwargs.update({'placeholder': placeholder}) %} {% endif %}
-        {% if type %} {% set _ = kwargs.update({'type': type}) %} {% endif %}
+        {#
+        AQUI ESTÁ A CORREÇÃO:
+        O Jinja armazena automaticamente argumentos extras (como step, placeholder, type) na variável 'kwargs'.
+        Nós apenas injetamos a nossa classe CSS dentro desse dicionário e passamos tudo para o campo.
+        #}
+        {% set _ = kwargs.update({'class': class_list}) %}
 
         {{ field(**kwargs) }}
     </div>

@@ -1,12 +1,9 @@
 # models_finance.py
 
 from datetime import datetime
-
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.sqlite import TEXT 
 from database import db
-
 
 # ==========================================================
 # 2. MODELO CATEGORIA (Tabela: categorias)
@@ -125,3 +122,28 @@ class Investimento(db.Model):
 
     def __repr__(self):
         return f"Investimento('{self.nome}', Qtde={self.quantidade})"
+
+
+# ==========================================================
+# 7. MODELO META (Tabela: metas) <--- NOVO
+# ==========================================================
+class Meta(db.Model):
+    __tablename__ = "metas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    descricao: Mapped[str] = mapped_column(String(200), nullable=True)
+    
+    # Valores Financeiros
+    valor_alvo: Mapped[float] = mapped_column(Float, nullable=False)
+    valor_atual: Mapped[float] = mapped_column(Float, default=0.0)
+    
+    # Configuração
+    data_limite: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    cor: Mapped[str] = mapped_column(String(20), default="bg-blue-500") # Guarda a classe Tailwind ou Hex
+    concluida: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    def __repr__(self):
+        return f"Meta('{self.nome}', Alvo={self.valor_alvo})"

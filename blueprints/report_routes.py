@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func, case
 from database import db
-from models import Categoria, Transacao, Investimento
+from models import Categoria, Transacao, Investimento, Meta
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -91,12 +91,18 @@ def relatorios():
     # 3. Investimentos
     alocacao_ativos = get_investments_allocation(current_user.id)
 
-    # 4. Mock de Metas (Futuramente virá do Banco)
-    metas_mock = [
-        {"nome": "Reserva de Emergência", "atual": 5000, "alvo": 15000, "cor": "bg-blue-500"},
-        {"nome": "Viagem Férias", "atual": 2000, "alvo": 8000, "cor": "bg-green-500"},
-        {"nome": "Carro Novo", "atual": 15000, "alvo": 60000, "cor": "bg-purple-500"},
-    ]
+    # 4. METAS REAIS (Do Banco de Dados)
+    minhas_metas = Meta.query.filter_by(user_id=current_user.id).all()
+    
+    # Adaptamos o objeto do banco para o formato de dicionário simples
+    metas_data = []
+    for m in minhas_metas:
+        metas_data.append({
+            "nome": m.nome,
+            "atual": m.valor_atual,
+            "alvo": m.valor_alvo,
+            "cor": m.cor
+        })
 
     return render_template("relatorios.html",
         labels=labels_meses,
@@ -106,7 +112,7 @@ def relatorios():
         data_patrimonio=data_patrimonio,
         despesas_por_categoria=despesas_por_categoria,
         alocacao_ativos=alocacao_ativos,
-        metas=metas_mock
+        metas=metas_data # Passamos os dados reais do banco
     )
 
 @reports_bp.route("/extrato", methods=["GET"])

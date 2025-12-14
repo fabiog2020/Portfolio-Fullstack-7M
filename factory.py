@@ -16,6 +16,7 @@ from blueprints.card_routes import cards_bp
 from blueprints.installment_routes import installments_bp
 from blueprints.investment_routes import investments_bp
 from blueprints.report_routes import reports_bp
+from blueprints.meta_routes import metas_bp
 
 def hex_to_rgb(hex_color):
     """Converte #RRGGBB para (R, G, B)."""
@@ -54,6 +55,7 @@ def create_app(config_class=DevConfig):
     app.register_blueprint(installments_bp, url_prefix='/parcelas')
     app.register_blueprint(investments_bp, url_prefix='/investimentos')
     app.register_blueprint(reports_bp)
+    app.register_blueprint(metas_bp, url_prefix='/metas')
 
     @app.context_processor
     def utility_processor():
