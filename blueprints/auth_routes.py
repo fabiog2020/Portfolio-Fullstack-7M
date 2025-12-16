@@ -1,6 +1,7 @@
 # blueprints/auth_routes.py
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+
+from flask import Blueprint, flash, redirect, render_template, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 
 from database import db
@@ -29,7 +30,7 @@ def inserir_categorias_padrao(user_id):
         {"nome": "Lazer", "tipo": "saída", "icone": "fa-solid fa-champagne-glasses", "cor": "#fd7e14"},
         {"nome": "Educação", "tipo": "saída", "icone": "fa-solid fa-graduation-cap", "cor": "#007bff"},
         
-        # INVESTIMENTOS (ADICIONADOS AQUI)
+        # INVESTIMENTOS
         {"nome": "Renda Fixa", "tipo": "investimento", "icone": "fa-solid fa-piggy-bank", "cor": "#2196F3"},
         {"nome": "Renda Variável", "tipo": "investimento", "icone": "fa-solid fa-chart-line", "cor": "#FFC107"},
         {"nome": "Consórcio", "tipo": "investimento", "icone": "fa-solid fa-car", "cor": "#9C27B0"},
@@ -81,6 +82,15 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
 
+    # --- TRAVA DE SEGURANÇA (BETA LIMIT) ---
+    contagem_atual = User.query.count()
+    limite_beta = current_app.config.get('MAX_BETA_USERS', 500)
+
+    if contagem_atual >= limite_beta:
+        # Se atingiu 500, mostra a tela de esgotado e impede o cadastro
+        return render_template("beta_full.html")
+    # ---------------------------------------
+
     form = RegisterForm()
 
     if form.validate_on_submit():
@@ -115,4 +125,4 @@ def register():
 def logout():
     logout_user()
     flash("Logout efetuado com sucesso!", "info")
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('main.index')) # Redireciona para a Landing Page

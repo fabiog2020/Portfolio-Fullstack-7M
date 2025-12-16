@@ -1,3 +1,5 @@
+# blueprints/main_routes.py
+
 from datetime import datetime
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -8,9 +10,16 @@ from models import Transacao, Categoria, Parcela
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route("/")
-@login_required
-def home():
-    return redirect(url_for("main.dashboard"))
+def index():
+    """
+    Página Inicial (Landing Page).
+    Se logado -> Dashboard.
+    Se não logado -> Apresentação do App (Landing).
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+    
+    return render_template("landing.html")
 
 @main_bp.route("/dashboard")
 @login_required
@@ -27,8 +36,6 @@ def dashboard():
                                     extract("year", campo_data) == ano,
                                     Categoria.tipo == tipo)
         
-        # --- CORREÇÃO AQUI ---
-        # Usamos 'is not None' em vez de apenas 'if extra_filter'
         if extra_filter is not None: 
             query = query.filter(extra_filter)
         

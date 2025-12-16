@@ -16,6 +16,9 @@ INSTANCE_DIR = BASE_DIR / "instance"
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Limite de usuários para a fase Beta
+    MAX_BETA_USERS = 500
 
 
 class DevConfig(Config):
@@ -24,6 +27,9 @@ class DevConfig(Config):
         f"sqlite:///{INSTANCE_DIR / 'finance.db'}",
     )
 
+
+class ProdConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
