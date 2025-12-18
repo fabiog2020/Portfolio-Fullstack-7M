@@ -1,0 +1,27 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+# --- Python & Flask ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambiente Virtual ---
+.venv/
+venv/
+env/
+
+# --- Variáveis de Ambiente e Segurança (CRÍTICO) ---
+.env
+
+# --- Banco de Dados Local (SQLite) ---
+*.db
+*.sqlite3
+instance/
+
+# --- IDEs (VS Code) ---
+.vscode/
+
+# --- Logs e Testes ---
+.pytest_cache/
+.coverage
+htmlcov/

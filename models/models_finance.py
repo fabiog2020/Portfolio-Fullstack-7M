@@ -107,21 +107,33 @@ class Parcela(db.Model):
 # ==========================================================
 # 6. MODELO INVESTIMENTO (Tabela: investimentos)
 # ==========================================================
+
 class Investimento(db.Model):
     __tablename__ = "investimentos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
-    tipo: Mapped[str] = mapped_column(String(50), nullable=False)
-    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Dados Básicos
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False) # Ação, FII, Crypto
+    nome: Mapped[str] = mapped_column(String(100), nullable=False) # Nome descritivo
+    ticker: Mapped[str] = mapped_column(String(20), nullable=True) # Código (Ex: PETR4.SA)
+    
+    # Dados de Compra
     quantidade: Mapped[float] = mapped_column(Float, default=0.0)
-
     preco_compra: Mapped[float] = mapped_column(Float, default=0.0)
     data_compra: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    # Dados de Venda / Situação
+    status: Mapped[str] = mapped_column(String(20), default="Ativo") # 'Ativo', 'Vendido'
+    preco_venda: Mapped[float] = mapped_column(Float, nullable=True)
+    data_venda: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    
+    # Cache de Performance (Opcional, mas útil para histórico)
+    lucro_final: Mapped[float] = mapped_column(Float, nullable=True) # Valor em R$
+
     def __repr__(self):
-        return f"Investimento('{self.nome}', Qtde={self.quantidade})"
+        return f"Investimento('{self.ticker or self.nome}', Status='{self.status}')"
 
 
 # ==========================================================
