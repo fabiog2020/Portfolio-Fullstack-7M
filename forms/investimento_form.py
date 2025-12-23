@@ -1,48 +1,35 @@
 # forms/investimento_form.py
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField
-from wtforms.validators import DataRequired, Length, NumberRange
-
+from wtforms import DateField, StringField, SelectField
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 from .custom_fields import BrazilianFloatField
 
-
 class InvestimentoForm(FlaskForm):
-    tipo = StringField(
-        "Tipo de Ativo",
-        validators=[
-            DataRequired(
-                message="Informe o tipo do investimento (ex: Ação, FII, CDB)."
-            ),
-            Length(max=50, message="O tipo deve ter no máximo 50 caracteres."),
-        ],
+    # --- CAMPO DECISOR ---
+    classe = SelectField(
+        "Classe do Ativo",
+        choices=[('Variavel', 'Renda Variável (Ações, FIIs, Crypto)'), ('Fixa', 'Renda Fixa (CDB, LCI, Tesouro)')],
+        validators=[DataRequired()],
+        default='Variavel'
     )
+    
+    # Campos Gerais
+    tipo = StringField("Tipo (Ex: Ação, CDB)", validators=[DataRequired(), Length(max=50)])
+    nome = StringField("Nome/Descrição", validators=[DataRequired(), Length(max=100)])
+    
+    # Renda Variável
+    ticker = StringField("Ticker (Ex: PETR4)", validators=[Optional(), Length(max=20)])
 
-    nome = StringField(
-        "Nome do Ativo",
-        validators=[
-            DataRequired(message="Informe o nome do ativo (ex: PETR4, HGLG11)."),
-            Length(max=100, message="O nome deve ter no máximo 100 caracteres."),
-        ],
+    # Renda Fixa
+    indice = SelectField(
+        "Índice",
+        choices=[('', 'Selecione...'), ('PRE', 'Pré-fixado'), ('CDI', 'CDI'), ('IPCA', 'IPCA')],
+        validators=[Optional()]
     )
+    taxa_contratada = BrazilianFloatField("Taxa (%)", validators=[Optional()])
+    data_vencimento = DateField("Vencimento", format="%Y-%m-%d", validators=[Optional()])
 
-    quantidade = BrazilianFloatField(
-        "Quantidade",
-        validators=[
-            DataRequired(message="Informe a quantidade."),
-            NumberRange(min=0.0001, message="A quantidade deve ser maior que zero."),
-        ],
-    )
-
-    preco_compra = BrazilianFloatField(
-        "Preço de compra (R$)",
-        validators=[
-            DataRequired(message="Informe o preço de compra."),
-            NumberRange(min=0.0, message="O preço não pode ser negativo."),
-        ],
-    )
-
-    data_compra = DateField(
-        "Data da compra",
-        format="%Y-%m-%d",
-        validators=[DataRequired(message="Informe a data da compra.")],
-    )
+    # Valores
+    quantidade = BrazilianFloatField("Quantidade", validators=[DataRequired()])
+    preco_compra = BrazilianFloatField("Valor Investido / Preço Compra", validators=[DataRequired()])
+    data_compra = DateField("Data da Aplicação", format="%Y-%m-%d", validators=[DataRequired()])

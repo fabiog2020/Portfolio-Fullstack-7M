@@ -114,26 +114,31 @@ class Investimento(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
-    # Dados Básicos
-    tipo: Mapped[str] = mapped_column(String(50), nullable=False) # Ação, FII, Crypto
-    nome: Mapped[str] = mapped_column(String(100), nullable=False) # Nome descritivo
-    ticker: Mapped[str] = mapped_column(String(20), nullable=True) # Código (Ex: PETR4.SA)
+    # --- NOVO CAMPO DECISOR ---
+    classe: Mapped[str] = mapped_column(String(20), nullable=False, default="Variavel") # 'Variavel' ou 'Fixa'
+    # --------------------------
+
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False) # Ação, FII, CDB...
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    ticker: Mapped[str] = mapped_column(String(20), nullable=True)
     
-    # Dados de Compra
+    # Renda Fixa
+    indice: Mapped[str] = mapped_column(String(10), nullable=True)
+    taxa_contratada: Mapped[float] = mapped_column(Float, nullable=True)
+    data_vencimento: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
     quantidade: Mapped[float] = mapped_column(Float, default=0.0)
     preco_compra: Mapped[float] = mapped_column(Float, default=0.0)
     data_compra: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    # Dados de Venda / Situação
-    status: Mapped[str] = mapped_column(String(20), default="Ativo") # 'Ativo', 'Vendido'
+    status: Mapped[str] = mapped_column(String(20), default="Ativo")
     preco_venda: Mapped[float] = mapped_column(Float, nullable=True)
     data_venda: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     
-    # Cache de Performance (Opcional, mas útil para histórico)
-    lucro_final: Mapped[float] = mapped_column(Float, nullable=True) # Valor em R$
+    lucro_final: Mapped[float] = mapped_column(Float, nullable=True)
 
     def __repr__(self):
-        return f"Investimento('{self.ticker or self.nome}', Status='{self.status}')"
+        return f"Investimento('{self.nome}', Classe='{self.classe}')"
 
 
 # ==========================================================

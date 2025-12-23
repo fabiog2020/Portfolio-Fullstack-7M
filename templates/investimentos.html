@@ -7,8 +7,26 @@
 <!-- Carrega Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- SCRIPT 1: Lógica do Modal (Topo) -->
+<!-- SCRIPT 1: Lógica Visual (Campos Dinâmicos e Modal) -->
 <script>
+    // --- Lógica de Mostrar/Esconder Campos ---
+    function toggleCamposInvestimento() {
+        const selectClasse = document.querySelector('select[name="classe"]');
+        const divVariavel = document.getElementById('campos-variavel');
+        const divFixa = document.getElementById('campos-fixa');
+
+        if (!selectClasse) return;
+
+        if (selectClasse.value === 'Fixa') {
+            divVariavel.classList.add('hidden');
+            divFixa.classList.remove('hidden');
+        } else {
+            divVariavel.classList.remove('hidden');
+            divFixa.classList.add('hidden');
+        }
+    }
+
+    // --- Lógica do Modal de Venda ---
     function abrirModalVenda(id, nome, qtd) {
         const modal = document.getElementById('modalVenda');
         const form = document.getElementById('formVenda');
@@ -27,6 +45,16 @@
         const modal = document.getElementById('modalVenda');
         if (modal) modal.classList.add('hidden');
     }
+
+    // Inicializa o estado dos campos ao carregar a página
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleCamposInvestimento();
+        // Adiciona listener para mudança
+        const selectClasse = document.querySelector('select[name="classe"]');
+        if (selectClasse) {
+            selectClasse.addEventListener('change', toggleCamposInvestimento);
+        }
+    });
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20">
@@ -57,35 +85,69 @@
     {% if modo == 'carteira' %}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
 
-        <!-- Formulário (Esquerda) -->
+        <!-- Formulário Inteligente (Esquerda) -->
         <div
             class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 h-fit">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <i class="fa-solid fa-plus-circle mr-2 text-brand-green"></i> Adicionar
             </h2>
+
             {% from "macros/forms.html" import render_field, render_submit %}
+
             <form method="post" action="{{ url_for('investments.investimentos') }}">
                 {{ form.hidden_tag() }}
+
+                <!-- 1. CLASSE DO ATIVO (Decisor) -->
                 <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Classe</label>
+                    <!-- Aplicamos classe manual para garantir estilo igual ao macro -->
+                    {{ form.classe(class="block w-full px-3 py-3 rounded-xl bg-gray-50 dark:bg-dark-input
+                    border-gray-300 dark:border-gray-600 focus:ring-brand-blue text-gray-900 dark:text-white
+                    transition") }}
+                </div>
+
+                <div class="mb-3">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Categoria</label>
                     <select name="categoria_id" required
-                        class="w-full rounded-xl bg-gray-50 dark:bg-dark-input border-gray-300 dark:border-gray-600 focus:ring-brand-blue dark:text-white">
+                        class="block w-full px-3 py-3 rounded-xl bg-gray-50 dark:bg-dark-input border-gray-300 dark:border-gray-600 focus:ring-brand-blue text-gray-900 dark:text-white transition">
                         <option value="" disabled selected>Selecione...</option>
                         {% for cat in categorias_investimento %}
                         <option value="{{ cat.id }}">{{ cat.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                {{ render_field(form.nome, placeholder="Ex: PETR4") }}
-                {{ render_field(form.tipo, placeholder="Ex: Ação") }}
-                <div class="grid grid-cols-2 gap-3">
-                    {{ render_field(form.quantidade, placeholder="Qtd", type="number", step="0.000001") }}
-                    {{ render_field(form.preco_compra, placeholder="R$", type="number", step="0.01") }}
+
+                {{ render_field(form.nome, placeholder="Ex: Petrobras ou CDB Banco X") }}
+                {{ render_field(form.tipo, placeholder="Ex: Ação, CDB, LCI") }}
+
+                <!-- CAMPOS ESPECÍFICOS: RENDA VARIÁVEL -->
+                <div id="campos-variavel" class="transition-all duration-300">
+                    {{ render_field(form.ticker, placeholder="Ex: PETR4 (Para cotação automática)") }}
                 </div>
+
+                <!-- CAMPOS ESPECÍFICOS: RENDA FIXA -->
+                <div id="campos-fixa"
+                    class="hidden space-y-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700 mb-4 transition-all duration-300">
+                    <p class="text-xs font-bold text-blue-500 uppercase mb-2">Dados de Rentabilidade</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        {{ render_field(form.indice) }}
+                        {{ render_field(form.taxa_contratada, placeholder="%") }}
+                    </div>
+                    {{ render_field(form.data_vencimento, type="date") }}
+                </div>
+
+                <!-- VALORES FINANCEIROS -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    {{ render_field(form.quantidade, placeholder="Qtd", type="number", step="0.000001") }}
+                    {{ render_field(form.preco_compra, label="Valor Investido (Total ou Unit)", placeholder="R$",
+                    type="number", step="0.01") }}
+                </div>
+
                 {{ render_field(form.data_compra, type="date") }}
+
                 <button type="submit"
-                    class="mt-4 w-full py-3 bg-brand-blue text-white font-bold rounded-xl hover:bg-blue-700 transition">
-                    Salvar
+                    class="mt-6 w-full py-3 bg-brand-blue text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-brand-blue/20">
+                    Salvar Investimento
                 </button>
             </form>
         </div>
@@ -102,7 +164,7 @@
                 </div>
                 <div
                     class="bg-white dark:bg-dark-card p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Atual</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase">Atual (Est.)</p>
                     <p class="text-xl font-extrabold text-blue-600">R$ {{ "%.2f"|format(total_atual) }}</p>
                 </div>
                 {% set lucro_total = total_atual - total_investido %}
@@ -115,15 +177,12 @@
                 </div>
             </div>
 
-            <!-- CONTAINER DO GRÁFICO -->
-            <!-- Adicionamos o Título HTML aqui para controle total do estilo -->
+            <!-- GRÁFICO -->
             <div
                 class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
                     Distribuição da Carteira (R$)
                 </h3>
-
-                <!-- Área do Canvas com Altura Fixa -->
                 <div style="height: 300px; width: 100%; position: relative;">
                     <canvas id="investimentoChart"></canvas>
                 </div>
@@ -131,7 +190,7 @@
         </div>
     </div>
 
-    <!-- Lista de Ativos -->
+    <!-- LISTA DE ATIVOS -->
     <div
         class="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden mb-10">
         <div class="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
@@ -151,38 +210,92 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     {% for item in dados %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                        <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">
-                            {{ item.obj.ticker or item.obj.nome }}
-                            <span class="block text-xs font-normal text-gray-500">{{ item.obj.tipo }}</span>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition group">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <!-- Ícone baseado na classe -->
+                                <div
+                                    class="h-10 w-10 rounded-full flex items-center justify-center mr-3 
+                                    {{ 'bg-purple-100 text-purple-600' if item.obj.classe == 'Fixa' else 'bg-blue-100 text-blue-600' }}">
+                                    {% if item.obj.classe == 'Fixa' %}
+                                    <i class="fa-solid fa-piggy-bank"></i>
+                                    {% else %}
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-white">
+                                        {{ item.obj.nome }}
+                                    </p>
+
+                                    <!-- Exibição Inteligente: Ticker ou Taxa -->
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        {% if item.obj.classe == 'Fixa' and item.obj.indice %}
+                                        <span class="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">
+                                            {% if item.obj.indice == 'PRE' %}
+                                            PRE {{ item.obj.taxa_contratada }}%
+                                            {% elif item.obj.indice == 'CDI' %}
+                                            {{ item.obj.taxa_contratada }}% CDI
+                                            {% elif item.obj.indice == 'IPCA' %}
+                                            IPCA + {{ item.obj.taxa_contratada }}%
+                                            {% endif %}
+                                        </span>
+                                        {% if item.obj.data_vencimento %}
+                                        • Vence: {{ item.obj.data_vencimento.strftime('%d/%m/%Y') }}
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">
+                                            {{ item.obj.ticker or 'RV' }}
+                                        </span>
+                                        {% endif %}
+                                        • {{ item.obj.tipo }}
+                                    </p>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 text-center text-sm">{{ item.obj.quantidade }}</td>
-                        <td class="px-6 py-4 text-right text-sm">R$ {{ "%.2f"|format(item.obj.preco_compra *
-                            item.obj.quantidade) }}</td>
-                        <td class="px-6 py-4 text-right text-sm font-bold">R$ {{ "%.2f"|format(item.valor_total_atual)
-                            }}</td>
+
+                        <td class="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-300">
+                            {{ item.obj.quantidade }}
+                        </td>
+
+                        <td class="px-6 py-4 text-right text-sm text-gray-500">
+                            R$ {{ "%.2f"|format(item.obj.preco_compra * item.obj.quantidade) }}
+                        </td>
+
+                        <td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">
+                            R$ {{ "%.2f"|format(item.valor_total_atual) }}
+                        </td>
+
                         <td class="px-6 py-4 text-right">
                             <span
                                 class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if item.rentabilidade >= 0 else 'bg-red-100 text-red-700' }}">
                                 {{ "%.2f"|format(item.rentabilidade) }}%
                             </span>
+                            <div class="text-[10px] text-gray-400 mt-1">
+                                {{ "+" if item.lucro_reais > 0 else "" }} R$ {{ "%.2f"|format(item.lucro_reais) }}
+                            </div>
                         </td>
-                        <td class="px-6 py-4 text-center space-x-2">
+
+                        <td
+                            class="px-6 py-4 text-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button type="button"
                                 onclick="abrirModalVenda('{{ item.obj.id }}', '{{ item.obj.nome|replace("'", "") }}'
-                                , '{{ item.obj.quantidade }}' )" class="text-gray-400 hover:text-green-600 p-2"
-                                title="Vender">
+                                , '{{ item.obj.quantidade }}' )"
+                                class="text-gray-400 hover:text-green-600 p-2 rounded-lg hover:bg-green-50 transition"
+                                title="Vender/Baixar">
                                 <i class="fa-solid fa-money-bill-transfer fa-lg"></i>
                             </button>
                             <a href="{{ url_for('investments.editar_investimento', id=item.obj.id) }}"
-                                class="text-gray-400 hover:text-blue-600 p-2" title="Editar">
+                                class="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition"
+                                title="Editar">
                                 <i class="fa-solid fa-pen-to-square fa-lg"></i>
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-gray-400">Nenhum ativo.</td>
+                        <td colspan="6" class="p-8 text-center text-gray-400">Nenhum ativo encontrado.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -191,7 +304,7 @@
     </div>
     {% endif %}
 
-    <!-- MODO HISTÓRICO -->
+    <!-- MODO HISTÓRICO (Mantido igual) -->
     {% if modo == 'historico' %}
     <div class="space-y-6">
         <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
@@ -247,7 +360,7 @@
 
 </div>
 
-<!-- MODAL HTML -->
+<!-- MODAL DE VENDA -->
 <div id="modalVenda" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" onclick="fecharModalVenda()"></div>
@@ -281,7 +394,7 @@
     </div>
 </div>
 
-<!-- SCRIPT 2: Lógica do Gráfico -->
+<!-- SCRIPT GRÁFICO (Chart.js) -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('investimentoChart');
@@ -325,7 +438,6 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    // Título REMOVIDO aqui (pois já está no HTML)
                     title: { display: false },
                     legend: {
                         position: 'right',
@@ -340,9 +452,7 @@
                         callbacks: {
                             label: function (context) {
                                 let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
+                                if (label) { label += ': '; }
                                 const value = context.raw;
                                 label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
                                 return label;
@@ -358,23 +468,8 @@
         // Gráfico Vazio
         new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: ['Carteira Vazia'],
-                datasets: [{
-                    data: [1],
-                    backgroundColor: ['#E5E7EB'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    title: { display: false }
-                },
-                cutout: '70%'
-            }
+            data: { labels: ['Vazio'], datasets: [{ data: [1], backgroundColor: ['#E5E7EB'] }] },
+            options: { cutout: '70%', plugins: { legend: { display: false } } }
         });
     }
     });

@@ -6,7 +6,10 @@ from flask_login import current_user, login_required
 from database import db
 from models import Investimento, Categoria
 from forms.investimento_form import InvestimentoForm
+
+# Importação dos Serviços de Cálculo
 from services.market_service import get_current_price
+from services.fixed_income_service import calcular_renda_fixa
 
 investments_bp = Blueprint('investments', __name__)
 
@@ -15,7 +18,7 @@ investments_bp = Blueprint('investments', __name__)
 def investimentos():
     form = InvestimentoForm()
     
-    # Busca investimentos ATIVOS
+    # 1. Busca investimentos ATIVOS do usuário
     investimentos_ativos = Investimento.query.filter_by(
         user_id=current_user.id, 
         status="Ativo"
@@ -23,55 +26,103 @@ def investimentos():
     
     cats = Categoria.query.filter_by(user_id=current_user.id, tipo="investimento").all()
 
-    # Processamento de Dados (Cálculos)
+    # 2. Motor de Cálculo e Processamento de Dados
     total_investido = 0
     total_atual = 0
     dados_investimentos = []
     
     for inv in investimentos_ativos:
-        preco_atual = inv.preco_compra # Valor padrão (se falhar a API)
-        
-        # Tenta pegar preço atualizado (se tiver ticker)
-        if inv.ticker:
-            cotacao = get_current_price(inv.ticker)
-            if cotacao > 0:
-                preco_atual = cotacao
-        
-        valor_atual_posicao = preco_atual * inv.quantidade
+        # Valores iniciais baseados na compra
         valor_comprado_posicao = inv.preco_compra * inv.quantidade
-        
-        rentabilidade = 0
-        if valor_comprado_posicao > 0:
-            rentabilidade = ((valor_atual_posicao - valor_comprado_posicao) / valor_comprado_posicao) * 100
+        valor_atual_posicao = valor_comprado_posicao # Fallback (valor padrão caso falhe o cálculo)
+        preco_unitario_atual = inv.preco_compra
 
+        # --- LÓGICA DE DECISÃO EXPLÍCITA ---
+        
+        # CASO 1: RENDA FIXA (CDB, Tesouro, LCI)
+        if inv.classe == 'Fixa':
+            # Usa o motor matemático (BCB/Juros)
+            valor_calculado = calcular_renda_fixa(inv)
+            
+            if valor_calculado > 0:
+                valor_atual_posicao = valor_calculado
+                # Calcula o "preço unitário virtual" para exibir na tabela
+                if inv.quantidade > 0:
+                    preco_unitario_atual = valor_atual_posicao / inv.quantidade
+
+        # CASO 2: RENDA VARIÁVEL (Ações, FIIs, Crypto)
+        elif inv.classe == 'Variavel':
+            # Usa o motor de mercado (Yahoo Finance)
+            if inv.ticker:
+                cotacao = get_current_price(inv.ticker)
+                if cotacao > 0:
+                    preco_unitario_atual = cotacao
+                    valor_atual_posicao = cotacao * inv.quantidade
+        
+        # -----------------------------------
+
+        # Cálculo de Rentabilidade
+        rentabilidade = 0
+        lucro_reais = valor_atual_posicao - valor_comprado_posicao
+        
+        if valor_comprado_posicao > 0:
+            rentabilidade = (lucro_reais / valor_comprado_posicao) * 100
+
+        # Atualiza Totais
         total_investido += valor_comprado_posicao
         total_atual += valor_atual_posicao
         
+        # Prepara objeto para o Front-end
         dados_investimentos.append({
             "obj": inv,
-            "preco_atual": preco_atual,
+            "preco_atual": preco_unitario_atual,
             "valor_total_atual": valor_atual_posicao,
             "rentabilidade": rentabilidade,
-            "lucro_reais": valor_atual_posicao - valor_comprado_posicao
+            "lucro_reais": lucro_reais
         })
 
-    # Lógica de Salvar Novo Investimento
+    # 3. Processamento do Formulário (Salvar Novo)
     if request.method == "POST":
         if form.validate_on_submit():
             try:
-                # Extrai ticker (ex: "PETR4 - Petrobras" vira "PETR4")
-                ticker_raw = form.nome.data.split(" ")[0].upper()
+                # Sanitização de Dados
+                classe_selecionada = form.classe.data
                 
+                # Prepara dados específicos baseados na classe
+                ticker_final = None
+                indice_final = None
+                taxa_final = None
+                vencimento_final = None
+
+                if classe_selecionada == 'Variavel':
+                    if form.ticker.data:
+                        ticker_final = form.ticker.data.strip().upper()
+                
+                elif classe_selecionada == 'Fixa':
+                    indice_final = form.indice.data
+                    taxa_final = form.taxa_contratada.data
+                    vencimento_final = form.data_vencimento.data
+
+                # Criação do Objeto
                 novo = Investimento(
                     user_id=current_user.id,
+                    classe=classe_selecionada, # Salva a decisão explícita
                     tipo=form.tipo.data,
                     nome=form.nome.data,
-                    ticker=ticker_raw,
+                    
+                    # Dados Específicos limpos
+                    ticker=ticker_final,
+                    indice=indice_final,
+                    taxa_contratada=taxa_final,
+                    data_vencimento=vencimento_final,
+                    
+                    # Dados Financeiros Comuns
                     quantidade=form.quantidade.data,
                     preco_compra=form.preco_compra.data,
                     data_compra=datetime.combine(form.data_compra.data, datetime.min.time()),
                     status="Ativo"
                 )
+                
                 db.session.add(novo)
                 db.session.commit()
                 flash("Investimento adicionado à carteira!", "success")
@@ -80,7 +131,7 @@ def investimentos():
                 db.session.rollback()
                 flash(f"Erro ao salvar: {e}", "danger")
         else:
-            flash("Verifique os dados do formulário.", "danger")
+            flash("Erro no formulário. Verifique os campos.", "danger")
 
     return render_template(
         "investimentos.html", 
@@ -101,17 +152,18 @@ def vender_investimento(id):
         return redirect(url_for("investments.investimentos"))
     
     try:
-        preco_venda = float(request.form.get("preco_venda"))
-        data_venda = datetime.strptime(request.form.get("data_venda"), "%Y-%m-%d")
+        preco_venda_unitario = float(request.form.get("preco_venda"))
+        data_venda_str = request.form.get("data_venda")
+        data_venda = datetime.strptime(data_venda_str, "%Y-%m-%d")
         
         # Cálculos de Saída
-        valor_venda_total = preco_venda * inv.quantidade
+        valor_venda_total = preco_venda_unitario * inv.quantidade
         valor_compra_total = inv.preco_compra * inv.quantidade
         lucro = valor_venda_total - valor_compra_total
         
         # Atualiza Banco
         inv.status = "Vendido"
-        inv.preco_venda = preco_venda
+        inv.preco_venda = preco_venda_unitario
         inv.data_venda = data_venda
         inv.lucro_final = lucro
         
@@ -127,7 +179,7 @@ def vender_investimento(id):
 @investments_bp.route("/historico", methods=["GET"])
 @login_required
 def historico_investimentos():
-    form = InvestimentoForm() # Necessário para o template base não quebrar
+    form = InvestimentoForm() # Evita erro no template base
     
     # Filtros
     ano = request.args.get('ano')
@@ -136,25 +188,23 @@ def historico_investimentos():
     query = Investimento.query.filter_by(user_id=current_user.id, status="Vendido")
     
     if ano:
-        # Filtra pelo ano da venda
         query = query.filter(db.extract('year', Investimento.data_venda) == int(ano))
-    
     if nome:
         query = query.filter(Investimento.nome.ilike(f"%{nome}%"))
         
     vendidos = query.order_by(Investimento.data_venda.desc()).all()
     
+    # Renderiza com totais zerados (modo histórico)
     return render_template(
         "investimentos.html", 
         dados=[], 
         historico=vendidos, 
-        form=form,
+        form=form, 
         total_investido=0, 
-        total_atual=0,
+        total_atual=0, 
         modo="historico"
     )
 
-# Rota de Editar e Excluir permanecem iguais (já corrigidas anteriormente)
 @investments_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 @login_required
 def editar_investimento(id):
@@ -168,9 +218,27 @@ def editar_investimento(id):
 
     if request.method == "POST" and form.validate_on_submit():
         try:
+            # Atualiza campos básicos
+            inv.classe = form.classe.data
             inv.tipo = form.tipo.data
             inv.nome = form.nome.data
-            inv.ticker = form.nome.data.split(" ")[0].upper()
+            
+            # Atualiza dados baseados na classe escolhida
+            if inv.classe == 'Variavel':
+                inv.ticker = form.ticker.data.strip().upper() if form.ticker.data else None
+                # Limpa dados de RF
+                inv.indice = None
+                inv.taxa_contratada = None
+                inv.data_vencimento = None
+                
+            elif inv.classe == 'Fixa':
+                inv.indice = form.indice.data
+                inv.taxa_contratada = form.taxa_contratada.data
+                inv.data_vencimento = form.data_vencimento.data
+                # Limpa Ticker
+                inv.ticker = None
+
+            # Atualiza Financeiro
             inv.quantidade = form.quantidade.data
             inv.preco_compra = form.preco_compra.data
             if form.data_compra.data:
@@ -183,8 +251,12 @@ def editar_investimento(id):
             db.session.rollback()
             flash(f"Erro: {e}", "danger")
 
-    if request.method == "GET" and inv.data_compra:
-        form.data_compra.data = inv.data_compra.date()
+    # Preenche datas no formulário (GET)
+    if request.method == "GET":
+        if inv.data_compra: 
+            form.data_compra.data = inv.data_compra.date()
+        if inv.data_vencimento: 
+            form.data_vencimento.data = inv.data_vencimento.date()
 
     return render_template("editar_investimento.html", investimento=inv, categorias_investimento=cats, form=form)
 
