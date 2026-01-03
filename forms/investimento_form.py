@@ -1,21 +1,16 @@
 # forms/investimento_form.py
 from flask_wtf import FlaskForm
 from wtforms import DateField, StringField, SelectField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, Optional
 from .custom_fields import BrazilianFloatField
 
 class InvestimentoForm(FlaskForm):
-    # --- CAMPO DECISOR ---
-    classe = SelectField(
-        "Classe do Ativo",
-        choices=[('Variavel', 'Renda Variável (Ações, FIIs, Crypto)'), ('Fixa', 'Renda Fixa (CDB, LCI, Tesouro)')],
-        validators=[DataRequired()],
-        default='Variavel'
-    )
+    # REMOVIDO: classe = SelectField(...) <--- Não precisamos mais pedir isso
     
-    # Campos Gerais
-    tipo = StringField("Tipo (Ex: Ação, CDB)", validators=[DataRequired(), Length(max=50)])
-    nome = StringField("Nome/Descrição", validators=[DataRequired(), Length(max=100)])
+    # Categoria (Agora é o campo principal)
+    categoria_id = SelectField("Categoria", coerce=int, validators=[DataRequired()])
+    
+    nome = StringField("Descrição / Nome do Ativo", validators=[DataRequired(), Length(max=100)])
     
     # Renda Variável
     ticker = StringField("Ticker (Ex: PETR4)", validators=[Optional(), Length(max=20)])
