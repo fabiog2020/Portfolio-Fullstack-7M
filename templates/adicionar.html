@@ -1,4 +1,3 @@
-<!-- START OF FILE adicionar.html -->
 {% extends "base.html" %}
 
 {% block title %}Nova Transação{% endblock %}
@@ -8,149 +7,220 @@
 <div class="max-w-lg mx-auto px-4 py-8 mb-20">
 
     <div class="bg-white dark:bg-dark-card p-6 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800">
+
         <div class="text-center mb-6">
             <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">Registrar Movimentação</h1>
         </div>
 
+        <!-- ABAS -->
+        <div class="flex space-x-2 mb-6 bg-gray-100 dark:bg-dark-bg p-1 rounded-xl">
+            <button type="button" onclick="switchTab('manual')" id="tab-manual"
+                class="flex-1 py-2 text-sm font-bold rounded-lg shadow bg-white dark:bg-dark-card text-brand-blue transition focus:outline-none">
+                <i class="fa-solid fa-pen-to-square mr-2"></i>Manual
+            </button>
+            <button type="button" onclick="switchTab('import')" id="tab-import"
+                class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none">
+                <i class="fa-solid fa-file-import mr-2"></i>Importar
+            </button>
+        </div>
+
         {% from "macros/forms.html" import render_field, render_submit %}
 
-        <form method="POST" action="{{ url_for('transactions.adicionar_transacao') }}">
+        <form method="POST" action="{{ url_for('transactions.adicionar_transacao') }}" enctype="multipart/form-data">
             {{ form.csrf_token }}
 
-            <!-- Campo Valor -->
-            <div class="mb-6 relative">
-                <label for="valor_input"
-                    class="block text-center text-xs font-bold text-gray-500 dark:text-dark-muted uppercase mb-2">Valor</label>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold text-lg"
-                        aria-hidden="true">R$</span>
-                    <input type="number" id="valor_input" step="0.01" name="valor" required placeholder="0.00"
-                        aria-label="Valor da transação em Reais"
-                        class="block w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white text-3xl font-bold text-center border-none focus:ring-2 focus:ring-brand-blue transition shadow-inner">
+            <!-- ======================= -->
+            <!-- ÁREA DE IMPORTAÇÃO -->
+            <!-- ======================= -->
+            <div id="area-import" class="hidden text-center space-y-6 animate-fade-in">
+                <div
+                    class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 hover:bg-gray-50 dark:hover:bg-dark-bg transition group">
+                    <i
+                        class="fa-solid fa-cloud-arrow-up text-4xl text-brand-blue mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-sm text-gray-500 mb-4">
+                        Suporta: <b>.OFX</b>, <b>.CSV</b> e <b>.PDF</b>
+                    </p>
+
+                    <label for="arquivo"
+                        class="cursor-pointer inline-block bg-brand-blue text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-600 transition shadow hover:shadow-lg">
+                        Selecionar Arquivo
+                    </label>
+                    {{ form.arquivo(class="hidden", id="arquivo", onchange="mostrarNomeArquivo(this)") }}
+                    <p id="nome-arquivo" class="text-xs text-gray-400 mt-3 font-mono h-4 overflow-hidden"></p>
+                </div>
+
+                <!-- CAMPO SENHA PDF -->
+                <div class="max-w-xs mx-auto">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Senha do PDF
+                        (Opcional)</label>
+                    {{ form.senha_pdf(class="block w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-dark-input border
+                    border-gray-300 dark:border-gray-700 focus:ring-brand-blue text-center", placeholder="Ex: 5
+                    primeiros dígitos do CPF") }}
+                </div>
+
+                <!-- CAMPO ESCOLHER CARTÃO -->
+                <div class="max-w-xs mx-auto mt-4">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Vincular a um
+                        Cartão?</label>
+                    {{ form.cartao_import_id(class="block w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-dark-input
+                    border border-gray-300 dark:border-gray-700 focus:ring-brand-blue text-center") }}
+                    <p class="text-[10px] text-gray-400 mt-1">Selecione "Conta Corrente" para débito/dinheiro.</p>
+                </div>
+
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-left border border-blue-100 dark:border-blue-800">
+                    <p class="text-xs text-blue-800 dark:text-blue-300">
+                        <i class="fa-solid fa-circle-info mr-1"></i>
+                        A Categoria abaixo será usada como padrão.
+                    </p>
                 </div>
             </div>
 
-            <!-- Descrição e Data -->
-            {{ render_field(form.descricao, placeholder="Descrição (ex: Celular, Aluguel)", icon="fa-align-left") }}
-
-            <div class="grid grid-cols-2 gap-4">
-                {{ render_field(form.data, type="date", icon="fa-calendar") }}
-
-                <!-- Categoria -->
-                <div class="mb-4">
-                    <label for="categoria_select"
-                        class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Categoria</label>
+            <!-- ======================= -->
+            <!-- ÁREA MANUAL -->
+            <!-- ======================= -->
+            <div id="area-manual">
+                <div class="mb-6 relative">
+                    <label for="valor_input"
+                        class="block text-center text-xs font-bold text-gray-500 dark:text-dark-muted uppercase mb-2">Valor</label>
                     <div class="relative">
-                        <select name="categoria_id" id="categoria_select" required
-                            class="block w-full pl-3 pr-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue appearance-none transition cursor-pointer text-sm">
-                            <option value="" disabled selected>Selecione...</option>
-                            {% for c in categorias %}
-                            <option value="{{ c.id }}">{{ c.nome }}</option>
-                            {% endfor %}
-                        </select>
-                        <div
-                            class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                            <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
-                        </div>
+                        <span
+                            class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold text-lg">R$</span>
+                        <input type="number" id="valor_input" step="0.01" name="valor" placeholder="0.00"
+                            class="block w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-dark-input text-gray-900 dark:text-white text-3xl font-bold text-center border-none focus:ring-2 focus:ring-brand-blue transition shadow-inner">
+                    </div>
+                </div>
+
+                {{ render_field(form.descricao, placeholder="Descrição (ex: Padaria)", icon="fa-align-left") }}
+
+                <div class="mb-4">
+                    {{ render_field(form.data, type="date", icon="fa-calendar") }}
+                </div>
+            </div>
+
+            <!-- CATEGORIA (COMUM) -->
+            <div class="mb-6 mt-4">
+                <label
+                    class="block text-xs font-semibold text-gray-500 dark:text-dark-muted uppercase mb-1 ml-1">Categoria</label>
+                <div class="relative">
+                    <select name="categoria_id" required
+                        class="block w-full pl-3 pr-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-input text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-brand-blue appearance-none transition cursor-pointer text-sm">
+                        {% for c in categorias %}
+                        <option value="{{ c.id }}">{{ c.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
                     </div>
                 </div>
             </div>
 
             <!-- OPÇÕES AVANÇADAS -->
-            <div class="mb-6 bg-gray-50 dark:bg-dark-bg p-1 rounded-xl flex space-x-1" role="group"
-                aria-label="Tipo de Recorrência">
-                <button type="button" onclick="setMode('unico')" id="btn-unico" aria-pressed="true"
-                    class="flex-1 py-2 rounded-lg text-sm font-bold bg-white dark:bg-dark-card shadow text-brand-blue transition focus:outline-none focus:ring-2 focus:ring-brand-blue">Único</button>
-                <button type="button" onclick="setMode('parcelado')" id="btn-parcelado" aria-pressed="false"
-                    class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">Parcelado</button>
-                <button type="button" onclick="setMode('recorrente')" id="btn-recorrente" aria-pressed="false"
-                    class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">Recorrente</button>
-            </div>
+            <div id="opcoes-avancadas-manual">
+                <div class="mb-6 bg-gray-50 dark:bg-dark-bg p-1 rounded-xl flex space-x-1">
+                    <button type="button" onclick="setMode('unico')" id="btn-unico"
+                        class="flex-1 py-2 rounded-lg text-sm font-bold bg-white dark:bg-dark-card shadow text-brand-blue transition">Único</button>
+                    <button type="button" onclick="setMode('parcelado')" id="btn-parcelado"
+                        class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">Parcelado</button>
+                    <button type="button" onclick="setMode('recorrente')" id="btn-recorrente"
+                        class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">Recorrente</button>
+                </div>
 
-            <!-- Campos Condicionais -->
-            <input type="hidden" name="tipo_transacao" id="tipo_transacao" value="unico">
+                <input type="hidden" name="tipo_transacao" id="tipo_transacao" value="unico">
 
-            <!-- 1. Parcelamento -->
-            <div id="fields-parcelado"
-                class="hidden space-y-4 bg-gray-50 dark:bg-dark-bg p-4 rounded-xl mb-4 border border-gray-200 dark:border-gray-700"
-                aria-live="polite">
-                <h3 class="text-xs font-bold uppercase text-gray-500 mb-2">Detalhes do Parcelamento</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="num_parcelas" class="block text-xs font-semibold text-gray-500 mb-1">Qtd.
-                            Parcelas</label>
-                        <input type="number" id="num_parcelas" name="num_parcelas" min="2" max="60" placeholder="Ex: 12"
+                <div id="fields-parcelado"
+                    class="hidden space-y-4 bg-gray-50 dark:bg-dark-bg p-4 rounded-xl mb-4 border border-gray-200 dark:border-gray-700">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" name="num_parcelas" min="2" max="60" placeholder="Qtd Parcelas"
                             class="block w-full px-3 py-2 rounded-lg bg-white dark:bg-dark-input border border-gray-300 dark:border-gray-600 focus:ring-brand-blue">
-                    </div>
-                    <div>
-                        <label for="cartao_select" class="block text-xs font-semibold text-gray-500 mb-1">Cartão
-                            (Opcional)</label>
-                        <select name="cartao_id" id="cartao_select"
+                        <select name="cartao_id"
                             class="block w-full px-3 py-2 rounded-lg bg-white dark:bg-dark-input border border-gray-300 dark:border-gray-600 focus:ring-brand-blue">
-                            <option value="">Nenhum</option>
+                            <option value="">Cartão...</option>
                             {% for c in cartoes %}
                             <option value="{{ c.id }}">{{ c.nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
-            </div>
 
-            <!-- 2. Recorrência -->
-            <div id="fields-recorrente"
-                class="hidden space-y-4 bg-gray-50 dark:bg-dark-bg p-4 rounded-xl mb-4 border border-gray-200 dark:border-gray-700"
-                aria-live="polite">
-                <h3 class="text-xs font-bold uppercase text-gray-500 mb-2">Despesa Fixa (Mensal)</h3>
-                <p class="text-xs text-gray-500 mb-2">Essa transação será lançada automaticamente todo mês.</p>
-                <div>
-                    <label for="meses_recorrencia" class="block text-xs font-semibold text-gray-500 mb-1">Repetir por
-                        (meses)</label>
-                    <input type="number" id="meses_recorrencia" name="meses_recorrencia" min="2" max="120"
-                        placeholder="Vazio = Infinito"
+                <div id="fields-recorrente"
+                    class="hidden bg-gray-50 dark:bg-dark-bg p-4 rounded-xl mb-4 border border-gray-200 dark:border-gray-700">
+                    <input type="number" name="meses_recorrencia" min="2" placeholder="Repetir por X meses"
                         class="block w-full px-3 py-2 rounded-lg bg-white dark:bg-dark-input border border-gray-300 dark:border-gray-600 focus:ring-brand-blue">
                 </div>
             </div>
 
             <div class="mt-8">
-                {{ render_submit(text="Confirmar Lançamento", icon="fa-check") }}
+                <button type="submit"
+                    class="w-full py-4 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-check mr-2"></i> Confirmar
+                </button>
             </div>
 
             <div class="mt-4 text-center">
                 <a href="{{ url_for('main.dashboard') }}"
-                    class="text-sm text-gray-500 dark:text-dark-muted hover:text-brand-blue transition">Cancelar</a>
+                    class="text-sm text-gray-500 hover:text-brand-blue">Cancelar</a>
             </div>
+
         </form>
     </div>
 </div>
 
 <script>
+    function mostrarNomeArquivo(input) {
+        const nome = input.files[0] ? input.files[0].name : '';
+        document.getElementById('nome-arquivo').textContent = nome;
+        if (nome) {
+            document.getElementById('nome-arquivo').classList.add('text-brand-blue', 'font-bold');
+        }
+    }
+
+    function switchTab(tab) {
+        const btnManual = document.getElementById('tab-manual');
+        const btnImport = document.getElementById('tab-import');
+        const areaManual = document.getElementById('area-manual');
+        const areaImport = document.getElementById('area-import');
+        const optsManual = document.getElementById('opcoes-avancadas-manual');
+        const inputValor = document.getElementById('valor_input');
+
+        if (tab === 'manual') {
+            areaManual.classList.remove('hidden');
+            optsManual.classList.remove('hidden');
+            areaImport.classList.add('hidden');
+
+            btnManual.className = "flex-1 py-2 text-sm font-bold rounded-lg shadow bg-white dark:bg-dark-card text-brand-blue transition focus:outline-none";
+            btnImport.className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none";
+            inputValor.required = true;
+        } else {
+            areaManual.classList.add('hidden');
+            optsManual.classList.add('hidden');
+            areaImport.classList.remove('hidden');
+
+            btnImport.className = "flex-1 py-2 text-sm font-bold rounded-lg shadow bg-white dark:bg-dark-card text-brand-blue transition focus:outline-none";
+            btnManual.className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none";
+            inputValor.required = false;
+        }
+    }
+
     function setMode(mode) {
-        // Atualiza input hidden
         document.getElementById('tipo_transacao').value = mode;
-
-        // Atualiza estilo dos botões e ARIA
         const modes = ['unico', 'parcelado', 'recorrente'];
-
         modes.forEach(m => {
             const btn = document.getElementById('btn-' + m);
             if (m === mode) {
-                btn.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white dark:bg-dark-card shadow text-brand-blue transition focus:outline-none focus:ring-2 focus:ring-brand-blue";
-                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.add('bg-white', 'dark:bg-dark-card', 'shadow', 'text-brand-blue', 'font-bold');
+                btn.classList.remove('text-gray-500');
             } else {
-                btn.className = "flex-1 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition focus:outline-none focus:ring-2 focus:ring-brand-blue";
-                btn.setAttribute('aria-pressed', 'false');
+                btn.classList.remove('bg-white', 'dark:bg-dark-card', 'shadow', 'text-brand-blue', 'font-bold');
+                btn.classList.add('text-gray-500');
             }
         });
 
-        // Mostra/Esconde campos
         document.getElementById('fields-parcelado').classList.add('hidden');
         document.getElementById('fields-recorrente').classList.add('hidden');
 
-        if (mode === 'parcelado') {
-            document.getElementById('fields-parcelado').classList.remove('hidden');
-        } else if (mode === 'recorrente') {
-            document.getElementById('fields-recorrente').classList.remove('hidden');
-        }
+        if (mode === 'parcelado') document.getElementById('fields-parcelado').classList.remove('hidden');
+        if (mode === 'recorrente') document.getElementById('fields-recorrente').classList.remove('hidden');
     }
 </script>
 {% endblock %}

@@ -1,29 +1,60 @@
+# services/transactions_service.py
+
 from datetime import datetime
 from flask import flash, request
 from flask_login import current_user
 from database import db
 from models import Categoria, Transacao
-# Importa o serviço de parcelas para delegar se for o caso
 from services.parcelas_service import criar_parcelas_a_partir_formulario
+
+def adicionar_transacao_core(user_id, categoria_id, descricao, valor, data_transacao):
+    """
+    Função Pura (Core):
+    Recebe dados brutos e salva no banco.
+    Usada tanto pelo Formulário Manual quanto pela Importação de Extrato.
+    """
+    try:
+        # Verifica categoria
+        categoria = db.session.get(Categoria, categoria_id)
+        if not categoria or categoria.user_id != user_id:
+            return False, "Categoria inválida ou não pertence ao usuário."
+
+        # Ajuste de sinal automático (Entrada positiva, Saída negativa)
+        valor_final = valor
+        if categoria.tipo != "entrada":
+            valor_final = -abs(valor)
+        else:
+            valor_final = abs(valor)
+
+        nova = Transacao(
+            categoria_id=categoria_id,
+            descricao=descricao,
+            valor=valor_final,
+            data_transacao=data_transacao,
+            user_id=user_id,
+        )
+
+        db.session.add(nova)
+        db.session.commit()
+        return True, "Transação salva com sucesso."
+        
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Erro interno ao salvar: {str(e)}"
+
 
 def criar_transacao_a_partir_formulario(form):
     """
-    Controlador mestre de criação.
-    Lê dados híbridos: alguns do objeto form (WTForms) e outros do request.form (HTML manual).
+    Controlador (Adapter):
+    Pega os dados do HTML/Form e passa para a função Core.
     """
     
-    # 1. Obter 'tipo_transacao'
-    # Como esse campo é um hidden input manual no HTML, ele não está no objeto 'form' do WTForms.
-    # Precisamos pegar direto do request do Flask.
+    # 1. Obter 'tipo_transacao' do HTML
     tipo = request.form.get('tipo_transacao', 'unico')
 
-    # --- DESVIO DE FLUXO: PARCELADO OU RECORRENTE ---
+    # --- FLUXO DE PARCELAMENTO/RECORRÊNCIA (Mantém lógica existente) ---
     if tipo in ['parcelado', 'recorrente']:
-        
-        # Pega o valor original digitado pelo usuário
         valor_original = float(form.valor.data)
-
-        # Montamos um dicionário base
         dados_adaptados = {
             "descricao": form.descricao.data,
             "data_vencimento_primeira": str(form.data.data),
@@ -32,34 +63,19 @@ def criar_transacao_a_partir_formulario(form):
         }
 
         if tipo == 'parcelado':
-            # Parcelado: O valor digitado É o valor total
             dados_adaptados["valor_total"] = str(valor_original)
             dados_adaptados["num_parcelas"] = request.form.get('num_parcelas')
-        
-        else: # Recorrente
-            # Recorrente: O valor digitado é o valor MENSAL.
-            # O serviço de parcelas vai dividir o total pela quantidade.
-            # Então, multiplicamos agora para que a divisão resulte no valor mensal correto.
-            
+        else: 
             meses_str = request.form.get('meses_recorrencia')
-            # Se vier vazio ou 0, assumimos 12 meses por segurança
-            if not meses_str or int(meses_str) < 2:
-                meses = 12
-            else:
-                meses = int(meses_str)
-
+            meses = 12 if not meses_str or int(meses_str) < 2 else int(meses_str)
             valor_total_calculado = valor_original * meses
-            
             dados_adaptados["valor_total"] = str(valor_total_calculado)
             dados_adaptados["num_parcelas"] = str(meses)
             dados_adaptados["descricao"] += " (Recorrente)"
 
-        # Chama o serviço de parcelas com o dicionário ajustado
         return criar_parcelas_a_partir_formulario(dados_adaptados)
 
-    # --- FLUXO PADRÃO: TRANSAÇÃO ÚNICA ---
-    
-    # Validação dos dados do Form
+    # --- FLUXO PADRÃO: TRANSAÇÃO ÚNICA (Agora usa o Core) ---
     try:
         categoria_id = int(request.form.get('categoria_id'))
     except (TypeError, ValueError):
@@ -68,36 +84,27 @@ def criar_transacao_a_partir_formulario(form):
 
     descricao = form.descricao.data
     valor = form.valor.data
-    data_python = form.data.data
+    data_python = form.data.data # Date object
 
     if valor is None or data_python is None:
         flash("Valor e Data são obrigatórios.", "danger")
         return False
 
-    # Verifica categoria
-    categoria = db.session.get(Categoria, categoria_id)
-    if not categoria or categoria.user_id != current_user.id:
-        flash("Categoria não encontrada.", "danger")
-        return False
-
-    # Converte data
+    # Converte date para datetime
     data_transacao = datetime.combine(data_python, datetime.min.time())
 
-    nova = Transacao(
+    # CHAMA A FUNÇÃO CORE QUE CRIAMOS ACIMA
+    sucesso, mensagem = adicionar_transacao_core(
+        user_id=current_user.id,
         categoria_id=categoria_id,
         descricao=descricao,
-        # Se for saída/investimento é negativo, entrada é positivo
-        valor=valor if categoria.tipo == "entrada" else -abs(valor),
-        data_transacao=data_transacao,
-        user_id=current_user.id,
+        valor=valor,
+        data_transacao=data_transacao
     )
 
-    try:
-        db.session.add(nova)
-        db.session.commit()
+    if sucesso:
         flash("Transação adicionada com sucesso!", "success")
         return True
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Erro ao salvar: {e}", "danger")
+    else:
+        flash(mensagem, "danger")
         return False

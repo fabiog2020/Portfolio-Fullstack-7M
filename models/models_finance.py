@@ -53,6 +53,9 @@ class Transacao(db.Model):
     valor: Mapped[float] = mapped_column(Float, nullable=False)
     data_transacao: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
+    # --- NOVO: ID DO LOTE DE IMPORTAÇÃO ---
+    import_id: Mapped[str] = mapped_column(String(50), nullable=True, index=True)
+
     def __repr__(self):
         return f"Transacao('{self.descricao}', Valor={self.valor})"
 
@@ -67,10 +70,7 @@ class Cartao(db.Model):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
     nome: Mapped[str] = mapped_column(String(50), nullable=False)
-    
-    # --- NOVO CAMPO: ÚLTIMOS 4 DÍGITOS ---
     digitos_finais: Mapped[str] = mapped_column(String(4), nullable=True)
-    # -------------------------------------
 
     limite: Mapped[float] = mapped_column(Float, default=0.0)
     vencimento_dia: Mapped[int] = mapped_column(Integer, nullable=True)
@@ -100,6 +100,9 @@ class Parcela(db.Model):
     data_vencimento: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     pago: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # --- NOVO: ID DO LOTE DE IMPORTAÇÃO ---
+    import_id: Mapped[str] = mapped_column(String(50), nullable=True, index=True)
+
     def __repr__(self):
         return f"Parcela('{self.descricao}', Vencimento={self.data_vencimento})"
 
@@ -107,22 +110,17 @@ class Parcela(db.Model):
 # ==========================================================
 # 6. MODELO INVESTIMENTO (Tabela: investimentos)
 # ==========================================================
-
 class Investimento(db.Model):
     __tablename__ = "investimentos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
-    # --- NOVO CAMPO DECISOR ---
-    classe: Mapped[str] = mapped_column(String(20), nullable=False, default="Variavel") # 'Variavel' ou 'Fixa'
-    # --------------------------
-
-    tipo: Mapped[str] = mapped_column(String(50), nullable=False) # Ação, FII, CDB...
+    classe: Mapped[str] = mapped_column(String(20), nullable=False, default="Variavel") 
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False) 
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     ticker: Mapped[str] = mapped_column(String(20), nullable=True)
     
-    # Renda Fixa
     indice: Mapped[str] = mapped_column(String(10), nullable=True)
     taxa_contratada: Mapped[float] = mapped_column(Float, nullable=True)
     data_vencimento: Mapped[datetime] = mapped_column(DateTime, nullable=True)
@@ -134,7 +132,6 @@ class Investimento(db.Model):
     status: Mapped[str] = mapped_column(String(20), default="Ativo")
     preco_venda: Mapped[float] = mapped_column(Float, nullable=True)
     data_venda: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    
     lucro_final: Mapped[float] = mapped_column(Float, nullable=True)
 
     def __repr__(self):
@@ -142,7 +139,7 @@ class Investimento(db.Model):
 
 
 # ==========================================================
-# 7. MODELO META (Tabela: metas) <--- NOVO
+# 7. MODELO META (Tabela: metas)
 # ==========================================================
 class Meta(db.Model):
     __tablename__ = "metas"
@@ -153,13 +150,11 @@ class Meta(db.Model):
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     descricao: Mapped[str] = mapped_column(String(200), nullable=True)
     
-    # Valores Financeiros
     valor_alvo: Mapped[float] = mapped_column(Float, nullable=False)
     valor_atual: Mapped[float] = mapped_column(Float, default=0.0)
     
-    # Configuração
     data_limite: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    cor: Mapped[str] = mapped_column(String(20), default="bg-blue-500") # Guarda a classe Tailwind ou Hex
+    cor: Mapped[str] = mapped_column(String(20), default="bg-blue-500") 
     concluida: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __repr__(self):
