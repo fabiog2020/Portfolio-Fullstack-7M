@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-dark-card rounded shadow">
+    <div class="mb-6 flex justify-between">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Gerenciar: {{ user.nome }}</h2>
+        <a href="{{ url_for('admin.listar_usuarios') }}" class="text-blue-500 hover:underline">Voltar</a>
+    </div>
+
+    <div class="space-y-8">
+        <!-- ÁREA 1: Mudar Senha (Resgate de Conta) -->
+        <div class="p-4 border border-red-200 rounded bg-red-50 dark:bg-red-900/10">
+            <h3 class="text-lg font-bold text-red-700 mb-2">🆘 Zona de Perigo: Alterar Senha</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Use isso se o usuário esqueceu a senha e não
+                consegue entrar.</p>
+            <form method="POST" class="flex gap-2">
+                <input type="hidden" name="acao" value="mudar_senha">
+                <input type="text" name="nova_senha" placeholder="Nova Senha Provisória" required
+                    class="flex-1 p-2 rounded border border-gray-300">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold">
+                    Resetar Senha
+                </button>
+            </form>
+        </div>
+
+        <!-- ÁREA 2: Mudar Plano (Upgrade Manual) -->
+        <div class="p-4 border border-blue-200 rounded bg-blue-50 dark:bg-blue-900/10">
+            <h3 class="text-lg font-bold text-blue-700 mb-2">💎 Gerenciar Plano</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Plano Atual: <strong>{{ user.plano }}</strong></p>
+            <form method="POST" class="flex gap-2">
+                <input type="hidden" name="acao" value="mudar_plano">
+                <select name="novo_plano" class="flex-1 p-2 rounded border border-gray-300">
+                    <option value="free" {% if user.plano=='free' %}selected{% endif %}>Free</option>
+                    <option value="mensal" {% if user.plano=='mensal' %}selected{% endif %}>Mensal</option>
+                    <option value="semestral" {% if user.plano=='semestral' %}selected{% endif %}>Semestral</option>
+                    <option value="anual" {% if user.plano=='anual' %}selected{% endif %}>Anual</option>
+                </select>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold">
+                    Atualizar Plano
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

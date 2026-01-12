@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Planos de Assinatura{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10 px-4">
+    <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Escolha seu Plano</h2>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Faça o upgrade e desbloqueie recursos exclusivos.</p>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-6">
+
+        <!-- Plano Free -->
+        <div
+            class="bg-white dark:bg-dark-card rounded-lg shadow-lg p-6 border-2 {{ 'border-brand-blue' if plano_atual == 'free' else 'border-transparent' }}">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Free</h3>
+            <p class="text-3xl font-bold my-4 text-gray-900 dark:text-gray-100">R$ 0</p>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-2 mb-6">
+                <li>✅ Controle de despesas básico</li>
+                <li>✅ Relatórios simples</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="plano_selecionado" value="free">
+                <button type="submit"
+                    class="w-full py-2 rounded font-bold transition {{ 'bg-gray-300 cursor-not-allowed text-gray-600' if plano_atual == 'free' else 'bg-brand-blue text-white hover:bg-blue-600' }}"
+                    {{ 'disabled' if plano_atual=='free' }}>
+                    {{ 'Atual' if plano_atual == 'free' else 'Selecionar' }}
+                </button>
+            </form>
+        </div>
+
+        <!-- Plano Mensal -->
+        <div
+            class="bg-white dark:bg-dark-card rounded-lg shadow-lg p-6 border-2 {{ 'border-brand-blue' if plano_atual == 'mensal' else 'border-transparent' }}">
+            <h3 class="text-xl font-bold text-brand-blue">Mensal</h3>
+            <p class="text-3xl font-bold my-4 text-gray-900 dark:text-gray-100">R$ 19,90</p>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-2 mb-6">
+                <li>✅ Tudo do Free</li>
+                <li>✅ Suporte prioritário</li>
+                <li>✅ Metas ilimitadas</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="plano_selecionado" value="mensal">
+                <button type="submit"
+                    class="w-full py-2 rounded font-bold transition {{ 'bg-gray-300 cursor-not-allowed text-gray-600' if plano_atual == 'mensal' else 'bg-brand-blue text-white hover:bg-blue-600' }}"
+                    {{ 'disabled' if plano_atual=='mensal' }}>
+                    {{ 'Atual' if plano_atual == 'mensal' else 'Assinar' }}
+                </button>
+            </form>
+        </div>
+
+        <!-- Plano Semestral -->
+        <div
+            class="bg-white dark:bg-dark-card rounded-lg shadow-lg p-6 border-2 {{ 'border-brand-blue' if plano_atual == 'semestral' else 'border-transparent' }}">
+            <h3 class="text-xl font-bold text-purple-500">Semestral</h3>
+            <p class="text-3xl font-bold my-4 text-gray-900 dark:text-gray-100">R$ 99,90</p>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-2 mb-6">
+                <li>✅ Desconto de 15%</li>
+                <li>✅ Exportação Excel</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="plano_selecionado" value="semestral">
+                <button type="submit"
+                    class="w-full py-2 rounded font-bold transition {{ 'bg-gray-300 cursor-not-allowed text-gray-600' if plano_atual == 'semestral' else 'bg-brand-blue text-white hover:bg-blue-600' }}"
+                    {{ 'disabled' if plano_atual=='semestral' }}>
+                    {{ 'Atual' if plano_atual == 'semestral' else 'Assinar' }}
+                </button>
+            </form>
+        </div>
+
+        <!-- Plano Anual -->
+        <div
+            class="bg-white dark:bg-dark-card rounded-lg shadow-lg p-6 border-2 {{ 'border-brand-blue' if plano_atual == 'anual' else 'border-transparent' }}">
+            <h3 class="text-xl font-bold text-brand-green">Anual</h3>
+            <p class="text-3xl font-bold my-4 text-gray-900 dark:text-gray-100">R$ 189,90</p>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-2 mb-6">
+                <li>✅ 2 Meses Grátis</li>
+                <li>✅ Acesso Antecipado Beta</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="plano_selecionado" value="anual">
+                <button type="submit"
+                    class="w-full py-2 rounded font-bold transition {{ 'bg-gray-300 cursor-not-allowed text-gray-600' if plano_atual == 'anual' else 'bg-brand-blue text-white hover:bg-blue-600' }}"
+                    {{ 'disabled' if plano_atual=='anual' }}>
+                    {{ 'Atual' if plano_atual == 'anual' else 'Assinar' }}
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-8">
+        <a href="{{ url_for('profile.meu_perfil') }}" class="text-gray-500 hover:text-brand-blue">Voltar ao Perfil</a>
+    </div>
+</div>
+{% endblock %}

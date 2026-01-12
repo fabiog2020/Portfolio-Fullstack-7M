@@ -27,7 +27,8 @@
               green: '#10b981',
               red: '#ef4444',
               blue: '#3b82f6',
-              yellow: '#f59e0b'
+              yellow: '#f59e0b',
+              purple: '#7e22ce'
             }
           },
           fontFamily: {
@@ -99,26 +100,41 @@
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Parcelas</a>
             <a href="{{ url_for('investments.investimentos') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Investimentos</a>
-
-            <!-- Link Desktop -->
             <a href="{{ url_for('metas.listar_metas') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Metas</a>
-
             <a href="{{ url_for('categories.gerenciar_categorias') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Categorias</a>
             <a href="{{ url_for('reports.relatorios') }}" role="menuitem"
               class="hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition">Relatórios</a>
           </div>
         </div>
+
+        <!-- Área Direita da Navbar -->
         <div class="flex items-center space-x-4">
+
+          <!-- BOTÃO ADMIN (Só aparece para is_admin=True) -->
+          {% if current_user.is_authenticated and current_user.is_admin %}
+          <a href="{{ url_for('admin.dashboard') }}"
+            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-sm font-bold flex items-center shadow-sm transition transform hover:scale-105">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Admin
+          </a>
+          {% endif %}
+
           <button onclick="toggleTheme()" aria-label="Alternar entre modo claro e escuro"
             class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">
             <i class="fa-solid fa-sun text-yellow-500 block dark:hidden" aria-hidden="true"></i>
             <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
           </button>
 
+          <!-- Link Perfil -->
+          <a href="{{ url_for('profile.meu_perfil') }}" aria-label="Meu Perfil"
+            class="text-gray-600 dark:text-gray-300 hover:text-brand-blue text-sm font-medium flex items-center transition bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-full">
+            <i class="fa-solid fa-user-circle mr-2 text-lg" aria-hidden="true"></i>
+            <span>Perfil</span>
+          </a>
+
           <a href="{{ url_for('auth.logout') }}" aria-label="Sair da conta"
-            class="text-red-500 hover:text-red-400 text-sm font-medium flex items-center">
+            class="text-red-500 hover:text-red-400 text-sm font-medium flex items-center ml-2">
             <i class="fa-solid fa-right-from-bracket mr-1" aria-hidden="true"></i> Sair
           </a>
         </div>
@@ -131,11 +147,25 @@
     class="md:hidden flex justify-between items-center p-4 bg-white dark:bg-dark-card sticky top-0 z-40 shadow-sm">
     <h1 class="text-xl font-bold">{% block header_title %}Finanças{% endblock %}</h1>
     <div class="flex items-center space-x-3">
+
+      <!-- BOTÃO ADMIN MOBILE -->
+      {% if current_user.is_authenticated and current_user.is_admin %}
+      <a href="{{ url_for('admin.dashboard') }}" class="text-purple-600 hover:text-purple-800">
+        <i class="fa-solid fa-shield-halved text-xl"></i>
+      </a>
+      {% endif %}
+
       <button onclick="toggleTheme()" aria-label="Alternar tema"
         class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-blue">
         <i class="fa-solid fa-sun text-yellow-500 block dark:hidden" aria-hidden="true"></i>
         <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
       </button>
+
+      <a href="{{ url_for('profile.meu_perfil') }}" class="text-dark-muted hover:text-brand-blue p-2"
+        aria-label="Perfil">
+        <i class="fa-solid fa-user-circle text-xl" aria-hidden="true"></i>
+      </a>
+
       <a href="{{ url_for('auth.logout') }}" class="text-dark-muted" aria-label="Sair"><i
           class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></a>
     </div>
@@ -168,7 +198,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Bottom Navigation Bar (Mobile) - Ajustado para 5 Itens -->
+  <!-- Bottom Navigation Bar (Mobile) -->
   <nav aria-label="Navegação Mobile"
     class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-800 flex justify-around items-center py-2 z-50 shadow-inner safe-area-pb">
 
@@ -179,14 +209,14 @@
       <span class="text-[10px]">Início</span>
     </a>
 
-    <!-- 2. Metas (Novo) -->
+    <!-- 2. Metas -->
     <a href="{{ url_for('metas.listar_metas') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'metas' in request.endpoint else '' }}">
       <i class="fa-solid fa-bullseye text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Metas</span>
     </a>
 
-    <!-- 3. Botão Central (Adicionar) -->
+    <!-- 3. Botão Central -->
     <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}" aria-label="Adicionar Nova Transação"
       class="flex items-center justify-center w-12 h-12 bg-brand-blue rounded-full text-white shadow-lg transform -translate-y-3 border-4 border-gray-100 dark:border-dark-bg focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
       <i class="fa-solid fa-plus text-xl" aria-hidden="true"></i>
@@ -199,7 +229,7 @@
       <span class="text-[10px]">Investir</span>
     </a>
 
-    <!-- 5. Mais (Categorias/Outros) -->
+    <!-- 5. Menu -->
     <a href="{{ url_for('categories.gerenciar_categorias') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'categories' in request.endpoint else '' }}">
       <i class="fa-solid fa-bars text-xl mb-1" aria-hidden="true"></i>

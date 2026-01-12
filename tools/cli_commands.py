@@ -4,7 +4,9 @@ import click
 from flask.cli import with_appcontext
 
 from database import db
-from models import User, Categoria
+# Ajuste os imports conforme sua estrutura real.
+# Se der erro de importação aqui, use: from models.models import User / from models.models_finance import Categoria
+from models import User, Categoria 
 
 # ==========================================================
 # 1. CONSTANTES
@@ -223,12 +225,18 @@ def seed_db_command():
     db.create_all()
 
     # 2. Cria o usuário padrão 'admin'
-    admin_user = User(nome="Admin", email="admin@finance.app")
+    # --- MODIFICAÇÃO AQUI: Adicionado is_admin=True e plano='anual' ---
+    admin_user = User(
+        nome="Admin", 
+        email="admin@finance.app", 
+        is_admin=True, 
+        plano="anual"
+    )
     admin_user.set_password("123456")
     db.session.add(admin_user)
     db.session.flush()  # Força o ID do admin a ser gerado imediatamente
 
-    click.echo(f"✅ Usuário '{admin_user.email}' criado com sucesso! (Senha: 123456)")
+    click.echo(f"✅ Usuário '{admin_user.email}' criado com sucesso! (Senha: 123456) - ADMIN: SIM")
 
     parent_map = {}
     user_id = admin_user.id

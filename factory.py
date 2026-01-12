@@ -5,7 +5,7 @@ from flask import Flask
 from config import DevConfig
 from database import db, login_manager
 from tools.cli_commands import register_cli_commands
-from models import User # Importe o modelo User
+from models.models import User # Importe o modelo User
 
 # Importa TODOS os Blueprints
 from blueprints.auth_routes import auth_bp
@@ -17,6 +17,10 @@ from blueprints.installment_routes import installments_bp
 from blueprints.investment_routes import investments_bp
 from blueprints.report_routes import reports_bp
 from blueprints.meta_routes import metas_bp
+
+# NOVOS BLUEPRINTS (Perfil e Admin)
+from blueprints.profile_routes import profile_bp
+from blueprints.admin_routes import admin_bp
 
 def hex_to_rgb(hex_color):
     """Converte #RRGGBB para (R, G, B)."""
@@ -44,6 +48,7 @@ def create_app(config_class=DevConfig):
     # ------------------------------------------------------------
 
     with app.app_context():
+        # Registra os comandos do terminal (flask seed-db)
         register_cli_commands(app)
 
     # REGISTRO DOS BLUEPRINTS
@@ -56,9 +61,14 @@ def create_app(config_class=DevConfig):
     app.register_blueprint(investments_bp, url_prefix='/investimentos')
     app.register_blueprint(reports_bp)
     app.register_blueprint(metas_bp, url_prefix='/metas')
+    
+    # NOVOS REGISTROS
+    app.register_blueprint(profile_bp) # Rotas de perfil (/perfil, /suporte)
+    app.register_blueprint(admin_bp, url_prefix='/admin') # Rotas de admin (/admin/painel)
 
     @app.context_processor
     def utility_processor():
         return dict(hex_to_rgb=hex_to_rgb)
 
     return app
+    

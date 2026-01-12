@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Usuários{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 px-4">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Todos os Usuários</h2>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {% for user in users %}
+        <div
+            class="bg-white dark:bg-dark-card p-4 rounded shadow border border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <div>
+                <p class="font-bold text-lg dark:text-white">{{ user.nome }}</p>
+                <p class="text-sm text-gray-500">{{ user.email }}</p>
+                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mt-1 inline-block">Plano: {{ user.plano
+                    }}</span>
+                {% if user.is_admin %}
+                <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded mt-1 inline-block">ADMIN</span>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('admin.gerenciar_usuario', user_id=user.id) }}"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm">
+                Editar
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

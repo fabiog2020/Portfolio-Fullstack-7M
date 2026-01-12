@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Suporte e Atendimento{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-white dark:bg-dark-card rounded-lg shadow-md">
+
+    <div class="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Central de Ajuda</h2>
+        <a href="{{ url_for('profile.meu_perfil') }}" class="text-sm text-brand-blue hover:underline">Voltar</a>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+
+        <!-- Formulário de Novo Ticket -->
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">Abrir Novo Chamado</h3>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 dark:text-gray-400">Assunto</label>
+                    <input type="text" name="assunto" required placeholder="Ex: Problema no pagamento"
+                        class="w-full mt-1 p-2 rounded border border-gray-300 dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 dark:text-gray-400">Mensagem</label>
+                    <textarea name="mensagem" rows="4" required placeholder="Descreva seu problema..."
+                        class="w-full mt-1 p-2 rounded border border-gray-300 dark:bg-dark-input dark:border-gray-600 dark:text-white"></textarea>
+                </div>
+                <button type="submit"
+                    class="bg-brand-blue hover:bg-blue-600 text-white py-2 px-4 rounded w-full transition">
+                    Enviar Solicitação
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Histórico -->
+        <div class="bg-gray-50 dark:bg-[#252525] p-4 rounded-lg h-96 overflow-y-auto no-scrollbar">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">Meus Tickets</h3>
+
+            {% if tickets %}
+            <div class="space-y-3">
+                {% for ticket in tickets %}
+                <div
+                    class="bg-white dark:bg-dark-card p-3 rounded shadow-sm border-l-4 {{ 'border-green-500' if ticket.status == 'respondido' else 'border-yellow-500' }}">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-sm text-gray-800 dark:text-white">{{ ticket.assunto }}</span>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded {{ 'bg-green-100 text-green-800' if ticket.status == 'respondido' else 'bg-yellow-100 text-yellow-800' }}">
+                            {{ ticket.status }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">{{ ticket.data_abertura.strftime('%d/%m/%Y %H:%M') }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 truncate">{{ ticket.mensagem }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center mt-10">Nenhum ticket aberto ainda.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
