@@ -5,8 +5,8 @@ from flask.cli import with_appcontext
 
 from database import db
 # Ajuste os imports conforme sua estrutura real.
-# Se der erro de importação aqui, use: from models.models import User / from models.models_finance import Categoria
-from models import User, Categoria 
+from models.models import User 
+from models.models_finance import Categoria 
 
 # ==========================================================
 # 1. CONSTANTES
@@ -30,11 +30,11 @@ CATEGORIAS_A_SEMEAR = [
     {
         "nome": "Despesas (Geral)",
         "tipo": SAIDA,
-        "icone": "fa-solid fa-wallet", # Ajustado para um icone mais geral se preferir, ou fa-minus
+        "icone": "fa-solid fa-wallet",
         "cor": "#F44336",
         "parent_ref": None,
     },
-    {   # <--- NOVO PAI PARA INVESTIMENTOS
+    {   
         "nome": "Carteira de Ativos",
         "tipo": INVESTIMENTO,
         "icone": "fa-solid fa-chart-pie",
@@ -88,7 +88,7 @@ CATEGORIAS_A_SEMEAR = [
     {
         "nome": "Transporte Público/Uber",
         "tipo": SAIDA,
-        "icone": "fa-solid fa-train", # ou fa-taxi
+        "icone": "fa-solid fa-train",
         "cor": "#2196F3",
         "parent_ref": "Despesas (Geral)",
     },
@@ -156,7 +156,6 @@ CATEGORIAS_A_SEMEAR = [
         "parent_ref": "Despesas (Geral)",
     },
     {
-        # Categoria de SAÍDA para representar o dinheiro saindo para investir
         "nome": "Aporte/Investimento",
         "tipo": SAIDA,
         "icone": "fa-solid fa-money-bill-transfer",
@@ -225,23 +224,23 @@ def seed_db_command():
     db.create_all()
 
     # 2. Cria o usuário padrão 'admin'
-    # --- MODIFICAÇÃO AQUI: Adicionado is_admin=True e plano='anual' ---
     admin_user = User(
         nome="Admin", 
         email="admin@finance.app", 
         is_admin=True, 
-        plano="anual"
+        plano="anual",
+        confirmed=True # <--- IMPORTANTE: Admin já nasce confirmado
     )
     admin_user.set_password("123456")
     db.session.add(admin_user)
-    db.session.flush()  # Força o ID do admin a ser gerado imediatamente
+    db.session.flush() 
 
     click.echo(f"✅ Usuário '{admin_user.email}' criado com sucesso! (Senha: 123456) - ADMIN: SIM")
 
     parent_map = {}
     user_id = admin_user.id
 
-    # FASE A: Cria as Categorias Pais (parent_ref é None)
+    # FASE A: Cria as Categorias Pais
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is None:
             nova_categoria = Categoria(
@@ -252,14 +251,14 @@ def seed_db_command():
                 user_id=user_id,
             )
             db.session.add(nova_categoria)
-            db.session.flush()  # Importante: Garante que o ID do Pai é gerado
-            parent_map[cat_data["nome"]] = nova_categoria.id  # Salva o ID do Pai
+            db.session.flush()
+            parent_map[cat_data["nome"]] = nova_categoria.id
 
-    # FASE B: Cria as Categorias Filhas (parent_ref tem o nome do Pai)
+    # FASE B: Cria as Categorias Filhas
     for cat_data in CATEGORIAS_A_SEMEAR:
         if cat_data.get("parent_ref") is not None:
             parent_name = cat_data.get("parent_ref")
-            parent_id = parent_map.get(parent_name)  # Busca o ID salvo na FASE A
+            parent_id = parent_map.get(parent_name)
 
             if parent_id:
                 nova_categoria = Categoria(
@@ -268,7 +267,7 @@ def seed_db_command():
                     icone=cat_data["icone"],
                     cor=cat_data["cor"],
                     user_id=user_id,
-                    parent_id=parent_id,  # Usa o ID encontrado
+                    parent_id=parent_id,
                 )
                 db.session.add(nova_categoria)
 

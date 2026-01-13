@@ -1,51 +1,156 @@
 {% extends "base.html" %}
 
-{% block title %}Meu Perfil{% endblock %}
+{% block title %}Meu Perfil Completo{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-dark-card rounded-lg shadow-md">
+<div class="max-w-4xl mx-auto mt-6 px-4 mb-20">
 
-    <div class="flex items-center space-x-4 mb-6">
+    <!-- Cabeçalho do Perfil -->
+    <div class="flex items-center space-x-4 mb-6 bg-white dark:bg-dark-card p-6 rounded-lg shadow-sm">
         <div
-            class="w-16 h-16 bg-brand-blue rounded-full flex items-center justify-center text-white text-2xl font-bold">
+            class="w-20 h-20 bg-brand-blue rounded-full flex items-center justify-center text-white text-3xl font-bold">
             {{ user.nome[0] | upper }}
         </div>
         <div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">{{ user.nome }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
-            <span class="inline-block mt-1 px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">
-                Plano: {{ user.plano | upper }}
-            </span>
+            <div class="mt-2 flex space-x-2">
+                <span
+                    class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800 border border-green-200">
+                    Plano: {{ user.plano | upper }}
+                </span>
+                {% if user.is_admin %}
+                <span
+                    class="px-2 py-1 text-xs font-semibold rounded bg-purple-100 text-purple-800 border border-purple-200">
+                    ADMINISTRADOR
+                </span>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <!-- Abas de Navegação Interna -->
-    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-        <a href="#" class="px-4 py-2 border-b-2 border-brand-blue text-brand-blue font-medium">Dados</a>
+    <!-- Navegação Interna -->
+    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
+        <a href="#" class="px-4 py-2 border-b-2 border-brand-blue text-brand-blue font-medium whitespace-nowrap">Dados
+            Cadastrais</a>
         <a href="{{ url_for('profile.planos') }}"
-            class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Planos</a>
+            class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Planos</a>
         <a href="{{ url_for('profile.suporte') }}"
-            class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Suporte</a>
+            class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Suporte</a>
     </div>
 
-    <form method="POST" class="space-y-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo</label>
-            <input type="text" name="nome" value="{{ user.nome }}" required
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50 dark:bg-dark-input dark:border-gray-600 dark:text-white p-2 border">
+    <form method="POST" class="space-y-6">
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <!-- CARD 1: IDENTIFICAÇÃO -->
+            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-sm border dark:border-gray-700">
+                <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">
+                    <i class="fa-solid fa-id-card mr-2 text-brand-blue"></i> Identificação
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo</label>
+                        <input type="text" name="nome" value="{{ user.nome }}" required
+                            class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">CPF <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="cpf" value="{{ user.cpf or '' }}" required
+                                placeholder="000.000.000-00"
+                                class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Celular/Zap <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" name="telefone" value="{{ user.telefone or '' }}" required
+                                placeholder="(00) 00000-0000"
+                                class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha</label>
+                        <input type="password" name="senha" placeholder="Preencha apenas se quiser mudar"
+                            class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: PERFIL FINANCEIRO (IMPORTANTE PARA I.A.) -->
+            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-sm border dark:border-gray-700">
+                <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">
+                    <i class="fa-solid fa-chart-line mr-2 text-green-500"></i> Perfil Econômico
+                </h3>
+                <p class="text-xs text-gray-500 mb-4">Esses dados nos ajudam a personalizar ofertas e dicas para você.
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Profissão <span
+                                class="text-red-500">*</span></label>
+                        <input type="text" name="profissao" value="{{ user.profissao or '' }}" required
+                            placeholder="Ex: Desenvolvedor..."
+                            class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Renda Mensal (R$)
+                            <span class="text-red-500">*</span></label>
+                        <input type="text" name="renda_mensal" value="{{ user.renda_mensal or '' }}" required
+                            placeholder="0,00"
+                            class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha (deixe em branco para
-                manter)</label>
-            <input type="password" name="senha" placeholder="********"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50 dark:bg-dark-input dark:border-gray-600 dark:text-white p-2 border">
+        <!-- CARD 3: ENDEREÇO (LARGURA TOTAL) -->
+        <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-sm border dark:border-gray-700 mt-6">
+            <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">
+                <i class="fa-solid fa-map-location-dot mr-2 text-red-500"></i> Endereço
+            </h3>
+
+            <div class="grid md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">CEP</label>
+                    <input type="text" name="cep" value="{{ user.cep or '' }}" placeholder="00000-000"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rua / Logradouro</label>
+                    <input type="text" name="endereco" value="{{ user.endereco or '' }}"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Número</label>
+                    <input type="text" name="numero" value="{{ user.numero or '' }}"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bairro</label>
+                    <input type="text" name="bairro" value="{{ user.bairro or '' }}"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cidade</label>
+                    <input type="text" name="cidade" value="{{ user.cidade or '' }}"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estado (UF)</label>
+                    <input type="text" name="estado" value="{{ user.estado or '' }}" maxlength="2" placeholder="SP"
+                        class="w-full mt-1 p-2 rounded border dark:bg-dark-input dark:border-gray-600 dark:text-white uppercase">
+                </div>
+            </div>
         </div>
 
+        <!-- Botão Salvar -->
         <div class="pt-4">
             <button type="submit"
-                class="w-full bg-brand-blue hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200">
-                Salvar Alterações
+                class="w-full bg-brand-blue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 text-lg">
+                Salvar Atualizações do Perfil
             </button>
         </div>
     </form>

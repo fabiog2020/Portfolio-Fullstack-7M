@@ -1,128 +1,128 @@
 # blueprints/auth_routes.py
-
-
-from flask import Blueprint, flash, redirect, render_template, url_for, current_app
-from flask_login import current_user, login_required, login_user, logout_user
-
+import re
+from datetime import datetime, timezone
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import check_password_hash
 from database import db
-from forms.auth_forms import LoginForm, RegisterForm
-from models import User, Categoria
-
+from models.models import User
 
 auth_bp = Blueprint('auth', __name__)
 
-# ==================================================
-# FUNÇÃO AUXILIAR (Usada no Registro)
-# ==================================================
-def inserir_categorias_padrao(user_id):
-    """Insere categorias padrão para um NOVO usuário."""
-    # Lista simples (sem hierarquia complexa para registro rápido)
-    categorias = [
-        # ENTRADAS
-        {"nome": "Salário", "tipo": "entrada", "icone": "fa-solid fa-money-bill-wave", "cor": "#28a745"},
-        {"nome": "Renda Extra", "tipo": "entrada", "icone": "fa-solid fa-sack-dollar", "cor": "#17a2b8"},
-        
-        # SAÍDAS
-        {"nome": "Moradia", "tipo": "saída", "icone": "fa-solid fa-house", "cor": "#dc3545"},
-        {"nome": "Alimentação", "tipo": "saída", "icone": "fa-solid fa-burger", "cor": "#ffc107"},
-        {"nome": "Transporte", "tipo": "saída", "icone": "fa-solid fa-car-side", "cor": "#6f42c1"},
-        {"nome": "Saúde", "tipo": "saída", "icone": "fa-solid fa-briefcase-medical", "cor": "#20c997"},
-        {"nome": "Lazer", "tipo": "saída", "icone": "fa-solid fa-champagne-glasses", "cor": "#fd7e14"},
-        {"nome": "Educação", "tipo": "saída", "icone": "fa-solid fa-graduation-cap", "cor": "#007bff"},
-        
-        # INVESTIMENTOS
-        {"nome": "Renda Fixa", "tipo": "investimento", "icone": "fa-solid fa-piggy-bank", "cor": "#2196F3"},
-        {"nome": "Renda Variável", "tipo": "investimento", "icone": "fa-solid fa-chart-line", "cor": "#FFC107"},
-        {"nome": "Consórcio", "tipo": "investimento", "icone": "fa-solid fa-car", "cor": "#9C27B0"},
-    ]
+# --- Validação de Senha Forte ---
+def is_password_strong(password):
+    """
+    Exige: 8 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 especial.
+    """
+    regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    return re.match(regex, password)
 
-    for c in categorias:
-        nova_categoria = Categoria(
-            user_id=user_id,
-            nome=c["nome"],
-            tipo=c["tipo"],
-            icone=c["icone"],
-            cor=c["cor"],
-        )
-        db.session.add(nova_categoria)
-    db.session.commit()
-
-
-# ===========================
-# ROTAS DE AUTENTICAÇÃO
-# ===========================
-
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-
-    form = LoginForm()
-
-    if form.validate_on_submit():
-        email = form.email.data
-        senha = form.senha.data
-
-        user = db.session.execute(
-            db.select(User).filter_by(email=email)
-        ).scalar_one_or_none()
-
-        if user and user.check_password(senha):
-            login_user(user)
-            flash(f"Bem-vindo, {user.nome}!", "success")
-            return redirect(url_for('main.dashboard'))
-        else:
-            flash("E-mail ou senha inválidos.", "danger")
-
-    return render_template('login.html', form=form)
-
-
+# ---------------------------------------------------------
+# ROTA: REGISTRO
+# ---------------------------------------------------------
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
 
-    # --- TRAVA DE SEGURANÇA (BETA LIMIT) ---
-    contagem_atual = User.query.count()
-    limite_beta = current_app.config.get('MAX_BETA_USERS', 500)
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        senha = request.form.get('password')
+        senha_confirm = request.form.get('password_confirm') # Captura a confirmação
 
-    if contagem_atual >= limite_beta:
-        # Se atingiu 500, mostra a tela de esgotado e impede o cadastro
-        return render_template("beta_full.html")
-    # ---------------------------------------
+        # 1. Validação: Senhas Iguais?
+        if senha != senha_confirm:
+            flash('As senhas não conferem. Digite com atenção.', 'error')
+            return render_template('register.html')
 
-    form = RegisterForm()
+        # 2. Validação: Senha Forte?
+        if not is_password_strong(senha):
+            flash('A senha deve ter: min 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial (@$!%*?&).', 'error')
+            return render_template('register.html')
 
-    if form.validate_on_submit():
-        nome = form.nome.data
-        email = form.email.data
-        senha = form.senha.data
+        # 3. Verifica se email já existe
+        user_exists = User.query.filter_by(email=email).first()
+        if user_exists:
+            flash('Este e-mail já está cadastrado.', 'error')
+            return redirect(url_for('auth.register'))
 
-        user_existente = db.session.execute(
-            db.select(User).filter_by(email=email)
-        ).scalar_one_or_none()
-
-        if user_existente:
-            flash("E-mail já cadastrado.", "warning")
-            return render_template('register.html', form=form)
-
-        novo = User(nome=nome, email=email)
-        novo.set_password(senha)
-        db.session.add(novo)
+        # 4. Cria o Usuário
+        new_user = User(nome=nome, email=email, confirmed=False)
+        new_user.set_password(senha)
+        
+        db.session.add(new_user)
         db.session.commit()
 
-        # Insere categorias padrão
-        inserir_categorias_padrao(novo.id)
+        # 5. SIMULAÇÃO DE ENVIO DE E-MAIL (OLHE O TERMINAL)
+        token = f"fake-token-{new_user.id}" 
+        link = url_for('auth.confirm_email', token=token, _external=True)
+        
+        # MENSAGEM NO CONSOLE (AQUI ESTÁ O LINK!)
+        print("\n" + "="*50)
+        print("📧 [SIMULAÇÃO] EMAIL DE CONFIRMAÇÃO PARA:", email)
+        print(f"🔗 LINK CLICÁVEL: {link}")
+        print("="*50 + "\n")
 
-        flash("Cadastro realizado com sucesso! Faça login.", "success")
-        return redirect(url_for('auth.login')) 
+        flash('Conta criada! Olhe o terminal do sistema para pegar o link de confirmação (Simulação).', 'info')
+        return redirect(url_for('auth.login'))
 
-    return render_template('register.html', form=form)
+    return render_template('register.html')
 
+# ---------------------------------------------------------
+# ROTA: CONFIRMAÇÃO DE EMAIL
+# ---------------------------------------------------------
+@auth_bp.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        user_id = int(token.split('-')[-1])
+        user = db.session.get(User, user_id)
+        
+        if user and not user.confirmed:
+            user.confirmed = True
+            user.confirmed_on = datetime.now(timezone.utc)
+            db.session.commit()
+            flash('E-mail confirmado com sucesso! Faça login.', 'success')
+        else:
+            flash('Link inválido ou conta já confirmada.', 'warning')
+            
+    except:
+        flash('Link de confirmação inválido.', 'error')
 
+    return redirect(url_for('auth.login'))
+
+# ---------------------------------------------------------
+# ROTA: LOGIN
+# ---------------------------------------------------------
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.check_password(password):
+            if not user.confirmed:
+                flash('Conta não confirmada. Pegue o link no terminal (Simulação) e confirme.', 'warning')
+                return render_template('login.html')
+
+            login_user(user)
+            return redirect(url_for('main.dashboard'))
+        else:
+            flash('Login inválido. Verifique e-mail e senha.', 'error')
+
+    return render_template('login.html')
+
+# ---------------------------------------------------------
+# ROTA: LOGOUT
+# ---------------------------------------------------------
 @auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash("Logout efetuado com sucesso!", "info")
-    return redirect(url_for('main.index')) # Redireciona para a Landing Page
+    flash('Você saiu do sistema.', 'info')
+    return redirect(url_for('auth.login'))
