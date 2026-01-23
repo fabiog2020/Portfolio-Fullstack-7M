@@ -1,6 +1,4 @@
 # models/models.py
-# Define as tabelas de Usuário e Suporte
-
 from datetime import datetime, timezone
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -17,7 +15,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
 
-    # SEGURANÇA (Confirmação de E-mail)
+    # SEGURANÇA
     confirmed = db.Column(db.Boolean, default=False)
     confirmed_on = db.Column(db.DateTime, nullable=True)
 
@@ -27,21 +25,17 @@ class User(db.Model, UserMixin):
     plano = db.Column(db.String(20), default='free', nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
 
-    # ======================================================
-    # DADOS ESTENDIDOS (RAIO-X PARA I.A. E MARKETING)
-    # ======================================================
+    # DADOS ESTENDIDOS (KYC)
     cpf = db.Column(db.String(14), unique=True, nullable=True)
     telefone = db.Column(db.String(20), nullable=True)
-    
-    # Endereço (Geolocalização de ofertas)
     cep = db.Column(db.String(10), nullable=True)
     endereco = db.Column(db.String(200), nullable=True)
     numero = db.Column(db.String(20), nullable=True)
     bairro = db.Column(db.String(100), nullable=True)
     cidade = db.Column(db.String(100), nullable=True)
-    estado = db.Column(db.String(2), nullable=True) # UF (SP, RJ, etc)
+    estado = db.Column(db.String(2), nullable=True)
     
-    # Perfil Econômico (Para recomendação de Investimentos)
+    # PERFIL ECONÔMICO
     profissao = db.Column(db.String(100), nullable=True)
     renda_mensal = db.Column(db.Float, default=0.0)
 
@@ -49,6 +43,7 @@ class User(db.Model, UserMixin):
     transacoes = db.relationship("Transacao", backref="usuario", lazy=True)
     categorias = db.relationship("Categoria", backref="usuario", lazy=True)
     tickets = db.relationship("Suporte", backref="usuario", lazy=True)
+    notificacoes = db.relationship("Notification", backref="usuario", lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, senha):
         self.password_hash = generate_password_hash(senha)
@@ -75,3 +70,26 @@ class Suporte(db.Model):
 
     def __repr__(self):
         return f"Ticket('{self.assunto}', '{self.status}')"
+
+
+# ==========================================================
+# MODELO: NOTIFICAÇÕES (Central de Avisos Inteligentes)
+# ==========================================================
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    mensagem = db.Column(db.String(255), nullable=False) # Título curto para o sino
+    
+    # NOVO CAMPO: Detalhes completos (HTML/Texto) com as dicas da IA
+    detalhes = db.Column(db.Text, nullable=True) 
+    
+    tipo = db.Column(db.String(20), default='info') # info, warning, success, danger
+    lida = db.Column(db.Boolean, default=False)
+    data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    link_destino = db.Column(db.String(200), nullable=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    def __repr__(self):
+        return f"Notif('{self.mensagem}', Lida:{self.lida})"

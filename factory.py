@@ -2,10 +2,11 @@
 
 import os
 from flask import Flask
+from flask_login import current_user
 from config import DevConfig
 from database import db, login_manager
 from tools.cli_commands import register_cli_commands
-from models.models import User # Importe o modelo User
+from models.models import User, Notification # Importe Notification
 
 # Importa TODOS os Blueprints
 from blueprints.auth_routes import auth_bp
@@ -17,8 +18,6 @@ from blueprints.installment_routes import installments_bp
 from blueprints.investment_routes import investments_bp
 from blueprints.report_routes import reports_bp
 from blueprints.meta_routes import metas_bp
-
-# NOVOS BLUEPRINTS (Perfil e Admin)
 from blueprints.profile_routes import profile_bp
 from blueprints.admin_routes import admin_bp
 
@@ -41,14 +40,11 @@ def create_app(config_class=DevConfig):
     db.init_app(app)
     login_manager.init_app(app)
 
-    # --- CONFIGURAÇÃO DO USER_LOADER (CRUCIAL PARA OS TESTES) ---
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
-    # ------------------------------------------------------------
 
     with app.app_context():
-        # Registra os comandos do terminal (flask seed-db)
         register_cli_commands(app)
 
     # REGISTRO DOS BLUEPRINTS
@@ -61,14 +57,26 @@ def create_app(config_class=DevConfig):
     app.register_blueprint(investments_bp, url_prefix='/investimentos')
     app.register_blueprint(reports_bp)
     app.register_blueprint(metas_bp, url_prefix='/metas')
-    
-    # NOVOS REGISTROS
-    app.register_blueprint(profile_bp) # Rotas de perfil (/perfil, /suporte)
-    app.register_blueprint(admin_bp, url_prefix='/admin') # Rotas de admin (/admin/painel)
+    app.register_blueprint(profile_bp)
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
+    # PROCESSORES DE CONTEXTO (Funções disponíveis em todos os HTMLs)
     @app.context_processor
     def utility_processor():
-        return dict(hex_to_rgb=hex_to_rgb)
+        def get_notifications_count():
+            if current_user.is_authenticated:
+                return Notification.query.filter_by(user_id=current_user.id, lida=False).count()
+            return 0
+            
+        def get_notifications():
+            if current_user.is_authenticated:
+                return Notification.query.filter_by(user_id=current_user.id).order_by(Notification.data_criacao.desc()).limit(5).all()
+            return []
+
+        return dict(
+            hex_to_rgb=hex_to_rgb, 
+            notif_count=get_notifications_count,
+            recent_notifs=get_notifications
+        )
 
     return app
-    

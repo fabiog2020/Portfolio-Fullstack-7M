@@ -74,6 +74,11 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    /* Dropdown de Notificação */
+    .notif-dropdown:hover .notif-menu {
+      display: block;
+    }
   </style>
 </head>
 
@@ -109,10 +114,43 @@
           </div>
         </div>
 
-        <!-- Área Direita da Navbar -->
+        <!-- Área Direita -->
         <div class="flex items-center space-x-4">
 
-          <!-- BOTÃO ADMIN (Só aparece para is_admin=True) -->
+          <!-- CENTRAL DE NOTIFICAÇÕES -->
+          {% if current_user.is_authenticated %}
+          <div class="relative notif-dropdown group">
+            <button class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-brand-blue">
+              <i class="fa-solid fa-bell text-xl"></i>
+              <!-- Bolinha Vermelha -->
+              {% if notif_count() > 0 %}
+              <span
+                class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                {{ notif_count() }}
+              </span>
+              {% endif %}
+            </button>
+
+            <!-- Menu Dropdown -->
+            <div
+              class="notif-menu hidden group-hover:block absolute right-0 mt-0 w-80 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
+              <div class="p-3 border-b dark:border-gray-700 font-bold text-sm">Notificações</div>
+              <div class="max-h-64 overflow-y-auto">
+                {% for notif in recent_notifs() %}
+                <a href="{{ url_for('profile.marcar_lida', notif_id=notif.id) }}"
+                  class="block p-3 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 {{ 'bg-blue-50 dark:bg-blue-900/10' if not notif.lida else '' }}">
+                  <p class="text-sm text-gray-800 dark:text-white">{{ notif.mensagem }}</p>
+                  <p class="text-xs text-gray-500 mt-1">{{ notif.data_criacao.strftime('%d/%m %H:%M') }}</p>
+                </a>
+                {% else %}
+                <div class="p-4 text-center text-sm text-gray-500">Nenhuma notificação nova.</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Botão Admin -->
           {% if current_user.is_authenticated and current_user.is_admin %}
           <a href="{{ url_for('admin.dashboard') }}"
             class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-sm font-bold flex items-center shadow-sm transition transform hover:scale-105">
@@ -120,20 +158,20 @@
           </a>
           {% endif %}
 
-          <button onclick="toggleTheme()" aria-label="Alternar entre modo claro e escuro"
+          <button onclick="toggleTheme()" aria-label="Alternar tema"
             class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-brand-blue">
             <i class="fa-solid fa-sun text-yellow-500 block dark:hidden" aria-hidden="true"></i>
             <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
           </button>
 
-          <!-- Link Perfil -->
-          <a href="{{ url_for('profile.meu_perfil') }}" aria-label="Meu Perfil"
+          <!-- Perfil -->
+          <a href="{{ url_for('profile.meu_perfil') }}"
             class="text-gray-600 dark:text-gray-300 hover:text-brand-blue text-sm font-medium flex items-center transition bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-full">
             <i class="fa-solid fa-user-circle mr-2 text-lg" aria-hidden="true"></i>
             <span>Perfil</span>
           </a>
 
-          <a href="{{ url_for('auth.logout') }}" aria-label="Sair da conta"
+          <a href="{{ url_for('auth.logout') }}"
             class="text-red-500 hover:text-red-400 text-sm font-medium flex items-center ml-2">
             <i class="fa-solid fa-right-from-bracket mr-1" aria-hidden="true"></i> Sair
           </a>
@@ -148,7 +186,6 @@
     <h1 class="text-xl font-bold">{% block header_title %}Finanças{% endblock %}</h1>
     <div class="flex items-center space-x-3">
 
-      <!-- BOTÃO ADMIN MOBILE -->
       {% if current_user.is_authenticated and current_user.is_admin %}
       <a href="{{ url_for('admin.dashboard') }}" class="text-purple-600 hover:text-purple-800">
         <i class="fa-solid fa-shield-halved text-xl"></i>
@@ -161,13 +198,12 @@
         <i class="fa-solid fa-moon text-brand-blue hidden dark:block" aria-hidden="true"></i>
       </button>
 
-      <a href="{{ url_for('profile.meu_perfil') }}" class="text-dark-muted hover:text-brand-blue p-2"
-        aria-label="Perfil">
+      <a href="{{ url_for('profile.meu_perfil') }}" class="text-dark-muted hover:text-brand-blue p-2">
         <i class="fa-solid fa-user-circle text-xl" aria-hidden="true"></i>
       </a>
 
-      <a href="{{ url_for('auth.logout') }}" class="text-dark-muted" aria-label="Sair"><i
-          class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></a>
+      <a href="{{ url_for('auth.logout') }}" class="text-dark-muted"><i class="fa-solid fa-right-from-bracket"
+          aria-hidden="true"></i></a>
     </div>
   </header>
 
@@ -193,43 +229,31 @@
     {% endwith %}
   </div>
 
-  <!-- Conteúdo Principal -->
   <main class="flex-grow" role="main">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Bottom Navigation Bar (Mobile) -->
   <nav aria-label="Navegação Mobile"
     class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-dark-card border-t border-gray-200 dark:border-gray-800 flex justify-around items-center py-2 z-50 shadow-inner safe-area-pb">
-
-    <!-- 1. Dashboard -->
     <a href="{{ url_for('main.dashboard') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if request.endpoint == 'main.dashboard' else '' }}">
       <i class="fa-solid fa-house text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Início</span>
     </a>
-
-    <!-- 2. Metas -->
     <a href="{{ url_for('metas.listar_metas') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'metas' in request.endpoint else '' }}">
       <i class="fa-solid fa-bullseye text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Metas</span>
     </a>
-
-    <!-- 3. Botão Central -->
     <a href="{{ url_for('transactions.formulario_adicionar_transacao') }}" aria-label="Adicionar Nova Transação"
       class="flex items-center justify-center w-12 h-12 bg-brand-blue rounded-full text-white shadow-lg transform -translate-y-3 border-4 border-gray-100 dark:border-dark-bg focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
       <i class="fa-solid fa-plus text-xl" aria-hidden="true"></i>
     </a>
-
-    <!-- 4. Investimentos -->
     <a href="{{ url_for('investments.investimentos') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'investments' in request.endpoint else '' }}">
       <i class="fa-solid fa-chart-line text-xl mb-1" aria-hidden="true"></i>
       <span class="text-[10px]">Investir</span>
     </a>
-
-    <!-- 5. Menu -->
     <a href="{{ url_for('categories.gerenciar_categorias') }}"
       class="flex flex-col items-center p-2 text-gray-500 dark:text-dark-muted hover:text-brand-blue {{ 'text-brand-blue' if 'categories' in request.endpoint else '' }}">
       <i class="fa-solid fa-bars text-xl mb-1" aria-hidden="true"></i>

@@ -1,9 +1,10 @@
+# blueprints/transaction_routes.py
 from datetime import date, datetime, timedelta
 import calendar
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from database import db
-from models import Transacao, Categoria, Cartao, Parcela
+from models.models_finance import Transacao, Categoria, Cartao, Parcela
 from forms.transacao_form import TransacaoForm
 
 from services.transactions_service import criar_transacao_a_partir_formulario
@@ -226,6 +227,7 @@ def excluir_transacao(id):
         flash("Excluído.", "success")
     return redirect(request.referrer or url_for("main.dashboard"))
 
+# --- ATUALIZAÇÃO IMPORTANTE NA ROTA DE EDIÇÃO ---
 @transactions_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 @login_required
 def editar_transacao(id):
@@ -234,28 +236,48 @@ def editar_transacao(id):
         flash("Transação não encontrada.", "danger")
         return redirect(url_for("main.dashboard"))
 
+    # Busca categorias E CARTÕES para preencher o select no HTML
     categorias = Categoria.query.filter_by(user_id=current_user.id).filter(Categoria.tipo.in_(["entrada", "saída"])).order_by(Categoria.nome.asc()).all()
+    cartoes = Cartao.query.filter_by(user_id=current_user.id).all()
 
     if request.method == "POST":
         try:
+            # Captura dados
             categoria_id = int(request.form.get("categoria_id"))
             descricao = request.form.get("descricao")
             valor = float(request.form.get("valor"))
             data_transacao = date.fromisoformat(request.form.get("data"))
+            cartao_id_input = request.form.get("cartao_id") # Novo campo para corrigir o problema
             
+            # Lógica de sinal (Entrada/Saída)
             nova_categoria = Categoria.query.get(categoria_id)
             valor_final = valor
             if nova_categoria.tipo == "saída": valor_final = -abs(valor)
             elif nova_categoria.tipo == "entrada": valor_final = abs(valor)
 
+            # Atualiza objeto existente
             transacao.categoria_id = categoria_id
             transacao.descricao = descricao
             transacao.valor = valor_final
             transacao.data_transacao = data_transacao
             
-            db.session.commit()
-            flash("Atualizado!", "success")
-            return redirect(url_for("main.dashboard"))
-        except: pass
+            # CORREÇÃO: Remove do cartão se o usuário selecionou "Conta Corrente" (valor vazio ou 0)
+            if cartao_id_input and int(cartao_id_input) > 0:
+                transacao.cartao_id = int(cartao_id_input)
+            else:
+                # Se veio vazio, significa que é Conta Corrente -> Remove o vínculo com cartão
+                # OBS: Certifique-se que o modelo Transacao tem o campo cartao_id
+                if hasattr(transacao, 'cartao_id'):
+                    transacao.cartao_id = None
 
-    return render_template("editar.html", transacao=transacao, categorias=categorias)
+            db.session.commit()
+            flash("Transação atualizada com sucesso!", "success")
+            
+            # Se veio do extrato, volta pro extrato. Se não, dashboard.
+            return redirect(url_for("reports.extrato"))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao editar: {str(e)}", "danger")
+
+    return render_template("editar.html", transacao=transacao, categorias=categorias, cartoes=cartoes)

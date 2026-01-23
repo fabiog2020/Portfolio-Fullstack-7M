@@ -1,4 +1,4 @@
-# models_finance.py
+# models/models_finance.py
 
 from datetime import datetime
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String
@@ -49,12 +49,19 @@ class Transacao(db.Model):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     categoria_id: Mapped[int] = mapped_column(Integer, ForeignKey("categorias.id"), nullable=False)
 
+    # --- NOVO CAMPO: CARTÃO ---
+    # Permite vincular uma transação única (não parcelada) a um cartão de crédito/débito
+    cartao_id: Mapped[int] = mapped_column(Integer, ForeignKey("cartoes.id"), nullable=True)
+
     descricao: Mapped[str] = mapped_column(String(200), nullable=True)
     valor: Mapped[float] = mapped_column(Float, nullable=False)
     data_transacao: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
-    # --- NOVO: ID DO LOTE DE IMPORTAÇÃO ---
+    # ID do lote de importação
     import_id: Mapped[str] = mapped_column(String(50), nullable=True, index=True)
+
+    # Relacionamento para facilitar acesso: transacao.cartao.nome
+    cartao_rel = relationship("Cartao", backref="transacoes_avulsas", lazy=True)
 
     def __repr__(self):
         return f"Transacao('{self.descricao}', Valor={self.valor})"
@@ -77,6 +84,7 @@ class Cartao(db.Model):
 
     # Relações
     parcelas = relationship("Parcela", backref="cartao", lazy=True)
+    # Nota: O backref 'transacoes_avulsas' foi criado na classe Transacao acima
 
     def __repr__(self):
         return f"Cartao('{self.nome}', Limite={self.limite})"
@@ -100,7 +108,7 @@ class Parcela(db.Model):
     data_vencimento: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     pago: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # --- NOVO: ID DO LOTE DE IMPORTAÇÃO ---
+    # ID do lote de importação
     import_id: Mapped[str] = mapped_column(String(50), nullable=True, index=True)
 
     def __repr__(self):
