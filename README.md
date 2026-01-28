@@ -9,6 +9,8 @@ Este é um aplicativo de finanças pessoais robusto e modular desenvolvido com *
 - **Autenticação Segura**: Login, Registro e Logout com `Flask-Login`.
 - **Dashboard Interativo**: Visão geral de receitas, despesas, saldo projetado e gráficos.
 - **Gestão de Transações**: CRUD completo de entradas e saídas.
+- **Importação Inteligente**: Suporte para importação de extratos via **CSV, PDF e OFX**.
+- **Gestão de Metas**: Definição e acompanhamento visual de objetivos financeiros (poupança, compras, etc.).
 - **Controle de Cartões de Crédito**: Gestão de limites e dias de vencimento.
 - **Parcelamentos**: Lógica avançada para parcelas recorrentes e pagamentos parciais.
 - **Investimentos**: Controle de Renda Fixa, Variável e outros ativos.
@@ -33,29 +35,25 @@ O projeto foi refatorado para garantir escalabilidade e testabilidade:
 
 ```text
 finance-app/
-├── app.py                 # Ponto de entrada da aplicação (Entry Point)
-├── factory.py             # Application Factory (Configuração e Inicialização)
+├── app.py                 # Ponto de entrada (Entry Point)
+├── factory.py             # Application Factory (Configuração e Plugins)
 ├── database.py            # Instâncias do SQLAlchemy e LoginManager
-├── config.py              # Configurações de Ambiente (Dev/Prod)
+├── config.py              # Configurações de Ambiente
 │
 ├── blueprints/            # Rotas Modularizadas (Controllers)
-│   ├── auth_routes.py     # Login/Registro
 │   ├── main_routes.py     # Dashboard
 │   ├── transaction_routes.py
-│   └── ... (card, category, installment, investment, report)
+│   ├── meta_routes.py     # Gestão de Metas
+│   └── ... 
 │
-├── models/                # Modelos do Banco de Dados
-│   ├── models.py          # Modelo User
-│   └── models_finance.py  # Transacao, Categoria, etc.
+├── services/              # Regras de Negócio (Importação, Cálculos)
+│   ├── import_service.py  # Processamento de CSV/PDF/OFX
+│   └── ...
 │
-├── services/              # Regras de Negócio (Business Logic)
-│   ├── parcelas_service.py
-│   └── transactions_service.py
-│
-├── tools/                 # Ferramentas de Linha de Comando (CLI)
-├── forms/                 # Validações de Formulário (WTForms)
-├── templates/             # Arquivos HTML (Jinja2)
-└── static/                # CSS e Imagens
+├── migrations/            # Scripts de Migração do Alembic
+├── tools/                 # Ferramentas CLI e Checks
+├── templates/             # HTML (Jinja2)
+└── static/                # CSS e Assets
 ⚙️ Configuração e Instalação
 1. Pré-requisitos
 Python 3.10 ou superior.

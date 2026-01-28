@@ -3,10 +3,11 @@
 import os
 from flask import Flask
 from flask_login import current_user
+from flask_wtf.csrf import CSRFProtect  # <--- NOVA IMPORTAÇÃO DE SEGURANÇA
 from config import DevConfig
 from database import db, login_manager
 from tools.cli_commands import register_cli_commands
-from models.models import User, Notification # Importe Notification
+from models.models import User, Notification
 
 # Importa TODOS os Blueprints
 from blueprints.auth_routes import auth_bp
@@ -21,6 +22,9 @@ from blueprints.meta_routes import metas_bp
 from blueprints.profile_routes import profile_bp
 from blueprints.admin_routes import admin_bp
 
+# Inicializa a extensão CSRF globalmente
+csrf = CSRFProtect()
+
 def hex_to_rgb(hex_color):
     """Converte #RRGGBB para (R, G, B)."""
     cor_padrao = (108, 117, 125)
@@ -34,11 +38,16 @@ def hex_to_rgb(hex_color):
 def create_app(config_class=DevConfig):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
-    try: os.makedirs(app.instance_path, exist_ok=True)
-    except OSError: pass
+    
+    try: 
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError: 
+        pass
 
+    # Inicialização das Extensões
     db.init_app(app)
     login_manager.init_app(app)
+    csrf.init_app(app)  # <--- ATIVAÇÃO DA PROTEÇÃO CSRF
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -60,7 +69,7 @@ def create_app(config_class=DevConfig):
     app.register_blueprint(profile_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-    # PROCESSORES DE CONTEXTO (Funções disponíveis em todos os HTMLs)
+    # PROCESSORES DE CONTEXTO
     @app.context_processor
     def utility_processor():
         def get_notifications_count():
